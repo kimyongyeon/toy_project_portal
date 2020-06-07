@@ -2,7 +2,11 @@ package com.simple.portal.biz.board;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 @RestController
 public class BoardAPI {
@@ -16,7 +20,12 @@ public class BoardAPI {
      * @return
      */
     @GetMapping("/board/{seq}")
-    public ResponseEntity detail(@PathVariable int seq) {
+    public ResponseEntity detail(@Valid @PathVariable @NotNull int seq, BindingResult bindingResult) {
+
+        if (bindingResult.hasErrors()) {
+            throw new RuntimeException("Error");
+        }
+
         BoardEntity boardEntity = new BoardEntity();
         boardEntity.setId(seq);
         return ResponseEntity.ok(boardService.detail(boardEntity));
@@ -24,6 +33,7 @@ public class BoardAPI {
 
     /**
      * 게시판 목록보기
+     * todo: 순번/제목/좋아요수/싫어요수/조회수
      * @return
      */
     @GetMapping("/board")
@@ -60,4 +70,14 @@ public class BoardAPI {
         boardService.delete(boardEntity);
         return ResponseEntity.ok("remove ok");
     }
+
+    // todo: 좋아요/싫어요
+    @PostMapping("/board/evt/{like}")
+    public void like(@PathVariable int like) {
+
+    }
+
+
+
+
 }

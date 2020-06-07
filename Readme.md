@@ -33,6 +33,11 @@
     <artifactId>lombok</artifactId>
     <optional>true</optional>
 </dependency>
+<dependency>
+    <groupId>javax.validation</groupId>
+    <artifactId>validation-api</artifactId>
+    <version>2.0.1.Final</version>
+</dependency>
 ```
 
 ## maven 정리 
@@ -74,10 +79,11 @@ Content-Type: application/json
 }
 
 <> 2020-06-07T112021.200.txt
-
-
-
 ``` 
 
 ## 사용한 툴 
-- Intellij 
+- Intellij
+
+## 배포 
+- Docker
+ 
