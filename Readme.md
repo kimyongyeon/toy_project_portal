@@ -8,6 +8,9 @@
 - mysql
 - validation
 
+## 차후계획
+- SwaggerUI 붙여서 API목록을 화면으로 제공
+
 ## 사용한 라이브러리
 ``` 
 <dependency>
