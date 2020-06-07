@@ -1,15 +1,13 @@
-package com.simple.portal.biz.board;
+package com.simple.portal.biz.board.repository;
 
+import com.simple.portal.biz.board.entity.BoardEntity;
 import lombok.Data;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Profile("default")
 @Repository

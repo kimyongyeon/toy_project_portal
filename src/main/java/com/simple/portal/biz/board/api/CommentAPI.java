@@ -1,4 +1,4 @@
-package com.simple.portal.biz.board;
+package com.simple.portal.biz.board.api;
 
 import org.springframework.web.bind.annotation.*;
 

@@ -1,4 +1,4 @@
-package com.simple.portal.biz.board;
+package com.simple.portal.biz.board.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

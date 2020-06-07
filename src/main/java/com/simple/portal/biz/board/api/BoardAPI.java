@@ -1,12 +1,13 @@
-package com.simple.portal.biz.board;
+package com.simple.portal.biz.board.api;
 
+import com.simple.portal.biz.board.entity.BoardEntity;
+import com.simple.portal.biz.board.service.BoardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 @RestController
 public class BoardAPI {
