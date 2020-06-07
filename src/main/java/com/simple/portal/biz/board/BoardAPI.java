@@ -20,11 +20,7 @@ public class BoardAPI {
      * @return
      */
     @GetMapping("/board/{seq}")
-    public ResponseEntity detail(@Valid @PathVariable @NotNull int seq, BindingResult bindingResult) {
-
-        if (bindingResult.hasErrors()) {
-            throw new RuntimeException("Error");
-        }
+    public ResponseEntity detail(@PathVariable int seq) {
 
         BoardEntity boardEntity = new BoardEntity();
         boardEntity.setId(seq);
@@ -46,7 +42,12 @@ public class BoardAPI {
      * @return
      */
     @PostMapping("/board")
-    public ResponseEntity write(@RequestBody BoardEntity boardEntity) {
+    public ResponseEntity write(@Valid @RequestBody BoardEntity boardEntity, BindingResult bindingResult) {
+
+        if (bindingResult.hasErrors()) {
+            throw new RuntimeException("필수값 없습니다.");
+        }
+
         boardService.insert(boardEntity);
         return ResponseEntity.ok("insert ok");
     }
