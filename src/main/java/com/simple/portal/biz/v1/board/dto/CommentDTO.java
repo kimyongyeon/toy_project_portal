@@ -16,8 +16,8 @@ import javax.validation.constraints.NotNull;
 public class CommentDTO {
     @NotNull
     @NotEmpty
-    private double id; // 아이디
-    private double boardId; // 게시글 아이디
+    private Long id; // 아이디
+    private Long boardId; // 게시글 아이디
     private String title; // 제목
     private String content; // 내용
     private String itemGb; // 아이템 구분 L:D

@@ -18,8 +18,8 @@ import javax.validation.constraints.NotNull;
 public class CommentEntity extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private double id; // 기본키
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id; // 기본키
 
     @NotEmpty
     @NotNull

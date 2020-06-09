@@ -16,8 +16,8 @@ import javax.validation.constraints.NotNull;
 public class FileEntity extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private double id; // 기본키
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id; // 기본키
 
     @Column
     private String orgFileName; // 원본 파일 이름

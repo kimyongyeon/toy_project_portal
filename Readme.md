@@ -10,9 +10,13 @@
 - 스웨거 
 - common lang3
 - gson
+- queryDSL 3.6.3
 
-## 차후계획
-- SwaggerUI 붙여서 API목록을 화면으로 제공
+## 컴파일 방법 및 실행방법
+mvn compile
+mvn package
+mvn spring-boot:run
+
 
 ## 사용한 라이브러리
 ``` 

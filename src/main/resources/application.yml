@@ -1,4 +1,20 @@
+file:
+  location: /tmp
+
+server:
+  port: 8081
+
 spring:
+  security:
+    user:
+      name: admin
+      password: 1234
+
+  servlet:
+    multipart:
+      max-file-size: 128KB
+      max-request-size: 128KB
+
   datasource:
     url: jdbc:h2:mem:portaldb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     username: sa
@@ -7,7 +23,6 @@ spring:
     platform: h2
 
   # enable H2 web console and set url for web console
-  # http://localhost:8080/console
   h2:
     console:
       enabled: true
@@ -16,5 +31,12 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+      use-new-id-generator-mappings: false
     show-sql: true
     generate-ddl: true
+
+logging:
+  level:
+    root: warn
+    com.simple.portal: debug
+

@@ -7,12 +7,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Service
 public class BoardMemService {
 
-    AtomicInteger atomicInteger = new AtomicInteger();
+    AtomicLong atomicLong = new AtomicLong();
 
     @Autowired
     BoardMemRepository boardMemRepository;
@@ -26,7 +27,7 @@ public class BoardMemService {
     }
 
     public void insert(BoardEntity boardEntity) {
-        boardEntity.setId(atomicInteger.addAndGet(atomicInteger.get() + 1));
+        boardEntity.setId(atomicLong.addAndGet(atomicLong.get() + 1));
         boardMemRepository.getList().add(boardEntity);
     }
 

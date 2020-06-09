@@ -28,12 +28,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http
+        http.cors().and()
             .csrf()
             .disable()// rest api이므로 csrf 보안이 필요없으므로 disable처리.
             .authorizeRequests()
-            .antMatchers("/v1/api/board/**", "/v1/api/mem/board/**", "/h2-console/**").permitAll()
-            .antMatchers(HttpMethod.POST, "/board/**").permitAll()
+            .antMatchers("/v1/api/**", "/h2-console/**").permitAll()
             .antMatchers("/user").hasAuthority("USER")
             .antMatchers("/admin").hasAuthority("ADMIN")
             .anyRequest().authenticated()

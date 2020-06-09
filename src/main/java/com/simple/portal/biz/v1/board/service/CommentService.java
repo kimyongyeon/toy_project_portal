@@ -13,7 +13,7 @@ public class CommentService {
     @Autowired
     CommentRepository commentRepository;
 
-    public CommentEntity findByIdComment(double id) {
+    public CommentEntity findByIdComment(Long id) {
         if (commentRepository.findById(id).isEmpty()){
             throw new RuntimeException("게시글이 존재하지 않습니다.");
         }

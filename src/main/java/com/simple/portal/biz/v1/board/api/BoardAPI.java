@@ -1,22 +1,32 @@
 package com.simple.portal.biz.v1.board.api;
 
+import com.mysema.query.jpa.impl.JPAQuery;
 import com.simple.portal.biz.v1.board.dto.BoardDTO;
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
+import com.simple.portal.biz.v1.board.entity.QBoardEntity;
 import com.simple.portal.biz.v1.board.service.BoardService;
 import com.simple.portal.common.ApiResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.EntityManager;
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/v1/api")
+@Slf4j
 public class BoardAPI {
     @Autowired
     BoardService boardService;
+
+    @Autowired
+    EntityManager em;
 
     /**
      * Response 공통 처리
@@ -29,6 +39,24 @@ public class BoardAPI {
         return apiResponse;
     }
 
+    @GetMapping("/board/query")
+    public ResponseEntity<ApiResponse> query() {
+
+        JPAQuery query = new JPAQuery(em);
+        QBoardEntity qBoardEntity = new QBoardEntity("b");
+        List<BoardEntity> boardEntityList = query
+                .from(qBoardEntity)
+                .where(qBoardEntity.title.contains("title"))
+                .orderBy(qBoardEntity.title.desc())
+                .list(qBoardEntity);
+
+        log.debug(">>>>>>>>>>>>>>>>> " + boardEntityList.toString());
+
+        ApiResponse apiResponse = getApiResponse();
+        apiResponse.setBody(boardEntityList);
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
     /**
      * 게시글 검색
      * @param boardDTO
@@ -38,6 +66,13 @@ public class BoardAPI {
     public ResponseEntity<ApiResponse> search(BoardDTO boardDTO) {
         ApiResponse apiResponse = getApiResponse();
         apiResponse.setBody(boardService.search(boardDTO));
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    @GetMapping("/board/page")
+    public ResponseEntity<ApiResponse> page(String title, Pageable pageable) {
+        ApiResponse apiResponse = getApiResponse();
+        apiResponse.setBody(boardService.pageList(title, pageable));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 

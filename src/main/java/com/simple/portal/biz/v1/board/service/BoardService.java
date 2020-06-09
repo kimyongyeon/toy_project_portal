@@ -4,9 +4,13 @@ import com.simple.portal.biz.v1.board.dto.BoardDTO;
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.repository.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 @Service
@@ -19,11 +23,15 @@ public class BoardService {
         return boardRepository.findAllByTitleOrContents(boardDTO.getTitle(), boardDTO.getContents());
     }
 
+    public Page<BoardEntity> pageList(String title, Pageable pageable) {
+        return boardRepository.findByTitleContaining(title, pageable);
+    }
+
     public List list() {
         return (List) boardRepository.findAll();
     }
 
-    public BoardEntity findById(double id) {
+    public BoardEntity findById(Long id) {
         if (boardRepository.findById(id).isEmpty()) {
             throw new RuntimeException("게시글이 존재하지 않습니다.");
         }

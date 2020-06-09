@@ -32,7 +32,7 @@ public class BoardMemAPI {
      * @return
      */
     @GetMapping("/board/{seq}")
-    public ResponseEntity<ApiResponse> detail(@PathVariable int seq) {
+    public ResponseEntity<ApiResponse> detail(@PathVariable Long seq) {
 
         BoardEntity boardEntity = new BoardEntity();
         boardEntity.setId(seq);

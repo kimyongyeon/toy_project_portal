@@ -18,8 +18,8 @@ import java.util.List;
 public class BoardEntity extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private double id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     @Column
     private String title; // 제목
     @Column
@@ -33,10 +33,10 @@ public class BoardEntity extends BaseEntity {
     @Column
     private int rowDisLike; // 싫어요
 
-    @OneToMany(mappedBy = "boardEntity")
+    @OneToMany(mappedBy = "boardEntity", fetch = FetchType.LAZY)
     List<CommentEntity> commentEntityList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "boardEntity")
+    @OneToMany(mappedBy = "boardEntity", fetch = FetchType.LAZY)
     List<FileEntity> fileEntities = new ArrayList<>();
 
     public void addComment(CommentEntity commentEntity) {

@@ -19,7 +19,7 @@ public class BoardMemRepository {
     @PostConstruct
     public void init() {
         BoardEntity boardEntity;
-        for(int i=0; i<10; i++) {
+        for(long i=0; i<10; i++) {
             boardEntity = new BoardEntity();
             boardEntity.setId(i);
             boardEntity.setTitle("제목입니다. " + i);

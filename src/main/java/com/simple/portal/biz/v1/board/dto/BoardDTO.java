@@ -13,7 +13,7 @@ import javax.validation.constraints.NotEmpty;
 @Builder
 public class BoardDTO {
     @NotEmpty
-    private double id;
+    private Long id;
     private String title; // 제목
     private String contents; // 내용
     private String writer; // 글쓴이
