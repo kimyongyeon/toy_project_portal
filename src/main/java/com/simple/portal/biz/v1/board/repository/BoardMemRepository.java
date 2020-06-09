@@ -1,6 +1,6 @@
-package com.simple.portal.biz.board.repository;
+package com.simple.portal.biz.v1.board.repository;
 
-import com.simple.portal.biz.board.entity.BoardEntity;
+import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import lombok.Data;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;

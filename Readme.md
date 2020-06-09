@@ -7,6 +7,9 @@
 - h2
 - mysql
 - validation
+- 스웨거 
+- common lang3
+- gson
 
 ## 차후계획
 - SwaggerUI 붙여서 API목록을 화면으로 제공
@@ -50,6 +53,35 @@
     <artifactId>validation-api</artifactId>
     <version>2.0.1.Final</version>
 </dependency>
+
+<!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger2 -->
+<dependency>
+    <groupId>io.springfox</groupId>
+    <artifactId>springfox-swagger2</artifactId>
+    <version>2.9.2</version>
+</dependency>
+
+<!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui -->
+<dependency>
+    <groupId>io.springfox</groupId>
+    <artifactId>springfox-swagger-ui</artifactId>
+    <version>2.0.2</version>
+</dependency>
+
+<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+<dependency>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-lang3</artifactId>
+    <version>3.9</version>
+</dependency>
+
+<!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
+<dependency>
+    <groupId>com.google.code.gson</groupId>
+    <artifactId>gson</artifactId>
+    <version>2.8.5</version>
+</dependency>
+
 ```
 
 ## maven 정리 

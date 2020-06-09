@@ -1,4 +1,4 @@
-package com.simple.portal.biz.note;
+package com.simple.portal.biz.v1.note;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

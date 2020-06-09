@@ -1,7 +1,7 @@
-package com.simple.portal.biz.board.service;
+package com.simple.portal.biz.v1.board.service;
 
-import com.simple.portal.biz.board.entity.BoardEntity;
-import com.simple.portal.biz.board.repository.BoardMemRepository;
+import com.simple.portal.biz.v1.board.entity.BoardEntity;
+import com.simple.portal.biz.v1.board.repository.BoardMemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
-public class BoardService {
+public class BoardMemService {
 
     AtomicInteger atomicInteger = new AtomicInteger();
 
@@ -26,7 +26,7 @@ public class BoardService {
     }
 
     public void insert(BoardEntity boardEntity) {
-        boardEntity.setId(atomicInteger.addAndGet(boardMemRepository.getList().size()+1));
+        boardEntity.setId(atomicInteger.addAndGet(atomicInteger.get() + 1));
         boardMemRepository.getList().add(boardEntity);
     }
 
