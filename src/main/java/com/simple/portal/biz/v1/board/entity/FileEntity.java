@@ -13,6 +13,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Table(name="file")
 public class FileEntity extends BaseEntity {
 
     @Id
@@ -26,14 +27,14 @@ public class FileEntity extends BaseEntity {
     private String fileName; // 파일 이름
 
     @Column
-    private double fileSize; // 파일 사이즈
+    private Long fileSize; // 파일 사이즈
 
     @Column
     private String fileExtension; // 파일 확장자
 
     @NotEmpty
     @NotNull
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     BoardEntity boardEntity;
 
 }

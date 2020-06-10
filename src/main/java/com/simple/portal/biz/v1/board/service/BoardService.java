@@ -43,11 +43,15 @@ public class BoardService {
         boardRepository.save(BoardEntity.builder()
                 .title(boardDTO.getTitle())
                 .contents(boardDTO.getContents())
-                .viewCount(0)
+                .viewCount(0L)
                 .rowLike(0)
                 .rowDisLike(0)
                 .writer(boardDTO.getWriter())
                 .build());
+    }
+
+    public BoardEntity save(BoardEntity boardEntity) {
+        return boardRepository.save(boardEntity);
     }
 
     @Async

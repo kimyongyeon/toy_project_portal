@@ -1,9 +1,12 @@
 package com.simple.portal.biz.v1.board.api;
 
+import com.google.gson.Gson;
+import com.mysema.query.Tuple;
 import com.mysema.query.jpa.impl.JPAQuery;
 import com.simple.portal.biz.v1.board.dto.BoardDTO;
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.entity.QBoardEntity;
+import com.simple.portal.biz.v1.board.entity.QCommentEntity;
 import com.simple.portal.biz.v1.board.service.BoardService;
 import com.simple.portal.common.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +18,12 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 import javax.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/api")
@@ -24,6 +31,9 @@ import java.util.List;
 public class BoardAPI {
     @Autowired
     BoardService boardService;
+
+    @Autowired
+    EntityManagerFactory emf;
 
     @Autowired
     EntityManager em;
@@ -38,6 +48,53 @@ public class BoardAPI {
         apiResponse.setMsg("success");
         return apiResponse;
     }
+
+    // todo: 최근활동 조회
+    @GetMapping("/board/recent/{userId}")
+    public ResponseEntity<ApiResponse> recentBoardList(@PathVariable String userId) {
+
+        JPAQuery query = new JPAQuery(em);
+        QBoardEntity qBoardEntity = new QBoardEntity("b");
+        QCommentEntity qCommentEntity = new QCommentEntity("c");
+        List<Tuple> boardEntityList = query
+                .from(qBoardEntity)
+                .join(qCommentEntity).on(qBoardEntity.eq(qCommentEntity.boardEntity))
+                .where(qBoardEntity.writer.contains(userId))
+                .orderBy(qBoardEntity.title.desc())
+                .list(qBoardEntity, qCommentEntity);
+
+        boardEntityList.stream().forEach(b -> {
+            // 왜 comment가 비어 있을까?
+            log.debug("comment: " + b);
+        });
+
+//        log.debug(boardEntityList.toString());
+
+        Map resultMap = new HashMap<>();
+        resultMap.put("result", boardEntityList);
+
+        ApiResponse apiResponse = getApiResponse();
+        apiResponse.setBody(resultMap);
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+    // todo: 내가 올린 게시물
+    @GetMapping("/board/userid/{userId}")
+    public ResponseEntity<ApiResponse> userBoardList(@PathVariable String userId) {
+
+        JPAQuery query = new JPAQuery(em);
+        QBoardEntity qBoardEntity = new QBoardEntity("b");
+        List<BoardEntity> boardEntityList = query
+                .from(qBoardEntity)
+                .where(qBoardEntity.writer.contains(userId))
+                .orderBy(qBoardEntity.title.desc())
+                .list(qBoardEntity);
+
+        ApiResponse apiResponse = getApiResponse();
+        apiResponse.setBody(boardEntityList);
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+    // todo: 스크랩
+
 
     @GetMapping("/board/query")
     public ResponseEntity<ApiResponse> query() {
@@ -126,7 +183,7 @@ public class BoardAPI {
     }
 
     /**
-     * 게시글 삭제
+     * 게시글 단건삭제
      * @param boardDTO
      * @return
      */
@@ -134,6 +191,21 @@ public class BoardAPI {
     public ResponseEntity<ApiResponse> remove(BoardDTO boardDTO) {
         ApiResponse apiResponse = getApiResponse();
         boardService.idDelete(boardDTO);
+        apiResponse.setBody("");
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    /**
+     * 게시글 멀티삭제
+     * @param boardDTOList
+     * @return
+     */
+    @DeleteMapping("/board/bulk/delete")
+    public ResponseEntity<ApiResponse> bulkRemove(List<BoardDTO> boardDTOList) {
+        ApiResponse apiResponse = getApiResponse();
+        for(BoardDTO boardDTO: boardDTOList) {
+            boardService.idDelete(boardDTO);
+        }
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }

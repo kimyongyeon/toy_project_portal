@@ -1,13 +1,16 @@
 package com.simple.portal;
 
 import com.mysema.query.jpa.impl.JPAQuery;
-import com.simple.portal.biz.v1.board.dto.BoardDTO;
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
+import com.simple.portal.biz.v1.board.entity.CommentEntity;
 import com.simple.portal.biz.v1.board.entity.QBoardEntity;
+import com.simple.portal.biz.v1.board.entity.QCommentEntity;
 import com.simple.portal.biz.v1.board.service.BoardService;
+import com.simple.portal.biz.v1.board.service.CommentService;
 import com.simple.portal.common.storage.StorageProperties;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.asm.Advice;
+import org.hibernate.SessionFactory;
+import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -21,6 +24,11 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.PersistenceContext;
+import javax.transaction.Transaction;
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -29,12 +37,16 @@ import java.util.concurrent.Executor;
 @EnableConfigurationProperties(StorageProperties.class)
 @SpringBootApplication
 @Slf4j
-public class PortalApplication implements ApplicationRunner, CommandLineRunner {
+public class PortalApplication implements ApplicationRunner {
 
     @Autowired
     BoardService boardService;
 
+    @Autowired
+    CommentService commentService;
 
+    @Autowired
+    EntityManagerFactory emf;
 
     @Bean
     public Executor asyncThreadTaskExecutor() {
@@ -52,18 +64,44 @@ public class PortalApplication implements ApplicationRunner, CommandLineRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        for(int i=0; i<10; i++) {
-            BoardDTO boardDTO = new BoardDTO();
-            boardDTO.setTitle("title " + i);
-            boardDTO.setContents("contents: " + i);
-            boardDTO.setWriter("writer: " + i);
-            boardService.insert(boardDTO);
+        for(int i=0; i<3; i++) {
+            BoardEntity boardEntity = new BoardEntity();
+            CommentEntity commentEntity = new CommentEntity();
+            save(boardEntity, commentEntity, i);
+        }
+    }
+
+    @Transactional
+    public void save(BoardEntity boardEntity, CommentEntity commentEntity, int i) {
+
+        EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+
+        try {
+
+            tx.begin();
+
+            boardEntity.setTitle("board title:"+i);
+            boardEntity.setContents("board contents:"+i);
+            boardEntity.setWriter("board writer:"+i);
+//            boardService.save(boardEntity);
+            em.persist(boardEntity);
+
+            commentEntity.setTitle("comment title:"+i);
+            commentEntity.setContents("comment contents:"+i);
+            commentEntity.setWriter("comment writer:"+i);
+//            commentService.writeComment(commentEntity);
+            em.persist(commentEntity);
+
+            boardEntity.addComment(commentEntity);
+
+            tx.commit();
+
+        } catch (Exception e) {
+            log.error("error ", e);
+            tx.rollback();
         }
 
     }
 
-    @Override
-    public void run(String... args) throws Exception {
-
-    }
 }

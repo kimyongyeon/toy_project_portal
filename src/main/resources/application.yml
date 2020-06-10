@@ -35,6 +35,12 @@ spring:
     show-sql: true
     generate-ddl: true
 
+    # springboot-jpa LazyInitializationException
+#    properties:
+#      hibernate:
+#        enable_lazy_load_no_trans: true
+
+
 logging:
   level:
     root: warn

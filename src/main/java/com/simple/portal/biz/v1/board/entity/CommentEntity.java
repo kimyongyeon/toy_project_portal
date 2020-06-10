@@ -15,6 +15,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @Data
 @Builder
+@Table(name="comment")
 public class CommentEntity extends BaseEntity {
 
     @Id
@@ -37,7 +38,7 @@ public class CommentEntity extends BaseEntity {
     private String writer; // 글쓴이
 
     @Column
-    private double viewCount; // 조회수
+    private Long viewCount; // 조회수
 
     @Column
     private int rowLike; // 좋아요
@@ -47,7 +48,8 @@ public class CommentEntity extends BaseEntity {
 
     @NotEmpty
     @NotNull
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "BOARD_ID")
     BoardEntity boardEntity;
 
 
