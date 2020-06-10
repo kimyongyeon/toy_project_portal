@@ -5,6 +5,7 @@ import com.simple.portal.biz.v1.board.repository.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 @Service
@@ -20,6 +21,7 @@ public class CommentService {
         return commentRepository.findById(id).get();
     }
 
+    @Transactional
     public void writeComment(CommentEntity commentEntity) {
         commentRepository.save(commentEntity);
     }
@@ -28,10 +30,12 @@ public class CommentService {
         return (List) commentRepository.findAll();
     }
 
+    @Transactional
     public void addLike(CommentEntity commentEntity) {
         commentRepository.save(commentEntity);
     }
 
+    @Transactional
     public void addDislike(CommentEntity commentEntity) {
         commentRepository.save(commentEntity);
     }

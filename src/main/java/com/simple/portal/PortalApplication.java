@@ -71,7 +71,20 @@ public class PortalApplication implements ApplicationRunner {
         }
     }
 
-    @Transactional
+    public void jpaSave(BoardEntity boardEntity, CommentEntity commentEntity, int i) {
+
+        boardEntity.setTitle("board title:"+i);
+        boardEntity.setContents("board contents:"+i);
+        boardEntity.setWriter("board writer:"+i);
+        boardService.save(boardEntity);
+
+        commentEntity.setBoardEntity(boardEntity);
+        commentEntity.setTitle("comment title:"+i);
+        commentEntity.setContents("comment contents:"+i);
+        commentEntity.setWriter("comment writer:"+i);
+        commentService.writeComment(commentEntity);
+    }
+
     public void save(BoardEntity boardEntity, CommentEntity commentEntity, int i) {
 
         EntityManager em = emf.createEntityManager();
@@ -84,13 +97,11 @@ public class PortalApplication implements ApplicationRunner {
             boardEntity.setTitle("board title:"+i);
             boardEntity.setContents("board contents:"+i);
             boardEntity.setWriter("board writer:"+i);
-//            boardService.save(boardEntity);
             em.persist(boardEntity);
 
             commentEntity.setTitle("comment title:"+i);
             commentEntity.setContents("comment contents:"+i);
             commentEntity.setWriter("comment writer:"+i);
-//            commentService.writeComment(commentEntity);
             em.persist(commentEntity);
 
             boardEntity.addComment(commentEntity);

@@ -39,6 +39,7 @@ public class BoardService {
     }
 
     @Async
+    @Transactional
     public void insert(BoardDTO boardDTO) {
         boardRepository.save(BoardEntity.builder()
                 .title(boardDTO.getTitle())
@@ -50,11 +51,13 @@ public class BoardService {
                 .build());
     }
 
+    @Transactional
     public BoardEntity save(BoardEntity boardEntity) {
         return boardRepository.save(boardEntity);
     }
 
     @Async
+    @Transactional
     public void titleOrContentsUpdate(BoardDTO boardDTO) {
 
         if (boardRepository.findById(boardDTO.getId()).isEmpty()) {
@@ -68,16 +71,19 @@ public class BoardService {
     }
 
     @Async
+    @Transactional
     public void idDelete(BoardDTO boardDTO) {
         boardRepository.delete(BoardEntity.builder().id(boardDTO.getId()).build());
     }
 
     @Async
+    @Transactional
     public void addLike(BoardEntity boardEntity) {
         boardRepository.save(boardEntity);
     }
 
     @Async
+    @Transactional
     public void addDislike(BoardEntity boardEntity) {
         boardRepository.save(boardEntity);
     }

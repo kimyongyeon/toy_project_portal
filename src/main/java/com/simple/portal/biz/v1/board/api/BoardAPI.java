@@ -21,9 +21,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/v1/api")
@@ -63,18 +65,15 @@ public class BoardAPI {
                 .orderBy(qBoardEntity.title.desc())
                 .list(qBoardEntity, qCommentEntity);
 
-        boardEntityList.stream().forEach(b -> {
-            // 왜 comment가 비어 있을까?
-            log.debug("comment: " + b);
-        });
-
-//        log.debug(boardEntityList.toString());
-
-        Map resultMap = new HashMap<>();
-        resultMap.put("result", boardEntityList);
+        List list = new ArrayList();
+        for (Tuple row: boardEntityList) {
+            log.debug("comment: " + row.get(qCommentEntity));
+            log.debug("board: " + row.get(qBoardEntity));
+            list.add(row.get(qCommentEntity));
+        }
 
         ApiResponse apiResponse = getApiResponse();
-        apiResponse.setBody(resultMap);
+        apiResponse.setBody(list);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
     // todo: 내가 올린 게시물
