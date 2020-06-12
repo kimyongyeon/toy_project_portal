@@ -19,4 +19,9 @@ public class BoardDTO {
     private String writer; // 글쓴이
     private double viewCount; // 조회수
     private String itemGb; // 아이템 구분 L:D
+
+    public BoardDTO(String title, String writer) {
+        this.title = title;
+        this.writer = writer;
+    }
 }

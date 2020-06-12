@@ -1,20 +1,14 @@
 package com.simple.portal;
 
-import com.mysema.query.jpa.impl.JPAQuery;
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.entity.CommentEntity;
-import com.simple.portal.biz.v1.board.entity.QBoardEntity;
-import com.simple.portal.biz.v1.board.entity.QCommentEntity;
 import com.simple.portal.biz.v1.board.service.BoardService;
 import com.simple.portal.biz.v1.board.service.CommentService;
 import com.simple.portal.common.storage.StorageProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.SessionFactory;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -26,10 +20,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
-import javax.persistence.PersistenceContext;
-import javax.transaction.Transaction;
-import javax.transaction.Transactional;
-import java.util.List;
 import java.util.concurrent.Executor;
 
 @EnableAsync

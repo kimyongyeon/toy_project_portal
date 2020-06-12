@@ -1,8 +1,7 @@
 package com.simple.portal.biz.v1.board.api;
 
-import com.google.gson.Gson;
-import com.mysema.query.Tuple;
-import com.mysema.query.jpa.impl.JPAQuery;
+import com.querydsl.core.types.Projections;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.board.dto.BoardDTO;
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.entity.QBoardEntity;
@@ -17,15 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/v1/api")
@@ -35,10 +27,7 @@ public class BoardAPI {
     BoardService boardService;
 
     @Autowired
-    EntityManagerFactory emf;
-
-    @Autowired
-    EntityManager em;
+    JPAQueryFactory query;
 
     /**
      * Response 공통 처리
@@ -51,62 +40,52 @@ public class BoardAPI {
         return apiResponse;
     }
 
-    // todo: 최근활동 조회
+    // todo: 최근활동 조회 - 게시판, 댓글
     @GetMapping("/board/recent/{userId}")
     public ResponseEntity<ApiResponse> recentBoardList(@PathVariable String userId) {
 
-        JPAQuery query = new JPAQuery(em);
         QBoardEntity qBoardEntity = new QBoardEntity("b");
         QCommentEntity qCommentEntity = new QCommentEntity("c");
-        List<Tuple> boardEntityList = query
+        List<BoardDTO> boardEntityList = query
+                .select(Projections.constructor(BoardDTO.class, qBoardEntity.title, qCommentEntity.writer))
                 .from(qBoardEntity)
-                .join(qCommentEntity).on(qBoardEntity.eq(qCommentEntity.boardEntity))
+                .join(qCommentEntity).on(qCommentEntity.boardEntity.eq(qBoardEntity))
                 .where(qBoardEntity.writer.contains(userId))
-                .orderBy(qBoardEntity.title.desc())
-                .list(qBoardEntity, qCommentEntity);
-
-        List list = new ArrayList();
-        for (Tuple row: boardEntityList) {
-            log.debug("comment: " + row.get(qCommentEntity));
-            log.debug("board: " + row.get(qBoardEntity));
-            list.add(row.get(qCommentEntity));
-        }
-
-        ApiResponse apiResponse = getApiResponse();
-        apiResponse.setBody(list);
-        return new ResponseEntity(apiResponse, HttpStatus.OK);
-    }
-    // todo: 내가 올린 게시물
-    @GetMapping("/board/userid/{userId}")
-    public ResponseEntity<ApiResponse> userBoardList(@PathVariable String userId) {
-
-        JPAQuery query = new JPAQuery(em);
-        QBoardEntity qBoardEntity = new QBoardEntity("b");
-        List<BoardEntity> boardEntityList = query
-                .from(qBoardEntity)
-                .where(qBoardEntity.writer.contains(userId))
-                .orderBy(qBoardEntity.title.desc())
-                .list(qBoardEntity);
+                .fetch();
+                ;
 
         ApiResponse apiResponse = getApiResponse();
         apiResponse.setBody(boardEntityList);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
-    // todo: 스크랩
+    // todo: 내가 올린 게시물 - 게시판만
+    @GetMapping("/board/userid/{userId}")
+    public ResponseEntity<ApiResponse> userBoardList(@PathVariable String userId) {
 
-
-    @GetMapping("/board/query")
-    public ResponseEntity<ApiResponse> query() {
-
-        JPAQuery query = new JPAQuery(em);
         QBoardEntity qBoardEntity = new QBoardEntity("b");
         List<BoardEntity> boardEntityList = query
+                .select(qBoardEntity)
                 .from(qBoardEntity)
-                .where(qBoardEntity.title.contains("title"))
+                .where(qBoardEntity.writer.contains(userId))
                 .orderBy(qBoardEntity.title.desc())
-                .list(qBoardEntity);
+                .fetch();
 
-        log.debug(">>>>>>>>>>>>>>>>> " + boardEntityList.toString());
+        ApiResponse apiResponse = getApiResponse();
+        apiResponse.setBody(boardEntityList);
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    // todo: 스크랩
+    @GetMapping("/board/scrap/{userId}")
+    public ResponseEntity<ApiResponse> query(@PathVariable String userId) {
+
+        QBoardEntity qBoardEntity = new QBoardEntity("b");
+        List<BoardEntity> boardEntityList = query
+                .select(qBoardEntity)
+                .from(qBoardEntity)
+                .where(qBoardEntity.title.contains("title")) // 스크랩 유무?
+                .orderBy(qBoardEntity.title.desc())
+                .fetch();
 
         ApiResponse apiResponse = getApiResponse();
         apiResponse.setBody(boardEntityList);
