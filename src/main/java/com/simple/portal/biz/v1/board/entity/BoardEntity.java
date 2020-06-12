@@ -35,12 +35,13 @@ public class BoardEntity extends BaseEntity {
     @Column
     private int rowDisLike; // 싫어요
 
+    // cascade = CascadeType.ALL: 삭제시 자식까지...
     @Transient
-    @OneToMany(mappedBy = "boardEntity", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "boardEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     List<CommentEntity> commentEntityList = new ArrayList<>();
 
     @Transient
-    @OneToMany(mappedBy = "boardEntity", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "boardEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     List<FileEntity> fileEntities = new ArrayList<>();
 
     public void addComment(CommentEntity commentEntity) {
