@@ -16,7 +16,7 @@ spring:
       max-request-size: 128KB
 
   datasource:
-    url: jdbc:mysql://192.168.0.14:3306/okky_db?characterEncoding=UTF-8&serverTimezone=UTC
+    url: jdbc:mysql://141.164.41.213:3306/okky_db?characterEncoding=UTF-8&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: kimcoding
     password: dkwmfrjdns1!
@@ -24,7 +24,7 @@ spring:
 
     jpa:
       hibernate:
-        ddl-auto: create-drop
+        ddl-auto: update
         use-new-id-generator-mappings: false
       show-sql: true
       database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
