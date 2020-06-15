@@ -1,9 +1,7 @@
 package com.simple.portal.biz.v1.board.entity;
 
-import com.simple.portal.biz.v1.board.repository.CommentRepository;
 import com.simple.portal.common.BaseEntity;
 import lombok.*;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -15,7 +13,7 @@ import java.util.List;
 @Entity
 @Builder
 @ToString
-@Table(name="board")
+@Table(name="TB_BOARD")
 public class BoardEntity extends BaseEntity {
 
     @Id

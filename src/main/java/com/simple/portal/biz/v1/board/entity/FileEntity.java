@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-@Table(name="file")
+@Table(name="TB_FILE")
 public class FileEntity extends BaseEntity {
 
     @Id

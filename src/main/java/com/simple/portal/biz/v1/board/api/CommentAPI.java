@@ -32,7 +32,11 @@ public class CommentAPI {
         return apiResponse;
     }
 
-    // todo: 댓글목록 출력
+    /**
+     * 댓글목록 출력
+     * @param commentEntity
+     * @return
+     */
     @GetMapping("/comment")
     public ResponseEntity<ApiResponse> list(CommentEntity commentEntity) {
         ApiResponse apiResponse = getApiResponse();
@@ -40,7 +44,12 @@ public class CommentAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    // todo: 댓글 입력
+    /**
+     * 댓글 입력
+     * @param commentDTO
+     * @param bindingResult
+     * @return
+     */
     @PostMapping("/comment")
     public ResponseEntity<ApiResponse> comment (@Valid @RequestBody CommentDTO commentDTO, BindingResult bindingResult) {
 
@@ -62,7 +71,13 @@ public class CommentAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    // todo: 댓글 좋아요:싫어요
+    /**
+     * 댓글 좋아요:싫어요
+     * @param click
+     * @param commentDTO
+     * @param bindingResult
+     * @return
+     */
     @PostMapping("/comment/event/{click}")
     public ResponseEntity<ApiResponse> rowClickItem(@PathVariable String click, @Valid @RequestBody CommentDTO commentDTO, BindingResult bindingResult) {
 

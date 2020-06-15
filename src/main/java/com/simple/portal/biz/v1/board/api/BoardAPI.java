@@ -23,11 +23,9 @@ import java.util.List;
 @RequestMapping("/v1/api")
 @Slf4j
 public class BoardAPI {
-    @Autowired
-    BoardService boardService;
 
     @Autowired
-    JPAQueryFactory query;
+    BoardService boardService;
 
     /**
      * Response 공통 처리
@@ -40,55 +38,39 @@ public class BoardAPI {
         return apiResponse;
     }
 
-    // todo: 최근활동 조회 - 게시판, 댓글
+    /**
+     * 최근활동 조회 - 게시판, 댓글
+     * @param userId
+     * @return
+     */
     @GetMapping("/board/recent/{userId}")
     public ResponseEntity<ApiResponse> recentBoardList(@PathVariable String userId) {
-
-        QBoardEntity qBoardEntity = new QBoardEntity("b");
-        QCommentEntity qCommentEntity = new QCommentEntity("c");
-        List<BoardDTO> boardEntityList = query
-                .select(Projections.constructor(BoardDTO.class, qBoardEntity.title, qCommentEntity.writer))
-                .from(qBoardEntity)
-                .join(qCommentEntity).on(qCommentEntity.boardEntity.eq(qBoardEntity))
-                .where(qBoardEntity.writer.contains(userId))
-                .fetch();
-                ;
-
         ApiResponse apiResponse = getApiResponse();
-        apiResponse.setBody(boardEntityList);
+        apiResponse.setBody(boardService.recentBoardList(userId));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
-    // todo: 내가 올린 게시물 - 게시판만
+
+    /**
+     * 내가 올린 게시물 - 게시판만
+     * @param userId
+     * @return
+     */
     @GetMapping("/board/userid/{userId}")
     public ResponseEntity<ApiResponse> userBoardList(@PathVariable String userId) {
-
-        QBoardEntity qBoardEntity = new QBoardEntity("b");
-        List<BoardEntity> boardEntityList = query
-                .select(qBoardEntity)
-                .from(qBoardEntity)
-                .where(qBoardEntity.writer.contains(userId))
-                .orderBy(qBoardEntity.title.desc())
-                .fetch();
-
         ApiResponse apiResponse = getApiResponse();
-        apiResponse.setBody(boardEntityList);
+        apiResponse.setBody(boardService.userBoardList(userId));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    // todo: 스크랩
+    /**
+     * 스크랩
+     * @param userId
+     * @return
+     */
     @GetMapping("/board/scrap/{userId}")
     public ResponseEntity<ApiResponse> query(@PathVariable String userId) {
-
-        QBoardEntity qBoardEntity = new QBoardEntity("b");
-        List<BoardEntity> boardEntityList = query
-                .select(qBoardEntity)
-                .from(qBoardEntity)
-                .where(qBoardEntity.title.contains("title")) // 스크랩 유무?
-                .orderBy(qBoardEntity.title.desc())
-                .fetch();
-
         ApiResponse apiResponse = getApiResponse();
-        apiResponse.setBody(boardEntityList);
+        apiResponse.setBody(boardService.myScrap(userId));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -104,6 +86,12 @@ public class BoardAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
+    /**
+     * 게시판 페이징
+     * @param title
+     * @param pageable
+     * @return
+     */
     @GetMapping("/board/page")
     public ResponseEntity<ApiResponse> page(String title, Pageable pageable) {
         ApiResponse apiResponse = getApiResponse();
@@ -111,23 +99,23 @@ public class BoardAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    /**
-     * 게시글 목록
-     * @return
-     */
-    @GetMapping("/board")
-    public ResponseEntity<ApiResponse> list() {
-        ApiResponse apiResponse = getApiResponse();
-        apiResponse.setBody(boardService.list());
-        return new ResponseEntity(apiResponse, HttpStatus.OK);
-    }
+//    /**
+//     * 게시글 목록
+//     * @return
+//     */
+//    @GetMapping("/board")
+//    public ResponseEntity<ApiResponse> list() {
+//        ApiResponse apiResponse = getApiResponse();
+//        apiResponse.setBody(boardService.list());
+//        return new ResponseEntity(apiResponse, HttpStatus.OK);
+//    }
 
     /**
      * 게시글 상세
      * @param boardDTO
      * @return
      */
-    @GetMapping("/board/{seq}")
+    @GetMapping("/board/detail")
     public ResponseEntity<ApiResponse> findOne(BoardDTO boardDTO) {
         ApiResponse apiResponse = getApiResponse();
         apiResponse.setBody(boardService.findById(boardDTO.getId()));
@@ -200,7 +188,7 @@ public class BoardAPI {
         ApiResponse apiResponse = getApiResponse();
 
         if (bindingResult.hasErrors()) {
-            throw new RuntimeException("필수값을 입력 하세요.");
+            throw new RuntimeException(bindingResult.getAllErrors().toString());
         }
 
         if ("like".equals(click) || "dislike".equals(click)) {
@@ -214,7 +202,7 @@ public class BoardAPI {
                 boardEntity.setRowDisLike(boardEntity.getRowDisLike() + 1);
                 boardService.addDislike(boardEntity);
             } else {
-                throw new RuntimeException("좋아요와 싫어요 중 하나를 선택하세요.");
+                throw new RuntimeException(bindingResult.getAllErrors().toString());
             }
 
         } else {

@@ -15,7 +15,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @Data
 @Builder
-@Table(name="comment")
+@Table(name="TB_COMMENT")
 public class CommentEntity extends BaseEntity {
 
     @Id
