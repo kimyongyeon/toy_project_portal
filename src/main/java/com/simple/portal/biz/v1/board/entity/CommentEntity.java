@@ -24,17 +24,17 @@ public class CommentEntity extends BaseEntity {
 
     @NotEmpty
     @NotNull
-    @Column
+    @Column(nullable = false, unique = true)
     private String title; // 제목
 
     @NotEmpty
     @NotNull
-    @Column
+    @Column(nullable = false)
     private String contents; // 내용
 
     @NotEmpty
     @NotNull
-    @Column
+    @Column(nullable = false, updatable = false, unique = true)
     private String writer; // 글쓴이
 
     @Column

@@ -82,7 +82,7 @@ public class NoteAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    @DeleteMapping("/note")
+    @PutMapping("/note")
     public ResponseEntity<ApiResponse>  editPost(@Valid @RequestBody NoteEntity noteEntity, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {

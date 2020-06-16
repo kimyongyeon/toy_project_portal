@@ -20,21 +20,21 @@ public class FileEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // 기본키
 
-    @Column
+    @Column(nullable = false, updatable = false)
     private String orgFileName; // 원본 파일 이름
 
     @Column
     private String fileName; // 파일 이름
 
-    @Column
+    @Column(nullable = false)
     private Long fileSize; // 파일 사이즈
 
-    @Column
     private String fileExtension; // 파일 확장자
 
     @NotEmpty
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "BOARD_ID")
     BoardEntity boardEntity;
 
 }

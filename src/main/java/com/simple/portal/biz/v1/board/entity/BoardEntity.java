@@ -20,16 +20,22 @@ public class BoardEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "BOARD_ID")
     private Long id;
-    @Column
+
+    @Column(nullable = false, unique = true)
     private String title; // 제목
-    @Column
+
+    @Column(nullable = false)
     private String contents; // 내용
-    @Column
+
+    @Column(nullable = false, updatable = false, unique = true)
     private String writer; // 글쓴이
+
     @Column
     private Long viewCount; // 조회수
+
     @Column
     private int rowLike; // 좋아요
+
     @Column
     private int rowDisLike; // 싫어요
 
