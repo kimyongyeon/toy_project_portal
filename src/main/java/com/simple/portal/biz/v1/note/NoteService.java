@@ -1,7 +1,6 @@
 package com.simple.portal.biz.v1.note;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.simple.portal.biz.v1.board.entity.QNoteEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
