@@ -32,17 +32,25 @@ spring:
     hibernate:
       ddl-auto: create-drop
       use-new-id-generator-mappings: false
-    show-sql: true
     generate-ddl: true
+
+    properties:
+      hibernate:
+        show_sql: true # SQL 표시
+        format_sql: true # SQL 포맷팅
+        use_sql_comments: true # 주석 표시
 
     # springboot-jpa LazyInitializationException
 #    properties:
 #      hibernate:
 #        enable_lazy_load_no_trans: true
 
-
 logging:
   level:
     root: warn
     com.simple.portal: debug
-
+    org:
+      hibernate:
+        type:
+          descriptor:
+            sql: trace # 값 매핑

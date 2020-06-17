@@ -10,7 +10,7 @@
 - 스웨거 
 - common lang3
 - gson
-- queryDSL 3.6.3
+- queryDSL 4.3.1
 
 ## 컴파일 방법 및 실행방법
 mvn compile

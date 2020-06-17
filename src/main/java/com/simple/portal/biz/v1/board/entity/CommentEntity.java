@@ -30,6 +30,7 @@ public class CommentEntity extends BaseEntity {
     @NotEmpty
     @NotNull
     @Column(nullable = false)
+    @Lob
     private String contents; // 내용
 
     @NotEmpty

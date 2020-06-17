@@ -24,7 +24,7 @@ spring:
 
     jpa:
       hibernate:
-        ddl-auto: update
+        ddl-auto: create-drop
         use-new-id-generator-mappings: false
       show-sql: true
       database-platform: org.hibernate.dialect.MySQL5InnoDBDialect

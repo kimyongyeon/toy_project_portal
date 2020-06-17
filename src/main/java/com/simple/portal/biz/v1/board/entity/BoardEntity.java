@@ -1,7 +1,9 @@
 package com.simple.portal.biz.v1.board.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.simple.portal.common.BaseEntity;
 import lombok.*;
+import org.hibernate.envers.Audited;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -25,9 +27,11 @@ public class BoardEntity extends BaseEntity {
     private String title; // 제목
 
     @Column(nullable = false)
+    @Lob // 2020-06-17 LOB 타입 정의
     private String contents; // 내용
 
     @Column(nullable = false, updatable = false, unique = true)
+    @Audited
     private String writer; // 글쓴이
 
     @Column
@@ -40,11 +44,11 @@ public class BoardEntity extends BaseEntity {
     private int rowDisLike; // 싫어요
 
     // cascade = CascadeType.ALL: 삭제시 자식까지...
-    @Transient
-    @OneToMany(mappedBy = "boardEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Transient // 테이블 필드로 만들고 싶지 않을때 사용, 해당 어노테이션이 빠지면 java.lang.StackOverflowError: null
+    @OneToMany(mappedBy = "boardEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     List<CommentEntity> commentEntityList = new ArrayList<>();
 
-    @Transient
+    @Transient // 테이블 필드로 만들고 싶지 않을때 사용
     @OneToMany(mappedBy = "boardEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     List<FileEntity> fileEntities = new ArrayList<>();
 

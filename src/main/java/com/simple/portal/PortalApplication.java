@@ -2,6 +2,7 @@ package com.simple.portal;
 
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.entity.CommentEntity;
+import com.simple.portal.biz.v1.board.repository.BoardRepository;
 import com.simple.portal.biz.v1.board.service.BoardService;
 import com.simple.portal.biz.v1.board.service.CommentService;
 import com.simple.portal.common.storage.StorageProperties;
@@ -20,6 +21,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
+import javax.transaction.Transactional;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 @EnableAsync
@@ -34,6 +38,9 @@ public class PortalApplication implements ApplicationRunner {
 
     @Autowired
     CommentService commentService;
+
+    @Autowired
+    BoardRepository boardRepository;
 
     @Autowired
     EntityManagerFactory emf;
@@ -59,6 +66,29 @@ public class PortalApplication implements ApplicationRunner {
             CommentEntity commentEntity = new CommentEntity();
             save(boardEntity, commentEntity, i);
         }
+
+        EntityManager em = emf.createEntityManager();
+        BoardEntity boardEntity = em.find(BoardEntity.class, 1L);
+        log.debug(boardEntity.toString());
+
+        /**
+         * orphanRemoval = true 로 설정해둔 컬렉션을 삭제하고 새 값으로 설정하려면,
+         * list.clear(), ARepository.saveAndFlush(a), list.addAll(newList) 를 사용해야 한다.
+         * 안 그러면 A collection with cascade="all-delete-orphan" was no longer referenced by the owning entity instance 발생
+         */
+        List commentList = new ArrayList();
+        for(int i=0; i<10; i++) {
+            CommentEntity commentEntity = new CommentEntity();
+            commentEntity.setBoardEntity(boardEntity);
+            commentEntity.setTitle("comment title:"+i);
+            commentEntity.setContents("comment contents:"+i);
+            commentEntity.setWriter("comment writer:"+i);
+            commentList.add(commentEntity);
+        }
+        boardEntity.getCommentEntityList().clear();
+        boardRepository.saveAndFlush(boardEntity);
+        boardEntity.getCommentEntityList().addAll(commentList); // DB로 값이 가느냐 마느냐
+
     }
 
     public void jpaSave(BoardEntity boardEntity, CommentEntity commentEntity, int i) {
