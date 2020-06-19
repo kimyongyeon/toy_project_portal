@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>socketjs sample</title>
+    <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/webjars/jquery/jquery.min.js"></script>
+    <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/stomp.min.js"></script>
+</head>
+<body>
+
+    <h1>1번방</h1>
+    <div>
+        <input type="text" id="userName"><button id="userBtn">사용자 등록</button>
+        <input type="button" id="chattinglistBtn" value="채팅 참여자 리스트">
+        <button id="outRoom">채팅방 나기기</button>
+    </div>
+    <br>
+    <div>
+        <textarea name="" id="chatOutput" class="catting_history" cols="70" rows="30"></textarea>
+        <div class="chatting_input">
+            <input type="text" id="chatInput" class="chat">&nbsp
+            <button id="sendBtn">전송</button>
+        </div>
+    </div>
+
+
+<script>
+
+    $(function() {
+        connect();
+    });
+
+    $('#chattinglistBtn').on('click', function(e) {
+       console.log('참여자 목록');
+    });
+
+    // 메세지전송
+    $('#sendBtn').on('click', function(e) {
+        sendMessage({
+            uri: '/app/in',
+            userName: $('#userName').val(),
+            content: $('#chatInput').val()
+        })
+    });
+
+    // userName 등록
+    $('#userBtn').on('click', function(e) {
+        sendMessage({
+            uri: '/app/userNameInsert',
+            userName: $('#userName').val(),
+            content: '/app/userNameInsert 성공'
+        });
+    });
+
+    // 채팅방 나가기
+    $('#outRoom').on('click', function(e) {
+        disconnect();
+    });
+
+    // SockJS 설정
+    function connect() {
+        var socket = new SockJS('/websockethandler');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function() {
+
+            stompClient.subscribe('/topic/connect', function(msg) {
+                console.log(`msg.body: ${msg.body}`);
+
+            });
+            stompClient.subscribe('/topic/userNameInsert', function(msg) {
+                console.log(`msg.body: ${msg.body}`);
+                $('#chatOutput').append(msg.body);
+            });
+            stompClient.subscribe('/topic/out', function(msg) {
+                console.log(`msg.body: ${msg.body}`);
+                $('#chatOutput').append(msg.body);
+            });
+            stompClient.subscribe('/topic/in', function(msg) {
+                console.log(`msg.body: ${msg.body}`);
+                $('#chatOutput').append(msg.body);
+            });
+
+            // 연결
+            sendMessage({
+                uri: '/app/connect',
+                userName: 'connectName',
+                content: '/app/connect 성공'
+            })
+
+        });
+    }
+
+    function disconnect() {
+        if (stompClient !== null) {
+            sendMessage({
+                uri: '/app/out',
+                userName: $('#userName').val(),
+                content: 'disconnect app out'
+            });
+            stompClient.disconnect();
+            $('#chatOutput').html('');
+        }
+    }
+
+    function sendMessage(text) {
+        stompClient.send(text.uri, {}, stringToJson({
+            userName: text.userName,
+            content: text.content
+        }));
+    }
+
+    function stringToJson(text) {
+        return JSON.stringify(text);
+    }
+
+</script>
+
+</body>
+</html>

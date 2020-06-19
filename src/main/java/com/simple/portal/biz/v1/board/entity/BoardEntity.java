@@ -1,6 +1,5 @@
 package com.simple.portal.biz.v1.board.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.simple.portal.common.BaseEntity;
 import lombok.*;
 import org.hibernate.envers.Audited;
