@@ -35,7 +35,7 @@ public class NoteAPI {
     @GetMapping("/note/send")
     public ResponseEntity<ApiResponse> sendNote(String userId) {
         ApiResponse apiResponse = getApiResponse();
-        apiResponse.setBody(noteService.findNowAll(userId));
+        apiResponse.setBody(noteService.findAll(userId));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -47,49 +47,72 @@ public class NoteAPI {
     @GetMapping("/note/receive")
     public ResponseEntity<ApiResponse> receiveNote(String userId) {
         ApiResponse apiResponse = getApiResponse();
-        apiResponse.setBody(noteService.findNowAll(userId));
+        apiResponse.setBody(noteService.findAll(userId));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
     /**
-     * 쪽지입력
-      * @param noteEntity
+     * 쪽지 상세보기
+     * @param id
+     * @return
+     */
+    @GetMapping("/note/{id}")
+    public ResponseEntity<ApiResponse> noteDetail(@PathVariable Long id) {
+        ApiResponse apiResponse = getApiResponse();
+        apiResponse.setBody(noteService.findDetail(id));
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    /**
+     * 쪽지쓰기
+      * @param noteDTO
      * @return
      */
     @PostMapping("/note")
-    public ResponseEntity<ApiResponse>  notePost(@Valid @RequestBody NoteEntity noteEntity, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse>  notePost(@Valid @RequestBody NoteDTO noteDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
             throw new RuntimeException(bindingResult.getAllErrors().toString());
         }
-
-        noteService.save(noteEntity);
+        noteService.save(noteDTO);
         ApiResponse apiResponse = getApiResponse();
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
+    /**
+     * 쪽지삭제
+     * @param noteDTO
+     * @param bindingResult
+     * @return
+     */
     @DeleteMapping("/note")
-    public ResponseEntity<ApiResponse>  delPost(@Valid @RequestBody NoteEntity noteEntity, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse>  delPost(@Valid @RequestBody NoteDTO noteDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
             throw new RuntimeException(bindingResult.getAllErrors().toString());
         }
 
-        noteService.delete(noteEntity);
+        noteService.delete(noteDTO);
         ApiResponse apiResponse = getApiResponse();
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
+    /**
+     * 쪽지수정
+     * @param noteDTO
+     * @param bindingResult
+     * @return
+     */
     @PutMapping("/note")
-    public ResponseEntity<ApiResponse>  editPost(@Valid @RequestBody NoteEntity noteEntity, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse>  editPost(@Valid @RequestBody NoteDTO noteDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
             throw new RuntimeException(bindingResult.getAllErrors().toString());
         }
 
-        noteService.update(noteEntity);
+        noteService.update(noteDTO);
         ApiResponse apiResponse = getApiResponse();
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
