@@ -1,5 +1,11 @@
 package com.simple.portal.common;
 
+import com.simple.portal.biz.v1.user.exception.CreateUserFailedException;
+import com.simple.portal.biz.v1.user.exception.IdCheckFailException;
+import com.simple.portal.biz.v1.user.exception.LoginFailException;
+import com.simple.portal.biz.v1.user.exception.SelectUserFailedException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +18,16 @@ public class CommonExceptionHandler {
     public static final String CODE_RE = "502";
     public static final String CODE_DAE = "503";
     public static final String CODE_E = "500";
+
+    private ApiResponse errorApiResponse;
+
+    /*
+    @Autowired
+    @Qualifier("errorApiResponse")
+    public void CommonExceptionHandler(ApiResponse errorApiResponse) {
+        this.errorApiResponse = errorApiResponse;
+    }
+     */
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> runtimeException(RuntimeException e) {
