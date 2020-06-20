@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Slf4j
 @RestController
@@ -34,15 +36,17 @@ public class UserController {
     public ResponseEntity<?> userFindAll( ) {
         log.info("[GET] /user/ - /userFindAll/");
 
+        apiResponse.setMsg(UserConst.SUCCESS_SELECT_USER);
         apiResponse.setBody(userService.userFindAllService());
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     };
 
     //특정 유저 조회
     @GetMapping("/{id}")
-    public ResponseEntity<?> userFindOne(@PathVariable Long id) {
+    public ResponseEntity<?> userFindOne(@PathVariable @NotNull Long id) {
         log.info("[GET] /user/{id}" + id + "/userFindOne/");
 
+        apiResponse.setMsg(UserConst.SUCCESS_SELECT_USER);
         apiResponse.setBody(userService.userFineOneService(id));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
@@ -56,13 +60,14 @@ public class UserController {
         if(bindingResult.hasErrors()) {
             String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
             apiResponse.setCode("400");
-            apiResponse.setMsg("error");
+            apiResponse.setMsg(UserConst.ERROR_PARAMS);
             apiResponse.setBody(errMsg);
             return new ResponseEntity(apiResponse, HttpStatus.BAD_REQUEST);
         }
 
         userService.createUserService(user);
-        apiResponse.setBody(UserConst.SUCCESS_CREATE_USER);
+        apiResponse.setMsg(UserConst.SUCCESS_CREATE_USER);
+        apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -75,23 +80,25 @@ public class UserController {
         if(bindingResult.hasErrors()) {
             String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
             apiResponse.setCode("400");
-            apiResponse.setMsg("error");
+            apiResponse.setMsg(UserConst.ERROR_PARAMS);
             apiResponse.setBody(errMsg);
             return new ResponseEntity(apiResponse, HttpStatus.BAD_REQUEST);
         }
 
         userService.updateUserService(user);
-        apiResponse.setBody(UserConst.FAILED_UPDATE_USER);
+        apiResponse.setMsg(UserConst.FAILED_UPDATE_USER);
+        apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
     //유저 삭제
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse> userDelete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse> userDelete(@PathVariable @NotNull Long id) {
         log.info("[DELETE] /user/ " + id + " /userDelete");
 
         userService.deleteUserService(id);
-        apiResponse.setBody(UserConst.SUCCESS_DELETE_USER);
+        apiResponse.setMsg(UserConst.SUCCESS_DELETE_USER);
+        apiResponse.setMsg("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -101,10 +108,12 @@ public class UserController {
         log.info("[GET] /user/check/id " + user_id + " /userIdCheck");
 
         if(userService.idCheckService(user_id)) {
-            apiResponse.setBody(UserConst.EXIST_USER);
+            apiResponse.setMsg(UserConst.EXIST_USER);
+            apiResponse.setBody("");
             return new ResponseEntity(apiResponse, HttpStatus.OK);
         } else {
-            apiResponse.setBody(UserConst.NO_USER);
+            apiResponse.setMsg(UserConst.NO_USER);
+            apiResponse.setBody("");
             return new ResponseEntity(apiResponse, HttpStatus.OK);
         }
     };
@@ -118,10 +127,12 @@ public class UserController {
         log.info("[POST] /user/login " + "[ID] :  "  + id + "[PW] : " + pw + " /userLogin");
 
         if(userService.userLoginService(id, pw)) {
-            apiResponse.setBody(UserConst.SUCCESS_LOGIN);
+            apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
+            apiResponse.setBody("토큰 정보");
             return new ResponseEntity(apiResponse, HttpStatus.OK);
         } else {
-            apiResponse.setBody(UserConst.FAILED_LOGIN);
+            apiResponse.setMsg(UserConst.FAILED_LOGIN);
+            apiResponse.setBody("");
             return new ResponseEntity(apiResponse, HttpStatus.OK);
         }
     }
