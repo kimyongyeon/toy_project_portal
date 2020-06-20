@@ -1,10 +1,10 @@
 package com.simple.portal.biz.v1.user.service;
 
 import com.simple.portal.biz.v1.user.entity.UserEntity;
-import com.simple.portal.biz.v1.user.exception.IdCheckFailException;
-import com.simple.portal.biz.v1.user.exception.LoginFailException;
+import com.simple.portal.biz.v1.user.exception.*;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.weaver.bcel.BcelAccessForInlineMunger;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,26 +24,53 @@ public class UserService {
     }
 
     public List<UserEntity> userFindAllService( ) {
-        return userRepository.findAll();
+        try {
+            return userRepository.findAll();
+        }
+        catch(Exception e) {
+            log.info("[UserService] userFindAllService Error : " + e.getMessage());
+            throw new SelectUserFailedException();
+        }
     }
 
     public UserEntity userFineOneService(Long id) {
-        return userRepository.findById(id).get();
+        try {
+            return userRepository.findById(id).get();
+        } catch (Exception e) {
+            log.info("[UserService] userFindOneService Error : " + e.getMessage());
+            throw new SelectUserFailedException();
+        }
     }
 
     public void createUserService(UserEntity user) {
+        try {
             user.setCreated(LocalDateTime.now());
             user.setUpdated(LocalDateTime.now());
+            user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())); // 비밀번호 암호화
             userRepository.save(user);
+        } catch (Exception e) {
+            log.info("[UserService] createUserService Error : " + e.getMessage());
+            throw new CreateUserFailedException();
+        }
     };
 
     public void updateUserService(UserEntity user) {
+        try {
             user.setUpdated(LocalDateTime.now());
             userRepository.save(user);
+        } catch (Exception e) {
+            log.info("[UserService] updateUserService Error : " + e.getMessage());
+            throw new UpdateUserFaileException();
+        }
     };
 
     public void deleteUserService(Long id) {
-        userRepository.deleteById(id);
+        try {
+            userRepository.deleteById(id);
+        } catch (Exception e) {
+            log.info("[UserService] deleteUserService Error : " + e.getMessage());
+            throw new DeleteUserFailedException();
+        }
     }
 
     public Boolean idCheckService(String user_id) {
@@ -51,7 +78,7 @@ public class UserService {
             return userRepository.existsUserByUserId(user_id) == true ? true : false;
         } catch (Exception e) {
             log.info("[UserService] idCheckService Error : " + e.getMessage());
-            throw new IdCheckFailException();
+            throw new IdCheckFailedException();
         }
     }
 
@@ -63,13 +90,13 @@ public class UserService {
                 UserEntity user = userRepository.findByUserId(user_id);
                 String pwOrigin = user.getPassword();
 
-                if(BCrypt.checkpw(password, pwOrigin)) return true;
-                else return false;
+                if(BCrypt.checkpw(password, pwOrigin)) return true; // 로그인 성공
+                else return false; // 비밀번호 오류
             }
 
         } catch (Exception e) {
             log.info("[UserService] userLoginService Error : " + e.getMessage());
-            throw new LoginFailException();
+            throw new LoginFailedException();
         }
     }
 }
