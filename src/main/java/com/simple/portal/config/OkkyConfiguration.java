@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OkkyConfiguration {
     @Bean
-    public ApiResponse successApiResponse() { // 성공 케이스
+    public ApiResponse successApiResponse() { // 성공 케이스 response
         ApiResponse apiResponse = new ApiResponse();
         apiResponse.setCode("200");
         apiResponse.setMsg("success");
@@ -15,7 +15,7 @@ public class OkkyConfiguration {
     }
 
     @Bean
-    public ApiResponse errorApiResponse() { // 실패 케이스
+    public ApiResponse errorApiResponse() { // 실패 케이스 response
         ApiResponse apiResponse = new ApiResponse();
         apiResponse.setCode("500");
         apiResponse.setMsg("error");
