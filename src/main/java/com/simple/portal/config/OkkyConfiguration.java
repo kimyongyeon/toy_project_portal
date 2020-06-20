@@ -1,0 +1,24 @@
+package com.simple.portal.config;
+
+import com.simple.portal.common.ApiResponse;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class OkkyConfiguration {
+    @Bean
+    public ApiResponse successApiResponse() {
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setCode("200");
+        apiResponse.setMsg("success");
+        return apiResponse;
+    }
+
+    @Bean
+    public ApiResponse errorApiResponse() {
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setCode("500");
+        apiResponse.setMsg("error");
+        return apiResponse;
+    }
+}
