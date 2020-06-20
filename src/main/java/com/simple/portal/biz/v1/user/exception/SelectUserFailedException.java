@@ -4,6 +4,6 @@ import com.simple.portal.biz.v1.user.UserConst;
 
 public class SelectUserFailedException extends RuntimeException {
     public SelectUserFailedException( ) {
-        super(UserConst.NO_USER);
+        super(UserConst.FAILED_SELECT_USER);
     }
 }

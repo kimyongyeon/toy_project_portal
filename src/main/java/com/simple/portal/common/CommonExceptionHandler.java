@@ -1,11 +1,6 @@
 package com.simple.portal.common;
 
-import com.simple.portal.biz.v1.user.exception.CreateUserFailedException;
-import com.simple.portal.biz.v1.user.exception.IdCheckFailException;
-import com.simple.portal.biz.v1.user.exception.LoginFailException;
-import com.simple.portal.biz.v1.user.exception.SelectUserFailedException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import com.simple.portal.biz.v1.user.exception.*;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,16 +13,7 @@ public class CommonExceptionHandler {
     public static final String CODE_RE = "502";
     public static final String CODE_DAE = "503";
     public static final String CODE_E = "500";
-
-    private ApiResponse errorApiResponse;
-
-    /*
-    @Autowired
-    @Qualifier("errorApiResponse")
-    public void CommonExceptionHandler(ApiResponse errorApiResponse) {
-        this.errorApiResponse = errorApiResponse;
-    }
-     */
+    public static final String CODE_USER = "505";
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> runtimeException(RuntimeException e) {
@@ -63,5 +49,21 @@ public class CommonExceptionHandler {
                         .body("")
                         .build()
                 , HttpStatus.BAD_REQUEST);
+    }
+
+    //유저 관련 Exception 처리
+    @ExceptionHandler({CreateUserFailedException.class, UpdateUserFaileException.class,
+            SelectUserFailedException.class, DeleteUserFailedException.class,
+            IdCheckFailedException.class, LoginFailedException.class
+    })
+    public ResponseEntity<ApiResponse> userException(Exception e) {
+        return new ResponseEntity<>(
+                ApiResponse
+                        .builder()
+                        .code(CODE_USER)
+                        .msg(e.getMessage())
+                        .body("")
+                        .build()
+                , HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

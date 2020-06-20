@@ -4,6 +4,7 @@ public class UserConst {
     public static final String FAILED_CREATE_USER = "유저 생성에 실패하였습니다.";
     public static final String FAILED_DELETE_USER = "유저 삭제에 실패하였습니다.";
     public static final String FAILED_UPDATE_USER = "유저 정보 변경에 실패하였습니다.";
+    public static final String FAILED_SELECT_USER ="유저 조회에 실패하였습니다.";
     public static final String NO_USER="존재하지 않는 유저 입니다.";
     public static final String FAILED_LOGIN ="아이디 혹은 비밀번호가 틀렸습니다.";
 
