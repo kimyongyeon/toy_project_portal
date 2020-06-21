@@ -10,8 +10,13 @@
 => 클릭 => 상세 => 서버로 쪽지 id를 보낸다. 
 => 쪽지 개수 수정 => 클라이언트 수정된 개수 보낸다.
 => 마우스오버 => 목록출력
+- pub (publish) 발행
 {
-	url: '/socket/comment/notread',
+	url: '/socket/pub/comment/notread',
+}  
+- sub (subcribe) 구독
+{
+	url: '/socket/sub/comment/notread',
 	body: {
 		notReadTotalCount: 2
 	}	
@@ -24,15 +29,26 @@
 => 클릭! => 목록 보기 팝업 => 클릭! => 서버 게시판ID 3건 => 2건 업데이트 
 => 클라이언트 화면으로 개수 줄꺼고 => 상세화면 이동
 => 마우스오버 => 목록출력
-- socket 
+- pub (publish) 발행
 {
-	url: '/socket/board/comment/list'
+	url: '/socket/pub/board/comment/list'
+}
+- sub (subcribe) 구독
+{
+	url: '/socket/sub/board/comment/list'
 	count: 3,
 	boardId: [1,3,4] // board(title) + comment(iconKind) + user(userid, username)
 }
-- rest api 
+- request 
 {
 	url: '/api/board/comment/list',
+	method: Get,
+	boardId: [1,3,4]
+}
+- response
+{
+	url: '/api/board/comment/list',
+	method: Get,
 	body: [
 		{
 			boardType: '자유게시판',
@@ -67,16 +83,26 @@
 ```
 => 클릭! => 서버로 유저정보 전송 
 => 서버에서 수정된 개수 응답 => 프로필 이동
-- socket 
+- pub (publish) 발행
 {
-	url: '/socket/user/follow'
+	url: '/socket/pub/user/follow'
+}
+- sub (subcribe) 구독
+{
+	url: '/socket/sub/user/follow'
 	count: 3,
 	fromUserIds: [1,2,3],
 	toUserIds: [2,2,3]
 }
-- rest api 
+- request
 {
 	url: '/api/user/follow',
+	method: 'Get'
+}
+- response
+{
+	url: '/api/user/follow',
+	method: 'Get'
 	list: [
 		userId: '1',
 		followType: 'F1' // F1: 팔로우 F2: 언팔로우
