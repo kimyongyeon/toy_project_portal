@@ -88,10 +88,6 @@ public class BoardService {
                 .fetch();
     }
 
-    public List list() {
-        return (List) boardRepository.findAll();
-    }
-
     public BoardEntity findById(Long id) {
         if (boardRepository.findById(id).isEmpty()) {
             throw new BoardDetailNotException();

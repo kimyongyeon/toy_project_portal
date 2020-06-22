@@ -65,6 +65,11 @@ public class BoardAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse> list() {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * 게시글 검색
      * @param boardDTO
