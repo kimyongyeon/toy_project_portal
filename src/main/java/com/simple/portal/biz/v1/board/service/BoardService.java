@@ -2,10 +2,13 @@ package com.simple.portal.biz.v1.board.service;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.simple.portal.biz.v1.board.BoardConst;
 import com.simple.portal.biz.v1.board.dto.BoardDTO;
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.entity.QBoardEntity;
 import com.simple.portal.biz.v1.board.entity.QCommentEntity;
+import com.simple.portal.biz.v1.board.exception.BoardDetailNotException;
+import com.simple.portal.biz.v1.board.exception.ItemGubunExecption;
 import com.simple.portal.biz.v1.board.repository.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -25,6 +28,24 @@ public class BoardService {
 
     @Autowired
     JPAQueryFactory query;
+
+    @Transactional
+    public void setLike(BoardDTO boardDTO) {
+        BoardEntity boardEntity = findById(boardDTO.getId());
+
+        if (BoardConst.isItemGbLike(boardDTO.getItemGb())) { // 좋아요
+            boardEntity.setRowLike(boardEntity.getRowLike() + 1);
+            boardEntity.setRowDisLike(boardEntity.getRowDisLike() - 1);
+            addLike(boardEntity);
+
+        } else if (BoardConst.isItemGbDisLike(boardDTO.getItemGb())){ // 싫어요
+            boardEntity.setRowLike(boardEntity.getRowLike() - 1);
+            boardEntity.setRowDisLike(boardEntity.getRowDisLike() + 1);
+            addDislike(boardEntity);
+        } else {
+            throw new ItemGubunExecption();
+        }
+    }
 
     public List search(BoardDTO boardDTO) {
         return boardRepository.findAllByTitleOrContents(boardDTO.getTitle(), boardDTO.getContents());
@@ -67,13 +88,9 @@ public class BoardService {
                 .fetch();
     }
 
-    public List list() {
-        return (List) boardRepository.findAll();
-    }
-
     public BoardEntity findById(Long id) {
         if (boardRepository.findById(id).isEmpty()) {
-            throw new RuntimeException("게시글이 존재하지 않습니다.");
+            throw new BoardDetailNotException();
         }
         return boardRepository.findById(id).get();
     }
@@ -101,7 +118,7 @@ public class BoardService {
     public void titleOrContentsUpdate(BoardDTO boardDTO) {
 
         if (boardRepository.findById(boardDTO.getId()).isEmpty()) {
-            throw new RuntimeException("게시글이 존재하지 않습니다.");
+            throw new BoardDetailNotException();
         }
 
         BoardEntity boardEntity = boardRepository.findById(boardDTO.getId()).get();
