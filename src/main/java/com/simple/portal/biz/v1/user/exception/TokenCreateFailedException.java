@@ -2,8 +2,8 @@ package com.simple.portal.biz.v1.user.exception;
 
 import com.simple.portal.biz.v1.user.UserConst;
 
-public class TokenCreateFailException extends RuntimeException{
-    public TokenCreateFailException( ) {
-        super(UserConst.FAILED_TOKEN);
+public class TokenCreateFailedException extends RuntimeException{
+    public TokenCreateFailedException( ) {
+        super(UserConst.FAILED_CREATE_TOKEN);
     }
 }

@@ -1,4 +1,9 @@
 package com.simple.portal.biz.v1.user.exception;
 
-public class TokenVaildFailedException {
+import com.simple.portal.biz.v1.user.UserConst;
+
+public class TokenVaildFailedException extends RuntimeException{
+    public TokenVaildFailedException( ) {
+        super(UserConst.FAILED_TOKEN_VALIDATION);
+    }
 }

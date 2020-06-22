@@ -6,8 +6,9 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OkkyConfiguration {
+
     @Bean
-    public ApiResponse apiResponse() { //
+    public ApiResponse apiResponse() { //  response bean
         ApiResponse apiResponse = new ApiResponse();
         apiResponse.setCode("200");
         apiResponse.setMsg("success");
