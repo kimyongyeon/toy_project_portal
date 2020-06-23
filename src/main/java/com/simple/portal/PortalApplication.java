@@ -103,7 +103,7 @@ public class PortalApplication implements ApplicationRunner {
         boardEntity.setTitle("board title:"+i);
         boardEntity.setContents("board contents:"+i);
         boardEntity.setWriter("board writer:"+i);
-        boardService.save(boardEntity);
+        boardRepository.save(boardEntity);
 
         commentEntity.setBoardEntity(boardEntity);
         commentEntity.setTitle("comment title:"+i);

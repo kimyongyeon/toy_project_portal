@@ -10,18 +10,4 @@ public class BoardConst {
     public static final String BODY_BLANK = "";
     public static final String FAIL_BOARD_LIST = "게시글이 존재하지 않습니다.";
     public static final String FAIL_REQUIRED_VALUE = "필수 값을 입력 하시오.";
-
-    public static boolean isItemGbDisLike(String itemGb) {
-        return BoardConst.ITEM_GB_DISLIKE.equals(itemGb);
-    }
-
-    public static boolean isItemGbLike(String itemGb) {
-        return BoardConst.ITEM_GB_LIKE.equals(itemGb);
-    }
-
-    public static boolean isEventPath(String click) {
-        return BoardConst.LIKE.equals(click) || BoardConst.DIS_LIKE.equals(click);
-    }
-
-
 }
