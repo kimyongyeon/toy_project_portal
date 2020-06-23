@@ -15,6 +15,7 @@
 - websocket
 - sockjs
 - stomp
+- Jsaypt : 암호화 적용
 
 ## 개발 표준 가이드 
 - 트랜잭션 기능에 대한 메서드는 Transaction을 붙여준다.  
