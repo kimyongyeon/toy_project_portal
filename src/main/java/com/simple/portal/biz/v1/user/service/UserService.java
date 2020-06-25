@@ -1,10 +1,11 @@
 package com.simple.portal.biz.v1.user.service;
 
+import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.*;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
+import com.simple.portal.common.Interceptor.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.weaver.bcel.BcelAccessForInlineMunger;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,10 +18,12 @@ import java.util.List;
 @Service
 public class UserService {
     private UserRepository userRepository;
+    private JwtUtil jwtUtil;
 
     @Autowired
-    public void UserController(UserRepository userRepository) {
+    public void UserController(UserRepository userRepository, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
     }
 
     public List<UserEntity> userFindAllService( ) {
@@ -60,7 +63,7 @@ public class UserService {
             userRepository.save(user);
         } catch (Exception e) {
             log.info("[UserService] updateUserService Error : " + e.getMessage());
-            throw new UpdateUserFaileException();
+            throw new UpdateUserFailedException();
         }
     };
 
@@ -83,20 +86,19 @@ public class UserService {
     }
 
     @Transactional
-    public Boolean userLoginService(String user_id, String password) {
+    public String userLoginService(String user_id, String password) { // 성공만 처리하고 나머지 exception 던짐
         try {
-            if(!userRepository.existsUserByUserId(user_id)) return false; // 아이디 존재안함
+            if(!userRepository.existsUserByUserId(user_id)) throw new Exception(UserConst.NO_USER); // 아이디 존재 안함.
             else {
                 UserEntity user = userRepository.findByUserId(user_id);
                 String pwOrigin = user.getPassword();
+                if (BCrypt.checkpw(password, pwOrigin)) return jwtUtil.createToken(user.getUserId());
+                else throw new Exception(UserConst.INVALID_PASSWORD); // 비밀번호 오류
 
-                if(BCrypt.checkpw(password, pwOrigin)) return true; // 로그인 성공
-                else return false; // 비밀번호 오류
             }
-
         } catch (Exception e) {
             log.info("[UserService] userLoginService Error : " + e.getMessage());
-            throw new LoginFailedException();
-        }
+            throw new LoginFailedException(e.getMessage());
+    }
     }
 }

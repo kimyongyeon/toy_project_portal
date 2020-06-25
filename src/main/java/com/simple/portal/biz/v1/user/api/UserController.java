@@ -1,9 +1,12 @@
 package com.simple.portal.biz.v1.user.api;
 
+import com.google.gson.JsonObject;
 import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
+import com.simple.portal.biz.v1.user.exception.ParamInvalidException;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.common.ApiResponse;
+import com.simple.portal.common.Interceptor.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -12,10 +15,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.print.attribute.HashAttributeSet;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -30,6 +36,13 @@ public class UserController {
         this.userService = userService;
         this.apiResponse = apiResponse;
     }
+
+    //생성된 토큰 테스트
+    @GetMapping("/token")
+    public void token_test(HttpServletRequest request) {
+        log.info("token");
+        log.info((String)request.getAttribute("userId"));
+    };
 
     //전체 유저 조회
     @GetMapping("")
@@ -59,10 +72,7 @@ public class UserController {
         // client가 요청 잘못했을때 (파라미터 ) - 400
         if(bindingResult.hasErrors()) {
             String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
-            apiResponse.setCode("400");
-            apiResponse.setMsg(UserConst.ERROR_PARAMS);
-            apiResponse.setBody(errMsg);
-            return new ResponseEntity(apiResponse, HttpStatus.BAD_REQUEST);
+            throw new ParamInvalidException(errMsg);
         }
 
         userService.createUserService(user);
@@ -79,19 +89,16 @@ public class UserController {
         // client가 요청 잘못했을때 (파라미터 ) - 400
         if(bindingResult.hasErrors()) {
             String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
-            apiResponse.setCode("400");
-            apiResponse.setMsg(UserConst.ERROR_PARAMS);
-            apiResponse.setBody(errMsg);
-            return new ResponseEntity(apiResponse, HttpStatus.BAD_REQUEST);
+            throw new ParamInvalidException(errMsg);
         }
 
         userService.updateUserService(user);
         apiResponse.setMsg(UserConst.FAILED_UPDATE_USER);
         apiResponse.setBody("");
-        return  new ResponseEntity(apiResponse, HttpStatus.OK);
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    //유저 삭제
+    //유저 삭제 - 회원 탈퇴
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse> userDelete(@PathVariable @NotNull Long id) {
         log.info("[DELETE] /user/ " + id + " /userDelete");
@@ -118,7 +125,7 @@ public class UserController {
         }
     };
 
-    // 로그인 ( 암호화는 서버에서 할지? 클라에서 할지 ? )
+    // 로그인
     @PostMapping("/login")
     public ResponseEntity<ApiResponse> userlogin(HttpServletRequest request) {
 
@@ -126,14 +133,12 @@ public class UserController {
         String pw = request.getParameter("password");
         log.info("[POST] /user/login " + "[ID] :  "  + id + "[PW] : " + pw + " /userLogin");
 
-        if(userService.userLoginService(id, pw)) {
-            apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
-            apiResponse.setBody("토큰 정보");
-            return new ResponseEntity(apiResponse, HttpStatus.OK);
-        } else {
-            apiResponse.setMsg(UserConst.FAILED_LOGIN);
-            apiResponse.setBody("");
-            return new ResponseEntity(apiResponse, HttpStatus.OK);
-        }
+        String token = userService.userLoginService(id, pw);
+        apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
+
+        Map<String, String> obj = new HashMap<>();
+        obj.put("token", token);
+        apiResponse.setBody(obj);  // user_id 기반 토큰 생성
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 }
