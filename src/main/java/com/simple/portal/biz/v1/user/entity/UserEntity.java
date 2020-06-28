@@ -24,14 +24,14 @@ public class UserEntity {
     @Column(name="user_id")
     @Pattern(regexp = "^[_a-z0-9-]+(.[_a-z0-9-]+)*@(?:\\w+\\.)+\\w+$",
             message="아이디(이메일) 형식에 맞지 않습니다.")
-    @NotBlank(message="아이디는 필수 입력값입니다.")
+    @NotEmpty(message="아이디는 필수 입력값입니다.")
     private String userId;
 
-    @NotBlank(message="닉네임은 필수 입력값 입니다.")
+    @NotEmpty(message="닉네임은 필수 입력값 입니다.")
     @Size(min=2, max=8, message="닉네임을 2~8자 사이로 입력해주세요.")
     private String nickname;
 
-    @NotBlank(message="비밀번호는 필수 입력값입니다.")
+    @NotEmpty(message="비밀번호는 필수 입력값입니다.")
     @Pattern(regexp="(?=.*[0-9])(?=.*[a-zA-Z])(?=.*\\W)(?=\\S+$).{8,20}",
             message = "비밀번호는 영문 대,소문자와 숫자, 특수기호가 적어도 1개 이상씩 포함된 8자 ~ 20자의 비밀번호여야 합니다.")
     private String password;
