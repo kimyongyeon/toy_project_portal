@@ -42,10 +42,10 @@ public class CommentEntity extends BaseEntity {
     private Long viewCount; // 조회수
 
     @Column
-    private int rowLike; // 좋아요
+    private Long rowLike; // 좋아요
 
     @Column
-    private int rowDisLike; // 싫어요
+    private Long rowDisLike; // 싫어요
 
     @NotEmpty
     @NotNull

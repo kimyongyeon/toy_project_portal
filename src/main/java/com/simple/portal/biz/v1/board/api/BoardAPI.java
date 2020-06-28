@@ -1,13 +1,11 @@
 package com.simple.portal.biz.v1.board.api;
 
-import com.querydsl.core.types.Projections;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.board.BoardConst;
 import com.simple.portal.biz.v1.board.dto.BoardDTO;
-import com.simple.portal.biz.v1.board.entity.BoardEntity;
-import com.simple.portal.biz.v1.board.entity.QBoardEntity;
-import com.simple.portal.biz.v1.board.entity.QCommentEntity;
-import com.simple.portal.biz.v1.board.exception.ItemGubunExecption;
+import com.simple.portal.biz.v1.board.dto.BoardIdDTO;
+import com.simple.portal.biz.v1.board.dto.BoardLikeDTO;
+import com.simple.portal.biz.v1.board.exception.InputRequiredException;
+import com.simple.portal.biz.v1.board.service.BoardComponent;
 import com.simple.portal.biz.v1.board.service.BoardService;
 import com.simple.portal.common.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -110,9 +108,12 @@ public class BoardAPI {
      * @return
      */
     @PostMapping("/")
-    public ResponseEntity<ApiResponse> reg(BoardDTO boardDTO) {
+    public ResponseEntity<ApiResponse> reg(@Valid BoardDTO boardDTO, BindingResult bindingResult) {
+
+        isBinding(bindingResult);
+
         boardService.insert(boardDTO);
-        apiResponse.setBody("");
+        apiResponse.setBody(BoardConst.BODY_BLANK);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -122,59 +123,72 @@ public class BoardAPI {
      * @return
      */
     @PutMapping("/")
-    public ResponseEntity<ApiResponse> edit(BoardDTO boardDTO) {
-        boardService.titleOrContentsUpdate(boardDTO);
-        apiResponse.setBody("");
+    public ResponseEntity<ApiResponse> edit(@Valid BoardDTO boardDTO, BindingResult bindingResult) {
+
+        isBinding(bindingResult);
+
+        boardService.updateTitleOrContents(boardDTO);
+        apiResponse.setBody(BoardConst.BODY_BLANK);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
     /**
      * 게시글 단건삭제
-     * @param boardDTO
+     * @param boardIdDTO
      * @return
      */
     @DeleteMapping("/")
-    public ResponseEntity<ApiResponse> remove(BoardDTO boardDTO) {
-        boardService.idDelete(boardDTO);
-        apiResponse.setBody("");
+    public ResponseEntity<ApiResponse> remove(@Valid BoardIdDTO boardIdDTO, BindingResult bindingResult) {
+
+        isBinding(bindingResult);
+
+        boardService.idDelete(boardIdDTO);
+        apiResponse.setBody(BoardConst.BODY_BLANK);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
     /**
      * 게시글 멀티삭제
-     * @param boardDTOList
+     * @param boardIdDTOList
      * @return
      */
     @DeleteMapping("/bulk/delete")
-    public ResponseEntity<ApiResponse> bulkRemove(List<BoardDTO> boardDTOList) {
-        for(BoardDTO boardDTO: boardDTOList) {
-            boardService.idDelete(boardDTO);
+    public ResponseEntity<ApiResponse> bulkRemove(@Valid List<BoardIdDTO> boardIdDTOList, BindingResult bindingResult) {
+
+        isBinding(bindingResult);
+
+        for(BoardIdDTO boardIdDTO: boardIdDTOList) {
+            boardService.idDelete(boardIdDTO);
         }
-        apiResponse.setBody("");
+        apiResponse.setBody(BoardConst.BODY_BLANK);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
     /**
      * 좋아요/싫어요
-     * @param boardDTO
+     * @param boardLikeDTO
      * @param bindingResult
      * @return
      */
     @PostMapping("/event/{click}")
-    public ResponseEntity<ApiResponse> rowClickItem(@PathVariable String click, @Valid @RequestBody BoardDTO boardDTO, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> rowClickItem(@PathVariable String click, @Valid @RequestBody BoardLikeDTO boardLikeDTO, BindingResult bindingResult) {
 
-        if (bindingResult.hasErrors()) {
-            throw new RuntimeException(bindingResult.getAllErrors().toString());
-        }
+        isBinding(bindingResult);
 
-        if (BoardConst.isEventPath(click)) {
-            boardService.setLike(boardDTO);
+        if (BoardComponent.isEventPath(click)) {
+            boardService.setLikeAndDisLike(boardLikeDTO);
         } else {
             apiResponse.setBody(BoardConst.FAIL_PATH);
         }
 
         apiResponse.setBody(BoardConst.BODY_BLANK);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    private void isBinding(BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            throw new InputRequiredException();
+        }
     }
 
 }

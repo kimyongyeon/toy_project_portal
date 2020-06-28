@@ -56,3 +56,7 @@ logging:
         type:
           descriptor:
             sql: trace # 값 매핑
+
+jasypt:
+  encryptor:
+    bean: jasyptStringEncryptor

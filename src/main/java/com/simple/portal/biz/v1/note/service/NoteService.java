@@ -4,6 +4,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.note.QNoteEntity;
 import com.simple.portal.biz.v1.note.dto.NoteDTO;
 import com.simple.portal.biz.v1.note.entity.NoteEntity;
+import com.simple.portal.biz.v1.note.entity.QNoteEntity;
 import com.simple.portal.biz.v1.note.repository.NoteRepository;
 import com.simple.portal.util.DateFormatUtil;
 import org.springframework.beans.factory.annotation.Autowired;
