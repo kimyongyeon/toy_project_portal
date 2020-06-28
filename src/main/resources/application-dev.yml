@@ -33,6 +33,8 @@ spring:
         hibernate:
           format_sql: true
       generate-ddl: true
+  profile:
+    value: dev
 
 logging:
   level:

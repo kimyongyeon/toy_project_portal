@@ -1,8 +1,11 @@
 package com.simple.portal.biz.v1.board.api;
 
+import com.simple.portal.biz.v1.board.BoardConst;
 import com.simple.portal.biz.v1.board.dto.CommentDTO;
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.entity.CommentEntity;
+import com.simple.portal.biz.v1.board.exception.InputRequiredException;
+import com.simple.portal.biz.v1.board.exception.ItemGubunExecption;
 import com.simple.portal.biz.v1.board.service.CommentService;
 import com.simple.portal.common.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,32 +18,22 @@ import javax.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/api")
+@RequestMapping("/v1/api/comment")
 public class CommentAPI {
 
     @Autowired
     CommentService commentService;
 
-    /**
-     * Response 공통 처리
-     * @return
-     */
-    private ApiResponse getApiResponse() {
-        ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setCode("200");
-        apiResponse.setMsg("success");
-        return apiResponse;
-    }
+    @Autowired
+    ApiResponse apiResponse;
 
     /**
      * 댓글목록 출력
-     * @param commentEntity
      * @return
      */
-    @GetMapping("/comment")
-    public ResponseEntity<ApiResponse> list(CommentEntity commentEntity) {
-        ApiResponse apiResponse = getApiResponse();
-        apiResponse.setBody(commentService.listComment(commentEntity));
+    @GetMapping("/")
+    public ResponseEntity<ApiResponse> list() {
+        apiResponse.setBody(commentService.listComment());
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -50,7 +43,7 @@ public class CommentAPI {
      * @param bindingResult
      * @return
      */
-    @PostMapping("/comment")
+    @PostMapping("/")
     public ResponseEntity<ApiResponse> comment (@Valid @RequestBody CommentDTO commentDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
@@ -66,7 +59,6 @@ public class CommentAPI {
                 .boardEntity(boardEntity)
                 .build());
 
-        ApiResponse apiResponse = getApiResponse();
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
@@ -78,35 +70,17 @@ public class CommentAPI {
      * @param bindingResult
      * @return
      */
-    @PostMapping("/comment/event/{click}")
+    @PostMapping("/event/{click}")
     public ResponseEntity<ApiResponse> rowClickItem(@PathVariable String click, @Valid @RequestBody CommentDTO commentDTO, BindingResult bindingResult) {
 
-        ApiResponse apiResponse = getApiResponse();
-
         if (bindingResult.hasErrors()) {
-            throw new RuntimeException("필수값을 입력 하세요.");
+            throw new InputRequiredException();
         }
 
-        if ("like".equals(click) || "dislike".equals(click)) {
-            CommentEntity commentEntity = commentService.findByIdComment(commentDTO.getId());
-            BoardEntity boardEntity = new BoardEntity();
-            boardEntity.setId(commentDTO.getBoardId());
-            commentEntity.setBoardEntity(boardEntity);
-
-            if ("L".equals(commentDTO.getItemGb())) { // 좋아요
-                commentEntity.setRowLike(commentEntity.getRowLike() + 1);
-                commentEntity.setRowDisLike(commentEntity.getRowDisLike() - 1);
-                commentService.addLike(commentEntity);
-            } else if("D".equals(commentDTO.getItemGb())) { // 싫어요
-                commentEntity.setRowLike(commentEntity.getRowLike() - 1);
-                commentEntity.setRowDisLike(commentEntity.getRowDisLike() + 1);
-                commentService.addDislike(commentEntity);
-            } else {
-                throw new RuntimeException("좋아요와 싫어요 중 하나를 선택하세요.");
-            }
-
+        if (BoardConst.isEventPath(click)) {
+            commentService.setLike(commentDTO);
         } else {
-            apiResponse.setBody("올바른 context path를 입력하시요.");
+            apiResponse.setBody(BoardConst.FAIL_PATH);
         }
 
         apiResponse.setBody("");

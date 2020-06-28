@@ -2,10 +2,12 @@ package com.simple.portal.biz.v1.board.api;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.simple.portal.biz.v1.board.BoardConst;
 import com.simple.portal.biz.v1.board.dto.BoardDTO;
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.entity.QBoardEntity;
 import com.simple.portal.biz.v1.board.entity.QCommentEntity;
+import com.simple.portal.biz.v1.board.exception.ItemGubunExecption;
 import com.simple.portal.biz.v1.board.service.BoardService;
 import com.simple.portal.common.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -20,32 +22,23 @@ import javax.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/api")
+@RequestMapping("/v1/api/board")
 @Slf4j
 public class BoardAPI {
 
     @Autowired
     BoardService boardService;
 
-    /**
-     * Response 공통 처리
-     * @return
-     */
-    private ApiResponse getApiResponse() {
-        ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setCode("200");
-        apiResponse.setMsg("success");
-        return apiResponse;
-    }
+    @Autowired
+    ApiResponse apiResponse;
 
     /**
      * 최근활동 조회 - 게시판, 댓글
      * @param userId
      * @return
      */
-    @GetMapping("/board/recent/{userId}")
+    @GetMapping("/recent/{userId}")
     public ResponseEntity<ApiResponse> recentBoardList(@PathVariable String userId) {
-        ApiResponse apiResponse = getApiResponse();
         apiResponse.setBody(boardService.recentBoardList(userId));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
@@ -55,9 +48,8 @@ public class BoardAPI {
      * @param userId
      * @return
      */
-    @GetMapping("/board/userid/{userId}")
+    @GetMapping("/userid/{userId}")
     public ResponseEntity<ApiResponse> userBoardList(@PathVariable String userId) {
-        ApiResponse apiResponse = getApiResponse();
         apiResponse.setBody(boardService.userBoardList(userId));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
@@ -67,11 +59,15 @@ public class BoardAPI {
      * @param userId
      * @return
      */
-    @GetMapping("/board/scrap/{userId}")
+    @GetMapping("/scrap/{userId}")
     public ResponseEntity<ApiResponse> query(@PathVariable String userId) {
-        ApiResponse apiResponse = getApiResponse();
         apiResponse.setBody(boardService.myScrap(userId));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse> list() {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -79,9 +75,8 @@ public class BoardAPI {
      * @param boardDTO
      * @return
      */
-    @GetMapping("/board/search")
+    @GetMapping("/search")
     public ResponseEntity<ApiResponse> search(BoardDTO boardDTO) {
-        ApiResponse apiResponse = getApiResponse();
         apiResponse.setBody(boardService.search(boardDTO));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
@@ -92,32 +87,19 @@ public class BoardAPI {
      * @param pageable
      * @return
      */
-    @GetMapping("/board/page")
+    @GetMapping("/page")
     public ResponseEntity<ApiResponse> page(String title, Pageable pageable) {
-        ApiResponse apiResponse = getApiResponse();
         apiResponse.setBody(boardService.pageList(title, pageable));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
-
-//    /**
-//     * 게시글 목록
-//     * @return
-//     */
-//    @GetMapping("/board")
-//    public ResponseEntity<ApiResponse> list() {
-//        ApiResponse apiResponse = getApiResponse();
-//        apiResponse.setBody(boardService.list());
-//        return new ResponseEntity(apiResponse, HttpStatus.OK);
-//    }
 
     /**
      * 게시글 상세
      * @param boardDTO
      * @return
      */
-    @GetMapping("/board/detail")
+    @GetMapping("/detail")
     public ResponseEntity<ApiResponse> findOne(BoardDTO boardDTO) {
-        ApiResponse apiResponse = getApiResponse();
         apiResponse.setBody(boardService.findById(boardDTO.getId()));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
@@ -127,9 +109,8 @@ public class BoardAPI {
      * @param boardDTO
      * @return
      */
-    @PostMapping("/board")
+    @PostMapping("/")
     public ResponseEntity<ApiResponse> reg(BoardDTO boardDTO) {
-        ApiResponse apiResponse = getApiResponse();
         boardService.insert(boardDTO);
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -140,9 +121,8 @@ public class BoardAPI {
      * @param boardDTO
      * @return
      */
-    @PutMapping("/board")
+    @PutMapping("/")
     public ResponseEntity<ApiResponse> edit(BoardDTO boardDTO) {
-        ApiResponse apiResponse = getApiResponse();
         boardService.titleOrContentsUpdate(boardDTO);
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -153,9 +133,8 @@ public class BoardAPI {
      * @param boardDTO
      * @return
      */
-    @DeleteMapping("/board")
+    @DeleteMapping("/")
     public ResponseEntity<ApiResponse> remove(BoardDTO boardDTO) {
-        ApiResponse apiResponse = getApiResponse();
         boardService.idDelete(boardDTO);
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -166,9 +145,8 @@ public class BoardAPI {
      * @param boardDTOList
      * @return
      */
-    @DeleteMapping("/board/bulk/delete")
+    @DeleteMapping("/bulk/delete")
     public ResponseEntity<ApiResponse> bulkRemove(List<BoardDTO> boardDTOList) {
-        ApiResponse apiResponse = getApiResponse();
         for(BoardDTO boardDTO: boardDTOList) {
             boardService.idDelete(boardDTO);
         }
@@ -182,34 +160,21 @@ public class BoardAPI {
      * @param bindingResult
      * @return
      */
-    @PostMapping("/board/event/{click}")
+    @PostMapping("/event/{click}")
     public ResponseEntity<ApiResponse> rowClickItem(@PathVariable String click, @Valid @RequestBody BoardDTO boardDTO, BindingResult bindingResult) {
-
-        ApiResponse apiResponse = getApiResponse();
 
         if (bindingResult.hasErrors()) {
             throw new RuntimeException(bindingResult.getAllErrors().toString());
         }
 
-        if ("like".equals(click) || "dislike".equals(click)) {
-            BoardEntity boardEntity = boardService.findById(boardDTO.getId());
-            if ("L".equals(boardDTO.getItemGb())) { // 좋아요
-                boardEntity.setRowLike(boardEntity.getRowLike() + 1);
-                boardEntity.setRowDisLike(boardEntity.getRowDisLike() - 1);
-                boardService.addLike(boardEntity);
-            } else if ("D".equals(boardDTO.getItemGb())){ // 싫어요
-                boardEntity.setRowLike(boardEntity.getRowLike() - 1);
-                boardEntity.setRowDisLike(boardEntity.getRowDisLike() + 1);
-                boardService.addDislike(boardEntity);
-            } else {
-                throw new RuntimeException(bindingResult.getAllErrors().toString());
-            }
-
+        if (BoardConst.isEventPath(click)) {
+            boardService.setLike(boardDTO);
         } else {
-            apiResponse.setBody("올바른 context path를 입력하시요.");
+            apiResponse.setBody(BoardConst.FAIL_PATH);
         }
 
-        apiResponse.setBody("");
+        apiResponse.setBody(BoardConst.BODY_BLANK);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
+
 }
