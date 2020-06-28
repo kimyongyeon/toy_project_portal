@@ -2,6 +2,7 @@ package com.simple.portal.biz.v1.board.service;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.simple.portal.biz.v1.board.BoardConst;
 import com.simple.portal.biz.v1.board.dto.BoardDTO;
 import com.simple.portal.biz.v1.board.dto.BoardIdDTO;
 import com.simple.portal.biz.v1.board.dto.BoardLikeDTO;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -57,15 +59,18 @@ public class BoardService implements BaseService {
         return currVal - 1;
     }
 
-    @Async
+    /**
+     * Async 처리시 오류가 나면 그냥 200을 던지는 오류를 범함.
+     * @param boardLikeDTO
+     */
     @Transactional
     public void setLikeAndDisLike(BoardLikeDTO boardLikeDTO) {
 
         if (BoardComponent.isItemGbLike(boardLikeDTO.getItemGb())) { // 좋아요
-            setLikeTransaction(boardLikeDTO.getId());
+            setLikeTransaction(Long.parseLong(boardLikeDTO.getId()));
 
         } else if (BoardComponent.isItemGbDisLike(boardLikeDTO.getItemGb())){ // 싫어요
-            setDisLikeTransaction(boardLikeDTO.getId());
+            setDisLikeTransaction(Long.parseLong(boardLikeDTO.getId()));
 
         } else {
             throw new ItemGubunExecption();
@@ -159,7 +164,6 @@ public class BoardService implements BaseService {
         return boardDTO;
     }
 
-    @Async
     @Transactional
     public void insert(BoardDTO boardDTO) {
         boardRepository.save(BoardEntity.builder()
@@ -172,7 +176,6 @@ public class BoardService implements BaseService {
                 .build());
     }
 
-    @Async
     @Transactional
     public void updateTitleOrContents(BoardDTO boardDTO) {
 
@@ -186,7 +189,6 @@ public class BoardService implements BaseService {
         boardRepository.save(boardEntity);
     }
 
-    @Async
     @Transactional
     public void idDelete(BoardIdDTO boardIdDTO) {
         boardRepository.delete(BoardEntity.builder().id(boardIdDTO.getId()).build());

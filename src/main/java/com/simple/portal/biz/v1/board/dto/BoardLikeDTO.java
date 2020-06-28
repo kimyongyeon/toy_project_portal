@@ -14,8 +14,9 @@ import javax.validation.constraints.NotBlank;
 public class BoardLikeDTO {
 
     @NotBlank(message="기본키는 필수 입력값입니다.")
-    private Long id;
+    private String id;
     @NotBlank(message="아이템구분은 필수 입력값입니다.")
     private String itemGb; // 아이템 구분 L:D
+
 
 }

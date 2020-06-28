@@ -11,8 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import javax.swing.text.html.HTMLDocument;
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.function.Predicate;
 
 @Service
 public class CommentService implements BaseService {
@@ -46,7 +48,6 @@ public class CommentService implements BaseService {
         return currVal - 1;
     }
 
-    @Async
     @Transactional
     public void setLikeAndDisLike(CommentLikeDTO commentLikeDTO) {
 
@@ -68,13 +69,11 @@ public class CommentService implements BaseService {
         return commentRepository.findById(id).get();
     }
 
-    @Async
     @Transactional
     public void writeComment(CommentEntity commentEntity) {
         commentRepository.save(commentEntity);
     }
 
-    @Async
     @Transactional
     public void updateComment(CommentEntity commentEntity) {
         CommentEntity upCommentEntity = commentRepository.findById(commentEntity.getId()).get();
