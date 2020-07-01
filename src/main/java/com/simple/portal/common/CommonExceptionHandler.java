@@ -78,14 +78,15 @@ public class CommonExceptionHandler {
     @ExceptionHandler({CreateUserFailedException.class, UpdateUserFailedException.class,
             SelectUserFailedException.class, DeleteUserFailedException.class,
             IdCheckFailedException.class,
-            TokenCreateFailedException.class
+            TokenCreateFailedException.class,
+            UserAuthGrantFailedException.class
     })
     public ResponseEntity<ApiResponse> user500Exception(Exception e) {
         return new ResponseEntity<>(
                 ApiResponse
                         .builder()
                         .code(CODE_USER)
-                        .msg(getMag(e))
+                        .msg(e.getMessage())
                         .body(BODY_BLANK)
                         .build()
                 , HttpStatus.INTERNAL_SERVER_ERROR);

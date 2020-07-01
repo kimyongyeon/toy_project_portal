@@ -1,25 +1,20 @@
 package com.simple.portal.biz.v1.user.api;
 
-import com.google.gson.JsonObject;
 import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.dto.LoginDto;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.ParamInvalidException;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.common.ApiResponse;
-import com.simple.portal.common.Interceptor.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import javax.print.attribute.HashAttributeSet;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +31,16 @@ public class UserAPI {
     public void UserController(UserService userService, ApiResponse apiResponse) {
         this.userService = userService;
         this.apiResponse = apiResponse;
+    }
+
+
+    // 메일전송 테스트
+    @GetMapping("/mail")
+    public void mail_sender( ) {
+
+        String to ="xowns4817@naver.com";
+        String subject = "회원가입 축하 !";
+        String msg = "회원가입을 진심으로 축하드립니다.!";
     }
 
     //생성된 토큰 테스트
@@ -99,6 +104,7 @@ public class UserAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
+
     //유저 삭제 - 회원 탈퇴
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse> userDelete(@PathVariable @NotNull Long id) {
@@ -129,6 +135,7 @@ public class UserAPI {
     // 로그인
     @PostMapping("/login")
     public ResponseEntity<ApiResponse> userlogin(@Valid @RequestBody LoginDto loginDto, BindingResult bindingResult) {
+        log.info("[POST] /user/login/");
 
         if(bindingResult.hasErrors()) {
             log.info("400 Parameter Error !");
@@ -141,11 +148,33 @@ public class UserAPI {
         log.info("[POST] /user/login " + "[ID] :  "  + id + "[PW] : " + pw + " /userLogin");
 
         String token = userService.userLoginService(id, pw);
-        apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
 
+        // authority 조회 후 'Y'일때만 로그인 성공 로직 작성
+        char auth = userService.userAuthCheckServie(id);
+        //if(auth == 'N') 권한없음. -> 302 ....등등
+
+        apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
         Map<String, String> obj = new HashMap<>();
         obj.put("token", token);
         apiResponse.setBody(obj);  // user_id 기반 토큰 생성
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    //회원 가입 메일 전송 ( 회원 가입 완료하면 해당 api 호출 )
+    @GetMapping("/send/email")
+    public void sendEmail( ) {
+    log.info("[GET] /send/email");
+
+    };
+
+    //회원 가입 메일에서 메인으로 이동 링크 클릭 ( 권한 부여 )
+    @GetMapping("/auth/{id}")
+    public ResponseEntity<ApiResponse> userAuth(@PathVariable("id") @NotNull String userId) {
+        log.info("[GET] /user/auth/" + userId);
+
+        userService.updateUserAuthService(userId);
+        apiResponse.setMsg(UserConst.SUCCESS_GRANT_USER_AUTH);
+        apiResponse.setMsg("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 }

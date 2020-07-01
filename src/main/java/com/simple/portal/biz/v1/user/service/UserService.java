@@ -36,6 +36,7 @@ public class UserService {
         }
     }
 
+     // 유저의 기본키로 유저 조회
     public UserEntity userFineOneService(Long id) {
         try {
             return userRepository.findById(id).get();
@@ -100,5 +101,25 @@ public class UserService {
             log.info("[UserService] userLoginService Error : " + e.getMessage());
             throw new LoginFailedException(e.getMessage());
     }
+    }
+
+    // 유저 권한 부여
+    public void updateUserAuthService(String userId) {
+        try {
+            userRepository.updateUserAuth(userId);
+        } catch (Exception e) {
+            log.info("[UserService] userAuthService Error : " + e.getMessage());
+            throw new UserAuthGrantFailedException();
+        }
+    }
+
+    //유저 권한 체크
+    public char userAuthCheckServie(String userId) {
+        try {
+            return userRepository.checkUserAuth(userId);
+        } catch (Exception e) {
+            log.info("[UserService] userAuthCheckService Error : " + e.getMessage());
+            throw new UserAuthGrantFailedException();
+        }
     }
 }
