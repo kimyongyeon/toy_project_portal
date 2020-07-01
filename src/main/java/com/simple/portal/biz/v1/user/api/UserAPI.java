@@ -2,6 +2,7 @@ package com.simple.portal.biz.v1.user.api;
 
 import com.google.gson.JsonObject;
 import com.simple.portal.biz.v1.user.UserConst;
+import com.simple.portal.biz.v1.user.dto.LoginDto;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.ParamInvalidException;
 import com.simple.portal.biz.v1.user.service.UserService;
@@ -26,7 +27,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/v1/api/user")
-public class UserController {
+public class UserAPI {
 
     private UserService userService;
     private ApiResponse apiResponse;
@@ -93,7 +94,7 @@ public class UserController {
         }
 
         userService.updateUserService(user);
-        apiResponse.setMsg(UserConst.FAILED_UPDATE_USER);
+        apiResponse.setMsg(UserConst.SUCCESS_UPDATE_USER);
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
@@ -127,10 +128,16 @@ public class UserController {
 
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse> userlogin(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse> userlogin(@Valid @RequestBody LoginDto loginDto, BindingResult bindingResult) {
 
-        String id = request.getParameter("id");
-        String pw = request.getParameter("password");
+        if(bindingResult.hasErrors()) {
+            log.info("400 Parameter Error !");
+            String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
+            throw new ParamInvalidException(errMsg);
+        }
+
+        String id = loginDto.getId();
+        String pw = loginDto.getPassword();
         log.info("[POST] /user/login " + "[ID] :  "  + id + "[PW] : " + pw + " /userLogin");
 
         String token = userService.userLoginService(id, pw);
