@@ -45,8 +45,8 @@ public class UserEntity {
     @Column(name="activity_score")
     private int activityScore;
 
-    @ColumnDefault("N")
-    private char authority;
+    @Column(columnDefinition = "CHAR(1) DEFAULT 'N'")
+    private char authority; // 'Y', 'N'
 
     @Nullable
     private LocalDateTime created;

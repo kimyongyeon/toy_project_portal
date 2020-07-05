@@ -5,6 +5,7 @@ import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.*;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
 import com.simple.portal.common.Interceptor.JwtUtil;
+import com.simple.portal.util.CustomMailSender;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +19,13 @@ import java.util.List;
 @Service
 public class UserService {
     private UserRepository userRepository;
+    private CustomMailSender mailSender;
     private JwtUtil jwtUtil;
 
     @Autowired
-    public void UserController(UserRepository userRepository, JwtUtil jwtUtil) {
+    public void UserController(UserRepository userRepository, CustomMailSender mailSender, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
+        this.mailSender = mailSender;
         this.jwtUtil = jwtUtil;
     }
 
@@ -52,6 +55,12 @@ public class UserService {
             user.setUpdated(LocalDateTime.now());
             user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())); // 비밀번호 암호화
             userRepository.save(user);
+            try {
+                mailSender.sendMail(user.getUserId()); // 회원가입 후 해당 이메일로 인증 메일보냄
+            } catch (Exception e) {
+                log.info("[UserService] emailSend Error : " + e.getMessage());
+                throw new EmailSendFailedException();
+            }
         } catch (Exception e) {
             log.info("[UserService] createUserService Error : " + e.getMessage());
             throw new CreateUserFailedException();
@@ -119,7 +128,7 @@ public class UserService {
             return userRepository.checkUserAuth(userId);
         } catch (Exception e) {
             log.info("[UserService] userAuthCheckService Error : " + e.getMessage());
-            throw new UserAuthGrantFailedException();
+            throw new UserAuthCheckFailedException();
         }
     }
 }

@@ -9,6 +9,7 @@ public class UserConst {
     public static final String INVALID_PASSWORD="비밀번호가 올바르지 않습니다.";
     public static final String FAILED_LOGIN ="아이디 혹은 비밀번호가 틀렸습니다.";
     public static final String ERROR_PARAMS = "요청인자를 잘못 입력하였습니다.";
+    public static final String FAILED_EMAIL_SEND = "가입 이메일 전송에 실패하였습니다.";
 
     public static final String FIND_USER_ERROR ="해당 아이디의 유저 검색에 실패했습니다.";
     public static final String LOGIN_ERROR ="로그인에 실패하였습니다.";
@@ -22,6 +23,7 @@ public class UserConst {
     public static final String SUCCESS_LOGIN="로그인에 성공하였습니다.";
     public static final String SUCCESS_GRANT_USER_AUTH="가입유저에 로그인 권한이 부여되었습니다.";
 
+    public static final String FAILED_CHECK_USER_AUTH="로그인 권한이 없는 유저입니다.";
     public static final String FAILED_GRANT_USER_AUTH="가입유저에 로그인 권한 부여가 실패하였습니다.";
     public static final String FAILED_CREATE_TOKEN = "토큰 생성에 실패했습니다.";
     public static final String FAILED_TOKEN_VALIDATION = "유효하지 않은 토큰입니다.";

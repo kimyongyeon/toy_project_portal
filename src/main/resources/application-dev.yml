@@ -16,7 +16,25 @@ spring:
       max-request-size: 128KB
 
   freemarker:
-    check-template-location=false:
+    check-template-location: false
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: xowns4817@gmail.com
+    password: *************
+    properties:
+      mail:
+        debug: true
+        smtp:
+          auth: true
+          starttls:
+              enable: true
+        mime:
+            charset: UTF-8
+            transport:
+              protocol: smtp
+    default-encoding: UTF-8
 
   datasource:
     url: ENC(p96dBiARC6AkxQGtZL925cCut/Np7JwsbExtga5IoffyhPQE9DvftPafH6yeAupbycasUvp9g8sqpfRpEQvgyzc8Pgw/A4fNwLezl/SDqVfY+H8IkAVVnpth+Fmz3leq)
@@ -27,7 +45,8 @@ spring:
 
     jpa:
       hibernate:
-        ddl-auto: create-drop
+        #ddl-auto: create-drop
+        ddl-auto: none # 테이블 조작 못함.
         use-new-id-generator-mappings: false
       show-sql: true
       database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
@@ -35,7 +54,7 @@ spring:
       properties:
         hibernate:
           format_sql: true
-      generate-ddl: true
+      generate-ddl: false # ddl 쿼리를 초기화 안함 ( true로 할 경우는 초기화 )
   profile:
     value: dev
 
