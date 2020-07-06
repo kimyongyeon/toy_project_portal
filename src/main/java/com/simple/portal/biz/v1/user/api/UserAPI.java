@@ -2,6 +2,7 @@ package com.simple.portal.biz.v1.user.api;
 
 import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.dto.LoginDto;
+import com.simple.portal.biz.v1.user.dto.UserIdDto;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.ParamInvalidException;
 import com.simple.portal.biz.v1.user.exception.UserAuthCheckFailedException;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.mail.MessagingException;
 import javax.validation.Valid;
@@ -25,6 +27,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/v1/api/user")
+@CrossOrigin
 public class UserAPI {
 
     private UserService userService;
@@ -35,6 +38,13 @@ public class UserAPI {
         this.userService = userService;
         this.apiResponse = apiResponse;
     }
+
+    @GetMapping("/test")
+    public ModelAndView main() {
+        ModelAndView mv = new ModelAndView("mail-template");
+        mv.addObject("user_id", "xowns9418");
+        return mv;
+    };
 
     //전체 유저 조회
     @GetMapping("")
@@ -122,7 +132,6 @@ public class UserAPI {
         log.info("[POST] /user/login/");
 
         if(bindingResult.hasErrors()) {
-            log.info("400 Parameter Error !");
             String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
             throw new ParamInvalidException(errMsg);
         }
@@ -145,9 +154,17 @@ public class UserAPI {
     }
 
     // 권한 업데이트 ( 이메일 페이지에서 A태그로 호출해야 하므로 GET방식으로 호출.. )
-    @GetMapping("/auth/update/{id}")
-    public ResponseEntity<ApiResponse> auth_update(@PathVariable("id") String userId) {
-        userService.updateUserAuthService(userId);
+    @PutMapping("/auth")
+    public ResponseEntity<ApiResponse> auth_update(@Valid @RequestBody UserIdDto userIdDto, BindingResult bindingResult) {
+
+        log.info("[PUT] /user/auth/ " + userIdDto.getUserId());
+
+        if (bindingResult.hasErrors()) {
+            String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
+            throw new ParamInvalidException(errMsg);
+        }
+
+        userService.updateUserAuthService(userIdDto.getUserId());
         apiResponse.setMsg(UserConst.SUCCESS_GRANT_USER_AUTH);
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);

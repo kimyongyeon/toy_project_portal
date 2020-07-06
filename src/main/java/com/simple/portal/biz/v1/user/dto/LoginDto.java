@@ -11,7 +11,8 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LoginDto {
-    @NotBlank
+    @NotBlank(message="아이디는 필수값 입니다.")
     private String id;
+    @NotBlank(message="비밀번호는 필수값 입니다.")
     private String password;
 }
