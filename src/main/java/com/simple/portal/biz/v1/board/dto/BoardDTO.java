@@ -24,17 +24,29 @@ public class BoardDTO {
     private String contents; // 내용
     @NotBlank(message="아이디는 필수 입력값입니다.")
     private String writer; // 글쓴이
-    private Long viewCount; // 조회수
-    private Long rowLike; // 좋아요 개수
-    private Long rowDisLike; // 싫어요 개수
-    private String itemGb; // 아이템 구분 L:D
+    private Long viewCount = 0L; // 조회수
+    private Long rowLike = 0L; // 좋아요 개수
+    private Long rowDisLike = 0L; // 싫어요 개수
+    private String itemGb = ""; // 아이템 구분 L:D
     private LocalDateTime createdDate; // 작성일자
-    private CommentDTO commentDTO;
 
     // QueryDSL를 활용한 조인쿼리에서 사용함.
     public BoardDTO(String title, String writer) {
         this.title = title;
         this.writer = writer;
+    }
+    public BoardDTO(Long id, String title, String contents, String writer) {
+        this.id = id;
+        this.title = title;
+        this.contents = contents;
+        this.writer = writer;
+    }
+    public BoardDTO(Long id, String title, String contents, String writer, LocalDateTime createdDate) {
+        this.id = id;
+        this.title = title;
+        this.contents = contents;
+        this.writer = writer;
+        this.createdDate = createdDate;
     }
 
     public BoardDTO(BoardEntity boardEntity, CommentEntity commentEntity) {
@@ -46,9 +58,6 @@ public class BoardDTO {
         this.rowLike = boardEntity.getRowLike();
         this.rowDisLike = boardEntity.getRowDisLike();
         this.createdDate = boardEntity.getCreatedDate();
-
-        commentDTO.setId(commentEntity.getId());
-        commentDTO.setTitle(commentEntity.getTitle());
     }
 
 }

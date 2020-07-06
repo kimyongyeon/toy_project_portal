@@ -24,7 +24,7 @@ spring:
 
     jpa:
       hibernate:
-        ddl-auto: create-drop
+        ddl-auto: none
         use-new-id-generator-mappings: false
       show-sql: true
       database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
@@ -32,7 +32,7 @@ spring:
       properties:
         hibernate:
           format_sql: true
-      generate-ddl: true
+      generate-ddl: false
   profile:
     value: dev
 

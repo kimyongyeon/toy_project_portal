@@ -70,10 +70,10 @@ public class PortalApplication implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
 
-//        for(int i=0; i<3; i++) {
+//        for(int i=0; i<10; i++) {
 //            BoardEntity boardEntity = new BoardEntity();
 //            CommentEntity commentEntity = new CommentEntity();
-//            save(boardEntity, commentEntity, i);
+//            jpaSave(boardEntity, commentEntity, i);
 //        }
 //
 //        EntityManager em = emf.createEntityManager();
@@ -105,9 +105,10 @@ public class PortalApplication implements ApplicationRunner {
         boardEntity.setTitle("board title:"+i);
         boardEntity.setContents("board contents:"+i);
         boardEntity.setWriter("board writer:"+i);
+        boardEntity.addComment(commentEntity);
         boardRepository.save(boardEntity);
 
-        commentEntity.setBoardEntity(boardEntity);
+//        commentEntity.setBoardEntity(boardEntity);
         commentEntity.setTitle("comment title:"+i);
         commentEntity.setContents("comment contents:"+i);
         commentEntity.setWriter("comment writer:"+i);

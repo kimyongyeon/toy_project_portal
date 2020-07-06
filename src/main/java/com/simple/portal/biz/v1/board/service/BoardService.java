@@ -1,11 +1,13 @@
 package com.simple.portal.biz.v1.board.service;
 
+import com.querydsl.core.QueryResults;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.querydsl.jpa.sql.JPASQLQuery;
 import com.simple.portal.biz.v1.board.BoardConst;
-import com.simple.portal.biz.v1.board.dto.BoardDTO;
-import com.simple.portal.biz.v1.board.dto.BoardIdDTO;
-import com.simple.portal.biz.v1.board.dto.BoardLikeDTO;
+import com.simple.portal.biz.v1.board.dto.*;
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.entity.QBoardEntity;
 import com.simple.portal.biz.v1.board.entity.QCommentEntity;
@@ -14,10 +16,13 @@ import com.simple.portal.biz.v1.board.exception.ItemGubunExecption;
 import com.simple.portal.biz.v1.board.repository.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.function.Predicate;
@@ -77,13 +82,53 @@ public class BoardService implements BaseService {
         }
     }
 
-    public List<BoardDTO> search(BoardDTO boardDTO) {
-        return boardRepository.findAllByTitleOrContents(boardDTO.getTitle(), boardDTO.getContents());
+//    public List<BoardDTO> search(BoardReqDTO boardDTO) {
+//        return boardRepository.findAllByTitleOrContents(boardDTO.getTitle(), boardDTO.getContents());
+//    }
+
+    public Page<BoardDTO> pageList(BoardSearchDTO boardSearchDTO, Pageable pageable) {
+
+        // boardSearchDTO.getTitle(), PageRequest.of(boardSearchDTO.getPage(), boardSearchDTO.getSize()))
+        QBoardEntity qBoardEntity = new QBoardEntity("b");
+        // 테이블 구조 그대로 목록을 뽑는다.
+        QueryResults<BoardDTO> boards = query
+//                .select(qBoardEntity)
+                .select(Projections.bean(BoardDTO.class,
+                        qBoardEntity.id,
+                        qBoardEntity.title,
+                        qBoardEntity.contents,
+                        qBoardEntity.writer, qBoardEntity.createdDate))
+                .from(qBoardEntity)
+                .where(getContains(boardSearchDTO, qBoardEntity)) // 검색 조건
+                .orderBy(getDesc(qBoardEntity, boardSearchDTO.getSort())) // 정렬
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetchResults();
+        return new PageImpl(boards.getResults(),pageable,boards.getTotal());
     }
 
-    public List<BoardDTO> pageList(String title, Pageable pageable) {
-        Page<BoardEntity> pages = boardRepository.findByTitleContaining(title, pageable);
-        return getBoardDTOS(pages.stream());
+    private BooleanExpression getContains(BoardSearchDTO boardSearchDTO, QBoardEntity qBoardEntity) {
+        if (boardSearchDTO.getGb().equals("title")) {
+            return qBoardEntity.title.contains(boardSearchDTO.getKeyword());
+        } else if (boardSearchDTO.getGb().equals("contents")) {
+            return qBoardEntity.contents.contains(boardSearchDTO.getKeyword());
+        } else if (boardSearchDTO.getGb().equals("writer")) {
+            return qBoardEntity.writer.contains(boardSearchDTO.getKeyword());
+        } else {
+            return qBoardEntity.title.contains(boardSearchDTO.getKeyword());
+        }
+    }
+
+    private OrderSpecifier<String> getDesc(QBoardEntity qBoardEntity, String sort) {
+        if (sort.equals("title")) {
+            return qBoardEntity.title.desc();
+        } else if (sort.equals("contents")) {
+            return qBoardEntity.contents.desc();
+        } else if (sort.equals("writer")) {
+            return qBoardEntity.writer.desc();
+        } else {
+            return qBoardEntity.title.desc();
+        }
     }
 
     public List<BoardDTO> myScrap(String userId) {
