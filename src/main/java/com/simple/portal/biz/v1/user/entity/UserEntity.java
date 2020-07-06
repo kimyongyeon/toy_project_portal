@@ -1,6 +1,7 @@
 package com.simple.portal.biz.v1.user.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sun.istack.Nullable;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -34,6 +35,7 @@ public class UserEntity {
     private String nickname;
 
     @NotBlank(message="비밀번호는 필수 입력값입니다.")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Column(name="git_addr")
