@@ -30,9 +30,9 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none
       use-new-id-generator-mappings: false
-    generate-ddl: true
+    generate-ddl: false
 
     properties:
       hibernate:

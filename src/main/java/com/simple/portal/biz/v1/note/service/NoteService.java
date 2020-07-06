@@ -1,7 +1,6 @@
 package com.simple.portal.biz.v1.note.service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
-//import com.simple.portal.biz.v1.note.QNoteEntity;
 import com.simple.portal.biz.v1.note.dto.NoteDTO;
 import com.simple.portal.biz.v1.note.entity.NoteEntity;
 import com.simple.portal.biz.v1.note.entity.QNoteEntity;

@@ -45,8 +45,7 @@ spring:
 
     jpa:
       hibernate:
-        #ddl-auto: create-drop
-        ddl-auto: none # 테이블 조작 못함.
+        ddl-auto: none
         use-new-id-generator-mappings: false
       show-sql: true
       database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
@@ -54,7 +53,7 @@ spring:
       properties:
         hibernate:
           format_sql: true
-      generate-ddl: false # ddl 쿼리를 초기화 안함 ( true로 할 경우는 초기화 )
+      generate-ddl: false
   profile:
     value: dev
 

@@ -1,15 +1,14 @@
 package com.simple.portal.biz.v1.board.api;
 
 import com.simple.portal.biz.v1.board.BoardConst;
-import com.simple.portal.biz.v1.board.dto.BoardDTO;
-import com.simple.portal.biz.v1.board.dto.BoardIdDTO;
-import com.simple.portal.biz.v1.board.dto.BoardLikeDTO;
+import com.simple.portal.biz.v1.board.dto.*;
 import com.simple.portal.biz.v1.board.exception.InputRequiredException;
 import com.simple.portal.biz.v1.board.service.BoardComponent;
 import com.simple.portal.biz.v1.board.service.BoardService;
 import com.simple.portal.common.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -63,42 +62,39 @@ public class BoardAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    @GetMapping("/list")
-    public ResponseEntity<ApiResponse> list() {
-        throw new UnsupportedOperationException();
-    }
+//    @GetMapping("/list")
+//    public ResponseEntity<ApiResponse> list() {
+//        throw new UnsupportedOperationException();
+//    }
 
     /**
      * 게시글 검색
      * @param boardDTO
      * @return
      */
-    @GetMapping("/search")
-    public ResponseEntity<ApiResponse> search(BoardDTO boardDTO) {
-        apiResponse.setBody(boardService.search(boardDTO));
-        return new ResponseEntity(apiResponse, HttpStatus.OK);
-    }
+//    @GetMapping("/search")
+//    public ResponseEntity<ApiResponse> search(BoardReqDTO boardDTO) {
+//        apiResponse.setBody(boardService.search(boardDTO));
+//        return new ResponseEntity(apiResponse, HttpStatus.OK);
+//    }
 
     /**
-     * 게시판 페이징
-     * @param title
-     * @param pageable
+     * 게시판 페이징 / 검색
      * @return
      */
     @GetMapping("/page")
-    public ResponseEntity<ApiResponse> page(String title, Pageable pageable) {
-        apiResponse.setBody(boardService.pageList(title, pageable));
+    public ResponseEntity<ApiResponse> page(BoardSearchDTO boardSearchDTO, Pageable pageable) {
+        apiResponse.setBody(boardService.pageList(boardSearchDTO, pageable));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
     /**
      * 게시글 상세
-     * @param boardDTO
      * @return
      */
-    @GetMapping("/detail")
-    public ResponseEntity<ApiResponse> findOne(BoardDTO boardDTO) {
-        apiResponse.setBody(boardService.findById(boardDTO.getId()));
+    @GetMapping("/detail/{id}")
+    public ResponseEntity<ApiResponse> findOne(@PathVariable String id) {
+        apiResponse.setBody(boardService.findById(Long.parseLong(id)));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
