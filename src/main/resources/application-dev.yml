@@ -15,6 +15,27 @@ spring:
       max-file-size: 128KB
       max-request-size: 128KB
 
+  freemarker:
+    check-template-location: false
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: xowns4817@gmail.com
+    password: password
+    properties:
+      mail:
+        debug: true
+        smtp:
+          auth: true
+          starttls:
+              enable: true
+        mime:
+            charset: UTF-8
+            transport:
+              protocol: smtp
+    default-encoding: UTF-8
+
   datasource:
     url: ENC(p96dBiARC6AkxQGtZL925cCut/Np7JwsbExtga5IoffyhPQE9DvftPafH6yeAupbycasUvp9g8sqpfRpEQvgyzc8Pgw/A4fNwLezl/SDqVfY+H8IkAVVnpth+Fmz3leq)
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -41,3 +62,4 @@ logging:
     root: warn
     #com.simple.portal: error
     com.simple.portal: debug
+

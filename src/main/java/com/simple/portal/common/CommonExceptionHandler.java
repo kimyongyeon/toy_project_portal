@@ -78,14 +78,16 @@ public class CommonExceptionHandler {
     @ExceptionHandler({CreateUserFailedException.class, UpdateUserFailedException.class,
             SelectUserFailedException.class, DeleteUserFailedException.class,
             IdCheckFailedException.class,
-            TokenCreateFailedException.class
+            TokenCreateFailedException.class,
+            UserAuthGrantFailedException.class,
+            EmailSendFailedException.class
     })
     public ResponseEntity<ApiResponse> user500Exception(Exception e) {
         return new ResponseEntity<>(
                 ApiResponse
                         .builder()
                         .code(CODE_USER)
-                        .msg(getMag(e))
+                        .msg(e.getMessage())
                         .body(BODY_BLANK)
                         .build()
                 , HttpStatus.INTERNAL_SERVER_ERROR);
@@ -102,5 +104,18 @@ public class CommonExceptionHandler {
                         .body("")
                         .build()
                 , HttpStatus.BAD_REQUEST);
+    }
+
+    //유저 관련 Exception 처리 ( 401 - unauthorization )
+    @ExceptionHandler({UserAuthCheckFailedException.class})
+    public ResponseEntity<ApiResponse> user401Exception(Exception e) {
+        return new ResponseEntity<>(
+                ApiResponse
+                        .builder()
+                        .code(CODE_USER_C_E)
+                        .msg(e.getMessage())
+                        .body("")
+                        .build()
+                , HttpStatus.UNAUTHORIZED);
     }
 }
