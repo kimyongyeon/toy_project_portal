@@ -11,13 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,9 +63,10 @@ public class UserAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    // 유저 등록 ( 회원 가입 ) -> 아이디 중복 체크 로직 필요
+    // 유저 등록 ( 회원 가입 s
+    // -> 아이디 중복 체크 로직 필요
     @PostMapping("")
-    public ResponseEntity<ApiResponse> userCreate(@Valid @RequestBody UserEntity user, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> userCreate(@Valid @RequestBody UserEntity user, @RequestPart MultipartFile file, BindingResult bindingResult) {
         log.info("[POST] /user/ userCreateAPI" + "[RequestBody] " + user.toString());
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
@@ -74,7 +74,7 @@ public class UserAPI {
             String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
             throw new ParamInvalidException(errMsg);
         }
-        userService.createUserService(user);
+        userService.createUserService(user, file);
         apiResponse.setMsg(UserConst.SUCCESS_CREATE_USER);
         apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -82,7 +82,7 @@ public class UserAPI {
 
     //유저 수정
     @PutMapping("")
-    public ResponseEntity<ApiResponse> userUpdate(@Valid @RequestBody UserEntity user, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> userUpdate(@Valid @RequestBody UserEntity user, @RequestPart MultipartFile file, BindingResult bindingResult) {
         log.info("[PUT] /user/ userUpdateApi" + "[RequestBody] " + user);
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
@@ -91,7 +91,7 @@ public class UserAPI {
             throw new ParamInvalidException(errMsg);
         }
 
-        userService.updateUserService(user);
+        userService.updateUserService(user, file);
         apiResponse.setMsg(UserConst.SUCCESS_UPDATE_USER);
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
