@@ -146,7 +146,7 @@
                                 <td bgcolor="#ffffff" align="center" style="padding: 20px 30px 60px 30px;">
                                     <table border="0" cellspacing="0" cellpadding="0">
                                         <tr>
-                                            <td align="center" style="border-radius: 3px;" bgcolor="#3CBEB2"><a id="goLogin" style="font-size: 20px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; cursor:pointer; color: #ffffff; text-decoration: none; padding: 15px 25px; border-radius: 2px; border: 1px solid #3cbeb2; display: inline-block;">로그인 화면으로 이동하기</a></td>
+                                            <td align="center" style="border-radius: 3px;" bgcolor="#3CBEB2"><a th:href="@{http://localhost:8081/v1/api/user/auth(userId=${user_id})}" style="font-size: 20px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; cursor:pointer; color: #ffffff; text-decoration: none; padding: 15px 25px; border-radius: 2px; border: 1px solid #3cbeb2; display: inline-block;">로그인 화면으로 이동하기</a></td>
                                         </tr>
                                     </table>
                                 </td>
@@ -194,6 +194,7 @@
 </table>
 </body>
 
+<!--
 <script th:inline="javascript">
 
     // 타임리프 변수 -> 자바스크립트 변수
@@ -201,7 +202,6 @@
     var email = `[[${user_id}]]`;
     /*]]>*/
 
-    alert(email);
     var btn = document.getElementById("goLogin")
     btn.onclick = function( ) {
 
@@ -221,6 +221,6 @@
             }
         });
     }
-
 </script>
+-->
 </html>

@@ -49,6 +49,7 @@ public class UserService {
         }
     }
 
+    @Transactional
     public void createUserService(UserEntity user) {
         try {
             user.setCreated(LocalDateTime.now());
@@ -113,12 +114,14 @@ public class UserService {
     }
 
     // 유저 권한 부여
-    public void updateUserAuthService(String userId) {
+    public Boolean updateUserAuthService(String userId) {
         try {
             userRepository.updateUserAuth(userId);
+            return true;
         } catch (Exception e) {
             log.info("[UserService] userAuthService Error : " + e.getMessage());
-            throw new UserAuthGrantFailedException();
+            return false;
+            //throw new UserAuthGrantFailedException();
         }
     }
 

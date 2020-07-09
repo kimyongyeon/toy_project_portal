@@ -37,7 +37,6 @@ public class CommonExceptionHandler {
         }
     }
 
-
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> runtimeException(RuntimeException e) {
         return new ResponseEntity<>(
