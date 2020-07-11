@@ -99,7 +99,15 @@ public class DateFormatUtil {
         }
 
         return msg;
-
     }
 
+    // 출력 시간 format
+    private static SimpleDateFormat time_format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    //현재시간 Date -> String
+    public static String makeNowTimeStamp( ) {
+        Date date = new Date( );
+        String now = time_format.format(date);
+        return now;
+    }
 }

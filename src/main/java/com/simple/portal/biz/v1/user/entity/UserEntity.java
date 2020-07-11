@@ -17,7 +17,6 @@ import java.util.Date;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public class UserEntity {
 
     @Id
@@ -35,7 +34,7 @@ public class UserEntity {
     private String nickname;
 
     @NotBlank(message="비밀번호는 필수 입력값입니다.")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    //@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Column(name="git_addr")
@@ -51,13 +50,14 @@ public class UserEntity {
     private char authority; // 'Y', 'N'
 
     @Nullable
-    private LocalDateTime created;
+    private String created;
 
     @Nullable
-    private LocalDateTime updated;
+    private String updated;
 
     @Builder
-    public UserEntity(String userId, String nickname, String password, String gitAddr, String profileImg, int activityScore, char authority, LocalDateTime created, LocalDateTime updated) {
+    public UserEntity(Long id, String userId, String nickname, String password, String gitAddr, String profileImg, int activityScore, char authority, String created, String updated) {
+        this.id = id;
         this.userId = userId;
         this.nickname = nickname;
         this.password = password;

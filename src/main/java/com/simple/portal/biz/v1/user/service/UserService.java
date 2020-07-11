@@ -6,7 +6,9 @@ import com.simple.portal.biz.v1.user.exception.*;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
 import com.simple.portal.common.Interceptor.JwtUtil;
 import com.simple.portal.util.CustomMailSender;
+import com.simple.portal.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -54,14 +56,23 @@ public class UserService {
     @Transactional
     public void createUserService(UserEntity user, MultipartFile file) {
         try {
-            user.setCreated(LocalDateTime.now());
-            user.setUpdated(LocalDateTime.now());
-            user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())); // 비밀번호 암호화
-
-            String imgDir = "/data/profile/" + user.getUserId() + "-profileImg.png";
+            String imgDir = "/E:\\file_test\\" + user.getUserId() + "-profileImg.png";
             file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
-            user.setProfileImg(imgDir); // 프로필 세팅
-            userRepository.save(user);
+
+            // 빌더 패턴 적용
+            UserEntity insertUser = UserEntity.builder()
+                    .userId(user.getUserId())
+                    .nickname(user.getNickname())
+                    .password(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())) // 비밀번호
+                    .gitAddr(user.getGitAddr())
+                    .profileImg(imgDir)
+                    .activityScore(user.getActivityScore())
+                    .authority(user.getAuthority())
+                    .created(DateFormatUtil.makeNowTimeStamp())
+                    .updated(DateFormatUtil.makeNowTimeStamp())
+                    .build();
+
+            userRepository.save(insertUser);
             try {
                 mailSender.sendMail(user.getUserId()); // 회원가입 후 해당 이메일로 인증 메일보냄
             } catch (Exception e) {
@@ -76,18 +87,24 @@ public class UserService {
 
     public void updateUserService(UserEntity user, MultipartFile file) {
         try {
-            user.setUpdated(LocalDateTime.now());
 
-            //기존 프로필 삭제하고 새 프로필 사진 저장
-            File deleteProfileImg = new File(user.getProfileImg());
-            if(deleteProfileImg.exists()) {
-                deleteProfileImg.delete();
-            }
-
-            String imgDir = "/data/profile/" + user.getUserId() + "-profileImg.png";
+            String imgDir = "/E:\\file_test\\" + user.getUserId() + "-profileImg.png";
             file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
-            user.setProfileImg(imgDir); // 프로필 세팅
-            userRepository.save(user);
+            // 빌더 패턴 적용
+            UserEntity updateUser = UserEntity.builder()
+                    .id(user.getId())
+                    .userId(user.getUserId())
+                    .nickname(user.getNickname())
+                    .password(user.getPassword()) // 비밀번호
+                    .gitAddr(user.getGitAddr())
+                    .profileImg(imgDir)
+                    .activityScore(user.getActivityScore())
+                    .authority(user.getAuthority())
+                    .created(user.getCreated())
+                    .updated(DateFormatUtil.makeNowTimeStamp())
+                    .build();
+
+            userRepository.save(updateUser);
         } catch (Exception e) {
             log.info("[UserService] updateUserService Error : " + e.getMessage());
             throw new UpdateUserFailedException();
