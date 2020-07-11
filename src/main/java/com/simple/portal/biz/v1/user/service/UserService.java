@@ -10,8 +10,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -49,11 +51,16 @@ public class UserService {
         }
     }
 
-    public void createUserService(UserEntity user) {
+    @Transactional
+    public void createUserService(UserEntity user, MultipartFile file) {
         try {
             user.setCreated(LocalDateTime.now());
             user.setUpdated(LocalDateTime.now());
             user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())); // 비밀번호 암호화
+
+            String imgDir = "/data/profile/" + user.getUserId() + "-profileImg.png";
+            file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
+            user.setProfileImg(imgDir); // 프로필 세팅
             userRepository.save(user);
             try {
                 mailSender.sendMail(user.getUserId()); // 회원가입 후 해당 이메일로 인증 메일보냄
@@ -67,9 +74,19 @@ public class UserService {
         }
     };
 
-    public void updateUserService(UserEntity user) {
+    public void updateUserService(UserEntity user, MultipartFile file) {
         try {
             user.setUpdated(LocalDateTime.now());
+
+            //기존 프로필 삭제하고 새 프로필 사진 저장
+            File deleteProfileImg = new File(user.getProfileImg());
+            if(deleteProfileImg.exists()) {
+                deleteProfileImg.delete();
+            }
+
+            String imgDir = "/data/profile/" + user.getUserId() + "-profileImg.png";
+            file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
+            user.setProfileImg(imgDir); // 프로필 세팅
             userRepository.save(user);
         } catch (Exception e) {
             log.info("[UserService] updateUserService Error : " + e.getMessage());
@@ -113,12 +130,14 @@ public class UserService {
     }
 
     // 유저 권한 부여
-    public void updateUserAuthService(String userId) {
+    public Boolean updateUserAuthService(String userId) {
         try {
             userRepository.updateUserAuth(userId);
+            return true;
         } catch (Exception e) {
             log.info("[UserService] userAuthService Error : " + e.getMessage());
-            throw new UserAuthGrantFailedException();
+            return false;
+            //throw new UserAuthGrantFailedException();
         }
     }
 

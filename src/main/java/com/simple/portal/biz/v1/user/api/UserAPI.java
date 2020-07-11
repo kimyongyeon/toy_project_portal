@@ -2,25 +2,22 @@ package com.simple.portal.biz.v1.user.api;
 
 import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.dto.LoginDto;
-import com.simple.portal.biz.v1.user.dto.UserIdDto;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.ParamInvalidException;
 import com.simple.portal.biz.v1.user.exception.UserAuthCheckFailedException;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.common.ApiResponse;
-import com.simple.portal.util.CustomMailSender;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.mail.MessagingException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -66,9 +63,10 @@ public class UserAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    // 유저 등록 ( 회원 가입 )
+    // 유저 등록 ( 회원 가입 s
+    // -> 아이디 중복 체크 로직 필요
     @PostMapping("")
-    public ResponseEntity<ApiResponse> userCreate(@Valid @RequestBody UserEntity user, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> userCreate(@Valid @RequestBody UserEntity user, @RequestPart MultipartFile file, BindingResult bindingResult) {
         log.info("[POST] /user/ userCreateAPI" + "[RequestBody] " + user.toString());
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
@@ -76,7 +74,7 @@ public class UserAPI {
             String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
             throw new ParamInvalidException(errMsg);
         }
-        userService.createUserService(user);
+        userService.createUserService(user, file);
         apiResponse.setMsg(UserConst.SUCCESS_CREATE_USER);
         apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -84,7 +82,7 @@ public class UserAPI {
 
     //유저 수정
     @PutMapping("")
-    public ResponseEntity<ApiResponse> userUpdate(@Valid @RequestBody UserEntity user, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> userUpdate(@Valid @RequestBody UserEntity user, @RequestPart MultipartFile file, BindingResult bindingResult) {
         log.info("[PUT] /user/ userUpdateApi" + "[RequestBody] " + user);
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
@@ -93,7 +91,7 @@ public class UserAPI {
             throw new ParamInvalidException(errMsg);
         }
 
-        userService.updateUserService(user);
+        userService.updateUserService(user, file);
         apiResponse.setMsg(UserConst.SUCCESS_UPDATE_USER);
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -106,7 +104,7 @@ public class UserAPI {
 
         userService.deleteUserService(id);
         apiResponse.setMsg(UserConst.SUCCESS_DELETE_USER);
-        apiResponse.setMsg("");
+        apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -153,20 +151,17 @@ public class UserAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    // 권한 업데이트 ( 이메일 페이지에서 A태그로 호출해야 하므로 GET방식으로 호출.. )
-    @PutMapping("/auth")
-    public ResponseEntity<ApiResponse> auth_update(@Valid @RequestBody UserIdDto userIdDto, BindingResult bindingResult) {
+    // 권한 업데이트
+    @GetMapping("/auth")
+    public ModelAndView auth_update(@RequestParam(value="userId") @NotNull String userId) {
 
-        log.info("[PUT] /user/auth/ " + userIdDto.getUserId());
+        log.info("[GET] /user/auth/ " + userId);
+        Boolean res = userService.updateUserAuthService(userId);
 
-        if (bindingResult.hasErrors()) {
-            String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
-            throw new ParamInvalidException(errMsg);
+        if(res) { // 권한 업데이트 성공
+           return new ModelAndView("/mail-redirect-success-page");
+        } else { // 권한 업데이트 실패
+            return new ModelAndView("/mail-redirect-fail-page");
         }
-
-        userService.updateUserAuthService(userIdDto.getUserId());
-        apiResponse.setMsg(UserConst.SUCCESS_GRANT_USER_AUTH);
-        apiResponse.setBody("");
-        return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 }
