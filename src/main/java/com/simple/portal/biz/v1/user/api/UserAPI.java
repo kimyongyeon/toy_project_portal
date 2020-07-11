@@ -36,13 +36,6 @@ public class UserAPI {
         this.apiResponse = apiResponse;
     }
 
-    @GetMapping("/test")
-    public ModelAndView main() {
-        ModelAndView mv = new ModelAndView("mail-template");
-        mv.addObject("user_id", "xowns9418");
-        return mv;
-    };
-
     //전체 유저 조회
     @GetMapping("")
     public ResponseEntity<?> userFindAll( ) {
@@ -63,10 +56,10 @@ public class UserAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    // 유저 등록 ( 회원 가입 s
+    // 유저 등록 ( 회원 가입 )
     // -> 아이디 중복 체크 로직 필요
     @PostMapping("")
-    public ResponseEntity<ApiResponse> userCreate(@Valid @RequestBody UserEntity user, @RequestPart MultipartFile file, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> userCreate(@Valid UserEntity user, MultipartFile file, BindingResult bindingResult) {
         log.info("[POST] /user/ userCreateAPI" + "[RequestBody] " + user.toString());
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
@@ -82,7 +75,7 @@ public class UserAPI {
 
     //유저 수정
     @PutMapping("")
-    public ResponseEntity<ApiResponse> userUpdate(@Valid @RequestBody UserEntity user, @RequestPart MultipartFile file, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> userUpdate(@Valid UserEntity user, MultipartFile file, BindingResult bindingResult) {
         log.info("[PUT] /user/ userUpdateApi" + "[RequestBody] " + user);
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
