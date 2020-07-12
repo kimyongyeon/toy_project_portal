@@ -80,6 +80,7 @@ public class UserService {
                 throw new EmailSendFailedException();
             }
         } catch (Exception e) {
+
             log.info("[UserService] createUserService Error : " + e.getMessage());
             throw new CreateUserFailedException();
         }
@@ -111,9 +112,18 @@ public class UserService {
         }
     };
 
+    @Transactional
     public void deleteUserService(Long id) {
         try {
+            UserEntity deleteUser = userRepository.findById(id).get();
+            String imgDir = deleteUser.getProfileImg();
+
             userRepository.deleteById(id);
+            File deleteFile = new File(imgDir);
+            if (deleteFile.exists()) { // 프로필 이미지 삭제
+                deleteFile.delete();
+            };
+
         } catch (Exception e) {
             log.info("[UserService] deleteUserService Error : " + e.getMessage());
             throw new DeleteUserFailedException();
