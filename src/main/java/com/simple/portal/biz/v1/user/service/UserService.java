@@ -1,15 +1,21 @@
 package com.simple.portal.biz.v1.user.service;
 
+import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.*;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
+import com.simple.portal.common.Interceptor.JwtUtil;
+import com.simple.portal.util.CustomMailSender;
+import com.simple.portal.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.weaver.bcel.BcelAccessForInlineMunger;
+import org.apache.catalina.User;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,10 +23,14 @@ import java.util.List;
 @Service
 public class UserService {
     private UserRepository userRepository;
+    private CustomMailSender mailSender;
+    private JwtUtil jwtUtil;
 
     @Autowired
-    public void UserController(UserRepository userRepository) {
+    public void UserController(UserRepository userRepository, CustomMailSender mailSender, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
+        this.mailSender = mailSender;
+        this.jwtUtil = jwtUtil;
     }
 
     public List<UserEntity> userFindAllService( ) {
@@ -33,6 +43,7 @@ public class UserService {
         }
     }
 
+     // 유저의 기본키로 유저 조회
     public UserEntity userFineOneService(Long id) {
         try {
             return userRepository.findById(id).get();
@@ -42,25 +53,61 @@ public class UserService {
         }
     }
 
-    public void createUserService(UserEntity user) {
+    @Transactional
+    public void createUserService(UserEntity user, MultipartFile file) {
         try {
-            user.setCreated(LocalDateTime.now());
-            user.setUpdated(LocalDateTime.now());
-            user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())); // 비밀번호 암호화
-            userRepository.save(user);
+            String imgDir = "/E:\\file_test\\" + user.getUserId() + "-profileImg.png";
+            file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
+
+            // 빌더 패턴 적용
+            UserEntity insertUser = UserEntity.builder()
+                    .userId(user.getUserId())
+                    .nickname(user.getNickname())
+                    .password(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())) // 비밀번호
+                    .gitAddr(user.getGitAddr())
+                    .profileImg(imgDir)
+                    .activityScore(user.getActivityScore())
+                    .authority(user.getAuthority())
+                    .created(DateFormatUtil.makeNowTimeStamp())
+                    .updated(DateFormatUtil.makeNowTimeStamp())
+                    .build();
+
+            userRepository.save(insertUser);
+            try {
+                mailSender.sendMail(user.getUserId()); // 회원가입 후 해당 이메일로 인증 메일보냄
+            } catch (Exception e) {
+                log.info("[UserService] emailSend Error : " + e.getMessage());
+                throw new EmailSendFailedException();
+            }
         } catch (Exception e) {
             log.info("[UserService] createUserService Error : " + e.getMessage());
             throw new CreateUserFailedException();
         }
     };
 
-    public void updateUserService(UserEntity user) {
+    public void updateUserService(UserEntity user, MultipartFile file) {
         try {
-            user.setUpdated(LocalDateTime.now());
-            userRepository.save(user);
+
+            String imgDir = "/E:\\file_test\\" + user.getUserId() + "-profileImg.png";
+            file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
+            // 빌더 패턴 적용
+            UserEntity updateUser = UserEntity.builder()
+                    .id(user.getId())
+                    .userId(user.getUserId())
+                    .nickname(user.getNickname())
+                    .password(user.getPassword()) // 비밀번호
+                    .gitAddr(user.getGitAddr())
+                    .profileImg(imgDir)
+                    .activityScore(user.getActivityScore())
+                    .authority(user.getAuthority())
+                    .created(user.getCreated())
+                    .updated(DateFormatUtil.makeNowTimeStamp())
+                    .build();
+
+            userRepository.save(updateUser);
         } catch (Exception e) {
             log.info("[UserService] updateUserService Error : " + e.getMessage());
-            throw new UpdateUserFaileException();
+            throw new UpdateUserFailedException();
         }
     };
 
@@ -83,20 +130,41 @@ public class UserService {
     }
 
     @Transactional
-    public Boolean userLoginService(String user_id, String password) {
+    public String userLoginService(String user_id, String password) { // 성공만 처리하고 나머지 exception 던짐
         try {
-            if(!userRepository.existsUserByUserId(user_id)) return false; // 아이디 존재안함
+            if(!userRepository.existsUserByUserId(user_id)) throw new Exception(UserConst.NO_USER); // 아이디 존재 안함.
             else {
                 UserEntity user = userRepository.findByUserId(user_id);
                 String pwOrigin = user.getPassword();
+                if (BCrypt.checkpw(password, pwOrigin)) return jwtUtil.createToken(user.getUserId());
+                else throw new Exception(UserConst.INVALID_PASSWORD); // 비밀번호 오류
 
-                if(BCrypt.checkpw(password, pwOrigin)) return true; // 로그인 성공
-                else return false; // 비밀번호 오류
             }
-
         } catch (Exception e) {
             log.info("[UserService] userLoginService Error : " + e.getMessage());
-            throw new LoginFailedException();
+            throw new LoginFailedException(e.getMessage());
+    }
+    }
+
+    // 유저 권한 부여
+    public Boolean updateUserAuthService(String userId) {
+        try {
+            userRepository.updateUserAuth(userId);
+            return true;
+        } catch (Exception e) {
+            log.info("[UserService] userAuthService Error : " + e.getMessage());
+            return false;
+            //throw new UserAuthGrantFailedException();
+        }
+    }
+
+    //유저 권한 체크
+    public char userAuthCheckServie(String userId) {
+        try {
+            return userRepository.checkUserAuth(userId);
+        } catch (Exception e) {
+            log.info("[UserService] userAuthCheckService Error : " + e.getMessage());
+            throw new UserAuthCheckFailedException();
         }
     }
 }

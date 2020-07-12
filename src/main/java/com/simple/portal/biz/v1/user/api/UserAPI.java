@@ -1,26 +1,31 @@
 package com.simple.portal.biz.v1.user.api;
 
 import com.simple.portal.biz.v1.user.UserConst;
+import com.simple.portal.biz.v1.user.dto.LoginDto;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
+import com.simple.portal.biz.v1.user.exception.ParamInvalidException;
+import com.simple.portal.biz.v1.user.exception.UserAuthCheckFailedException;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.common.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/v1/api/user")
-public class UserController {
+@CrossOrigin
+public class UserAPI {
 
     private UserService userService;
     private ApiResponse apiResponse;
@@ -52,20 +57,17 @@ public class UserController {
     }
 
     // 유저 등록 ( 회원 가입 )
+    // -> 아이디 중복 체크 로직 필요
     @PostMapping("")
-    public ResponseEntity<ApiResponse> userCreate(@Valid @RequestBody UserEntity user, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> userCreate(@Valid UserEntity user, MultipartFile file, BindingResult bindingResult) {
         log.info("[POST] /user/ userCreateAPI" + "[RequestBody] " + user.toString());
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
         if(bindingResult.hasErrors()) {
             String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
-            apiResponse.setCode("400");
-            apiResponse.setMsg(UserConst.ERROR_PARAMS);
-            apiResponse.setBody(errMsg);
-            return new ResponseEntity(apiResponse, HttpStatus.BAD_REQUEST);
+            throw new ParamInvalidException(errMsg);
         }
-
-        userService.createUserService(user);
+        userService.createUserService(user, file);
         apiResponse.setMsg(UserConst.SUCCESS_CREATE_USER);
         apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -73,32 +75,29 @@ public class UserController {
 
     //유저 수정
     @PutMapping("")
-    public ResponseEntity<ApiResponse> userUpdate(@Valid @RequestBody UserEntity user, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> userUpdate(@Valid UserEntity user, MultipartFile file, BindingResult bindingResult) {
         log.info("[PUT] /user/ userUpdateApi" + "[RequestBody] " + user);
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
         if(bindingResult.hasErrors()) {
             String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
-            apiResponse.setCode("400");
-            apiResponse.setMsg(UserConst.ERROR_PARAMS);
-            apiResponse.setBody(errMsg);
-            return new ResponseEntity(apiResponse, HttpStatus.BAD_REQUEST);
+            throw new ParamInvalidException(errMsg);
         }
 
-        userService.updateUserService(user);
-        apiResponse.setMsg(UserConst.FAILED_UPDATE_USER);
+        userService.updateUserService(user, file);
+        apiResponse.setMsg(UserConst.SUCCESS_UPDATE_USER);
         apiResponse.setBody("");
-        return  new ResponseEntity(apiResponse, HttpStatus.OK);
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    //유저 삭제
+    //유저 삭제 - 회원 탈퇴
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse> userDelete(@PathVariable @NotNull Long id) {
         log.info("[DELETE] /user/ " + id + " /userDelete");
 
         userService.deleteUserService(id);
         apiResponse.setMsg(UserConst.SUCCESS_DELETE_USER);
-        apiResponse.setMsg("");
+        apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -118,22 +117,44 @@ public class UserController {
         }
     };
 
-    // 로그인 ( 암호화는 서버에서 할지? 클라에서 할지 ? )
+    // 로그인
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse> userlogin(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse> userlogin(@Valid @RequestBody LoginDto loginDto, BindingResult bindingResult) {
+        log.info("[POST] /user/login/");
 
-        String id = request.getParameter("id");
-        String pw = request.getParameter("password");
+        if(bindingResult.hasErrors()) {
+            String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
+            throw new ParamInvalidException(errMsg);
+        }
+
+        String id = loginDto.getId();
+        String pw = loginDto.getPassword();
         log.info("[POST] /user/login " + "[ID] :  "  + id + "[PW] : " + pw + " /userLogin");
 
-        if(userService.userLoginService(id, pw)) {
-            apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
-            apiResponse.setBody("토큰 정보");
-            return new ResponseEntity(apiResponse, HttpStatus.OK);
-        } else {
-            apiResponse.setMsg(UserConst.FAILED_LOGIN);
-            apiResponse.setBody("");
-            return new ResponseEntity(apiResponse, HttpStatus.OK);
+        String token = userService.userLoginService(id, pw);
+
+        // authority 조회 후 'Y'일때만 로그인 성공 로직 작성
+        char auth = userService.userAuthCheckServie(id);
+        if(auth == 'N') throw new UserAuthCheckFailedException();
+
+        apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
+        Map<String, String> obj = new HashMap<>();
+        obj.put("token", token);
+        apiResponse.setBody(obj);  // user_id 기반 토큰 생성
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    // 권한 업데이트
+    @GetMapping("/auth")
+    public ModelAndView auth_update(@RequestParam(value="userId") @NotNull String userId) {
+
+        log.info("[GET] /user/auth/ " + userId);
+        Boolean res = userService.updateUserAuthService(userId);
+
+        if(res) { // 권한 업데이트 성공
+           return new ModelAndView("/mail-redirect-success-page");
+        } else { // 권한 업데이트 실패
+            return new ModelAndView("/mail-redirect-fail-page");
         }
     }
 }

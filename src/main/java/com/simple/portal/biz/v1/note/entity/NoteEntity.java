@@ -1,4 +1,4 @@
-package com.simple.portal.biz.v1.note;
+package com.simple.portal.biz.v1.note.entity;
 
 import com.simple.portal.common.BaseEntity;
 import lombok.*;

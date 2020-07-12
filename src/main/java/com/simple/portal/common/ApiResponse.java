@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApiResponse {
+public class ApiResponse<T> {
     String code;
     String msg;
-    Object body;
+    T body;
 }

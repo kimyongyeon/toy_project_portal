@@ -1,8 +1,11 @@
 package com.simple.portal.biz.v1.user.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sun.istack.Nullable;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
+
 import javax.persistence.*;
 import javax.validation.constraints.*;
 import java.sql.Timestamp;
@@ -14,7 +17,6 @@ import java.util.Date;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public class UserEntity {
 
     @Id
@@ -32,8 +34,7 @@ public class UserEntity {
     private String nickname;
 
     @NotBlank(message="비밀번호는 필수 입력값입니다.")
-    @Pattern(regexp="(?=.*[0-9])(?=.*[a-zA-Z])(?=.*\\W)(?=\\S+$).{8,20}",
-            message = "비밀번호는 영문 대,소문자와 숫자, 특수기호가 적어도 1개 이상씩 포함된 8자 ~ 20자의 비밀번호여야 합니다.")
+    //@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Column(name="git_addr")
@@ -45,20 +46,25 @@ public class UserEntity {
     @Column(name="activity_score")
     private int activityScore;
 
-    @Nullable
-    private LocalDateTime created;
+    @Column(columnDefinition = "CHAR(1) DEFAULT 'N'")
+    private char authority; // 'Y', 'N'
 
     @Nullable
-    private LocalDateTime updated;
+    private String created;
+
+    @Nullable
+    private String updated;
 
     @Builder
-    public UserEntity(String userId, String nickname, String password, String gitAddr, String profileImg, int activityScore, LocalDateTime created, LocalDateTime updated) {
+    public UserEntity(Long id, String userId, String nickname, String password, String gitAddr, String profileImg, int activityScore, char authority, String created, String updated) {
+        this.id = id;
         this.userId = userId;
         this.nickname = nickname;
         this.password = password;
         this.gitAddr = gitAddr;
         this.profileImg = profileImg;
         this.activityScore = activityScore;
+        this.authority = authority;
         this.created = created;
         this.updated = updated;
     }
@@ -72,6 +78,7 @@ public class UserEntity {
                 + "git_addr : " + this.gitAddr + "\n"
                 + "profile_img : " + this.profileImg + "\n"
                 + "activity_score : " + this.activityScore + "\n"
+                + "authority : " + this.authority + "\n"
                 + "created : " + this.created + "\n"
                 + "updated : " + this.updated + "\n";
     };

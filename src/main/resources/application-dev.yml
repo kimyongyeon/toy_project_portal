@@ -12,19 +12,41 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 128KB
-      max-request-size: 128KB
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+
+  freemarker:
+    check-template-location: false
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: xowns4817@gmail.com
+    password: password
+    properties:
+      mail:
+        debug: true
+        smtp:
+          auth: true
+          starttls:
+              enable: true
+        mime:
+            charset: UTF-8
+            transport:
+              protocol: smtp
+    default-encoding: UTF-8
 
   datasource:
-    url: jdbc:mysql://141.164.41.213:3306/okky_db?characterEncoding=UTF-8&serverTimezone=UTC
+    url: ENC(p96dBiARC6AkxQGtZL925cCut/Np7JwsbExtga5IoffyhPQE9DvftPafH6yeAupbycasUvp9g8sqpfRpEQvgyzc8Pgw/A4fNwLezl/SDqVfY+H8IkAVVnpth+Fmz3leq)
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: kimcoding
-    password: dkwmfrjdns1!
+    username: ENC(Bev9/LnXQMnYBO5rLKbHgRjRzYSymiuy)
+    password: ENC(1SOP0D2SCzUmMfYkfw1BrwWiKeX+v7a8)
     platform: mariadb
 
     jpa:
       hibernate:
-        ddl-auto: create-drop
+        ddl-auto: none
         use-new-id-generator-mappings: false
       show-sql: true
       database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
@@ -32,10 +54,13 @@ spring:
       properties:
         hibernate:
           format_sql: true
-      generate-ddl: true
+      generate-ddl: false
+  profile:
+    value: dev
 
 logging:
   level:
     root: warn
     #com.simple.portal: error
     com.simple.portal: debug
+
