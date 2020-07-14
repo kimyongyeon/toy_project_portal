@@ -1,6 +1,7 @@
 package com.simple.portal.biz.v1.user.api;
 
 import com.simple.portal.biz.v1.user.UserConst;
+import com.simple.portal.biz.v1.user.dto.FollowDto;
 import com.simple.portal.biz.v1.user.dto.LoginDto;
 import com.simple.portal.biz.v1.user.dto.PasswordDto;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
@@ -172,7 +173,7 @@ public class UserAPI {
             throw new ParamInvalidException(errMsg);
         }
 
-        userService.updateUserPassword(passwordDto.getId(), passwordDto.getNewPassword());
+        userService.updateUserPasswordService(passwordDto.getId(), passwordDto.getNewPassword());
         apiResponse.setMsg(UserConst.SUCCESS_UPDATE_PASSWORD);
         apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -184,18 +185,33 @@ public class UserAPI {
     public ResponseEntity<ApiResponse> findPassword(@RequestParam(value="id", required = false, defaultValue = "") Long id,
                                                     @RequestParam(value="user_id", required = false, defaultValue = "") String user_id) {
 
-        log.info("[PUT] /find/passwrod/" + " id : " + id + " user_id : " + user_id);
+        log.info("[PUT] /user/find/passwrod/" + " id : " + id + " user_id : " + user_id);
 
         if(id.equals("") || user_id.equals("")) throw new ParamInvalidException(UserConst.ERROR_PARAMS);
 
-        userService.findUserPassword(id, user_id);
+        userService.findUserPasswordService(id, user_id);
         apiResponse.setMsg(UserConst.SUCCESS_SEND_NEW_PASSWORD);
         apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
     // 팔로우 하기
-    // post
+    @PostMapping("/follow")
+    public ResponseEntity<ApiResponse> do_follow(@Valid @RequestBody FollowDto followDto, BindingResult bindingResult) {
+
+        log.info("[PUT] /user/follow/" + " followDto : " + followDto.toString());
+
+        if(bindingResult.hasErrors()) {
+            String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
+            throw new ParamInvalidException(errMsg);
+        }
+
+        userService.followService(followDto.getFollowed_id(),followDto.getFollowing_id());
+        apiResponse.setMsg(UserConst.SUCCESS_FOLLOW);
+        apiResponse.setBody("");
+        return  new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
 
     // 팔로우 끊기 ( 언팔로우 하기 )
     // delete

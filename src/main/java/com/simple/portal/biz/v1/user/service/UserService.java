@@ -11,6 +11,8 @@ import com.simple.portal.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,13 +26,14 @@ public class UserService {
     private UserRepository userRepository;
     private CustomMailSender mailSender;
     private JwtUtil jwtUtil;
+    private RedisTemplate<String, String> redisTemplate;
 
-    // 회원가입 메일과 비밀번호 찾기 메일 구분
     @Autowired
-    public void UserController(UserRepository userRepository, CustomMailSender mailSender, JwtUtil jwtUtil) {
+    public void UserController(UserRepository userRepository, CustomMailSender mailSender, JwtUtil jwtUtil, RedisTemplate redisTemplate) {
         this.userRepository = userRepository;
         this.mailSender = mailSender;
         this.jwtUtil = jwtUtil;
+        this.redisTemplate = redisTemplate;
     }
 
     public List<UserEntity> userFindAllService( ) {
@@ -179,7 +182,7 @@ public class UserService {
     }
 
     // 비밀번호 변경
-    public void updateUserPassword(Long id, String newPassword) {
+    public void updateUserPasswordService(Long id, String newPassword) {
         try{
             userRepository.updatePassword(id,  BCrypt.hashpw(newPassword, BCrypt.gensalt()));
         } catch (Exception e) {
@@ -190,7 +193,7 @@ public class UserService {
 
     // 비밀번호 찾기 ( = 새로운 비밀번호 전송 )
     @Transactional
-    public void findUserPassword(Long id, String user_id) {
+    public void findUserPasswordService(Long id, String user_id) {
         try {
             // 랜덤값으로 비밀번호 변경 후 -> 이메일 발송
             String randomValue = ApiHelper.getRandomString(); // 이 값을 메일로 전송
@@ -205,6 +208,21 @@ public class UserService {
         } catch (Exception e) {
             log.info("[UserService] findUserPassword Error : " + e.getMessage());
             throw new FindPasswordFailedException();
+        }
+    }
+
+    // 팔로우하기
+    public void followService(Long followed_id, Long following_id) {
+        try {
+            // 매 요청마다 operation을 만들어야 되나 ?
+            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+            String followerKey = "user:follower:" + followed_id;
+            String followingKey = "user:following:" + following_id;
+            setOperations.add(followerKey, String.valueOf(following_id));
+            setOperations.add(followingKey, String.valueOf(followed_id));
+        } catch (Exception e) {
+            log.info("[UserService] followService Error : " + e.getMessage());
+            throw new FollowFailedException();
         }
     }
 }
