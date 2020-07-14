@@ -74,7 +74,7 @@ public class UserService {
 
             userRepository.save(insertUser);
             try {
-                mailSender.sendMail(user.getUserId()); // 회원가입 후 해당 이메일로 인증 메일보냄
+                mailSender.sendJoinMail("Okky 회원 가입 완료 메일 !", user.getUserId()); // 회원가입 후 해당 이메일로 인증 메일보냄
             } catch (Exception e) {
                 log.info("[UserService] emailSend Error : " + e.getMessage());
                 throw new EmailSendFailedException();
@@ -189,19 +189,22 @@ public class UserService {
     }
 
     // 비밀번호 찾기 ( = 새로운 비밀번호 전송 )
+    @Transactional
     public void findUserPassword(Long id, String user_id) {
         try {
             // 랜덤값으로 비밀번호 변경 후 -> 이메일 발송
             String randomValue = ApiHelper.getRandomString(); // 이 값을 메일로 전송
-
             userRepository.updatePassword(id, BCrypt.hashpw(randomValue, BCrypt.gensalt()));
-            log.info("randomValue : " + randomValue); // -> 이 비밀번호를 메일로 발송
+            try {
+                mailSender.sendNewPwMail("신규 비밀번호 안내 !", user_id, randomValue); // 회원가입 후 해당 이메일로 인증 메일보냄
+            } catch (Exception e) {
+                log.info("[UserService] emailSend Error : " + e.getMessage());
+                throw new EmailSendFailedException();
+            }
             // 해당 값을 이메일로 발송
         } catch (Exception e) {
             log.info("[UserService] findUserPassword Error : " + e.getMessage());
             throw new FindPasswordFailedException();
         }
     }
-
-
 }
