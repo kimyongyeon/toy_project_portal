@@ -5,10 +5,10 @@ import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.*;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
 import com.simple.portal.common.Interceptor.JwtUtil;
+import com.simple.portal.util.ApiHelper;
 import com.simple.portal.util.CustomMailSender;
 import com.simple.portal.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import java.io.File;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -26,6 +25,7 @@ public class UserService {
     private CustomMailSender mailSender;
     private JwtUtil jwtUtil;
 
+    // 회원가입 메일과 비밀번호 찾기 메일 구분
     @Autowired
     public void UserController(UserRepository userRepository, CustomMailSender mailSender, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
@@ -177,4 +177,31 @@ public class UserService {
             throw new UserAuthCheckFailedException();
         }
     }
+
+    // 비밀번호 변경
+    public void updateUserPassword(Long id, String newPassword) {
+        try{
+            userRepository.updatePassword(id,  BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+        } catch (Exception e) {
+            log.info("[UserService] updateUserPassword Error : " + e.getMessage());
+            throw new UpdatePasswordFailedException();
+        }
+    }
+
+    // 비밀번호 찾기 ( = 새로운 비밀번호 전송 )
+    public void findUserPassword(Long id, String user_id) {
+        try {
+            // 랜덤값으로 비밀번호 변경 후 -> 이메일 발송
+            String randomValue = ApiHelper.getRandomString(); // 이 값을 메일로 전송
+
+            userRepository.updatePassword(id, BCrypt.hashpw(randomValue, BCrypt.gensalt()));
+            log.info("randomValue : " + randomValue); // -> 이 비밀번호를 메일로 발송
+            // 해당 값을 이메일로 발송
+        } catch (Exception e) {
+            log.info("[UserService] findUserPassword Error : " + e.getMessage());
+            throw new FindPasswordFailedException();
+        }
+    }
+
+
 }

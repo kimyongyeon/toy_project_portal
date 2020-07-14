@@ -2,11 +2,13 @@ package com.simple.portal.biz.v1.user.api;
 
 import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.dto.LoginDto;
+import com.simple.portal.biz.v1.user.dto.PasswordDto;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.ParamInvalidException;
 import com.simple.portal.biz.v1.user.exception.UserAuthCheckFailedException;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.common.ApiResponse;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -157,4 +159,50 @@ public class UserAPI {
             return new ModelAndView("/mail-redirect-fail-page");
         }
     }
+
+    // 비밀번호 변경
+    // 값이 없을때는 체크하는데 잘못된 값일경우도 체크하는지? (디비조회 필요) 클라에서 체크 됬다고 판단하고 체크 안해도 되는지 ?
+    @PutMapping("/password")
+    public ResponseEntity<ApiResponse> updatePassword(@Valid @RequestBody PasswordDto passwordDto, BindingResult bindingResult) {
+
+        log.info("[PUT] /user/passwrod/" + " id : " + passwordDto.getId());
+
+        if(bindingResult.hasErrors()) {
+            String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
+            throw new ParamInvalidException(errMsg);
+        }
+
+        userService.updateUserPassword(passwordDto.getId(), passwordDto.getNewPassword());
+        apiResponse.setMsg(UserConst.SUCCESS_UPDATE_PASSWORD);
+        apiResponse.setBody("");
+        return  new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    // 비밀번호 찾기 -> 인자로 받는 메일주소로 새로운 비밀번호 발송하면서 해당 값으로 비밀번호 설정
+    // 만약, 없는 유저일 경우? 클라에서 검증된 값을 넘기는지? 아니면 서버에서 디비조회 한번 더 해서 없는 유저인지 판단해야 되는지 ?
+    @PutMapping("/find/password")
+    public ResponseEntity<ApiResponse> findPassword(@RequestParam(value="id", required = false, defaultValue = "") Long id,
+                                                    @RequestParam(value="user_id", required = false, defaultValue = "") String user_id) {
+
+        log.info("[PUT] /find/passwrod/" + " id : " + id + " user_id : " + user_id);
+
+        if(id.equals("") || user_id.equals("")) throw new ParamInvalidException(UserConst.ERROR_PARAMS);
+
+        userService.findUserPassword(id, user_id);
+        apiResponse.setMsg(UserConst.SUCCESS_SEND_NEW_PASSWORD);
+        apiResponse.setBody("");
+        return  new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    // 팔로우 하기
+    // post
+
+    // 팔로우 끊기 ( 언팔로우 하기 )
+    // delete
+
+    // 나를 팔로우 하는 유저들 조회
+    // get
+
+    // 내가 팔로잉 하는 유저들 조회
+    // get
 }

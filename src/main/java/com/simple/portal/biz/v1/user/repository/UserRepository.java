@@ -23,4 +23,10 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     // 유저 권한 체크
     @Query(value="select authority from user where user_id = ?1", nativeQuery = true)
     char checkUserAuth(String user_id);
+
+    //유저 비밀번호 업데이트
+    @Modifying
+    @Transactional
+    @Query(value="update user set password = :newPassword where id = :id", nativeQuery = true)
+    void updatePassword(Long id, String newPassword);
 }
