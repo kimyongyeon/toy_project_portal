@@ -57,10 +57,11 @@ spring:
       generate-ddl: false
   profile:
     value: dev
-
 logging:
   level:
     root: warn
     #com.simple.portal: error
     com.simple.portal: debug
-
+jasypt:
+  encryptor:
+    password: test
