@@ -10,10 +10,12 @@ public class UserConst {
     public static final String FAILED_LOGIN ="아이디 혹은 비밀번호가 틀렸습니다.";
     public static final String ERROR_PARAMS = "요청인자를 잘못 입력하였습니다.";
     public static final String FAILED_EMAIL_SEND = "가입 이메일 전송에 실패하였습니다.";
+    public static final String FAILED_UPDATE_PASSWORD = "비밀번호 변경에 실패하였습니다.";
+    public static final String FAILED_SEND_NEW_PASSWORD = "새로운 비밀번호 전송에 실패하였습니다.";
+    public static final String FAILED_FOLLOW = "팔로우에 실패 하였습니다.";
 
     public static final String FIND_USER_ERROR ="해당 아이디의 유저 검색에 실패했습니다.";
     public static final String LOGIN_ERROR ="로그인에 실패하였습니다.";
-
 
     public static final String SUCCESS_SELECT_USER = "유저 조회에 성공하였습니다.";
     public static final String SUCCESS_CREATE_USER = "유저 생성에 성공하였습니다.";
@@ -22,6 +24,9 @@ public class UserConst {
     public static final String EXIST_USER="존재하는 유저입니다.";
     public static final String SUCCESS_LOGIN="로그인에 성공하였습니다.";
     public static final String SUCCESS_GRANT_USER_AUTH="가입유저에 로그인 권한이 부여되었습니다.";
+    public static final String SUCCESS_UPDATE_PASSWORD="비밀번호 변경에 성공하였습니다.";
+    public static final String SUCCESS_SEND_NEW_PASSWORD="새로운 비밀번호 전송에 성공하였습니다.";
+    public static final String SUCCESS_FOLLOW = "팔로우에 성공 하였습니다.";
 
     public static final String FAILED_CHECK_USER_AUTH="로그인 권한이 없는 유저입니다.";
     public static final String FAILED_GRANT_USER_AUTH="가입유저에 로그인 권한 부여가 실패하였습니다.";

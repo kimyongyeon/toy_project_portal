@@ -23,7 +23,7 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // 값 자동 생성 ( IDENTITY는 기본 키 생성을 데이터베이스에 위임하는 방식이다.)
     private Long id; // 기본키(PK)로 지정
 
-    @Column(name="user_id")
+    @Column(name="user_id", nullable=false, unique = true)
     @Pattern(regexp = "^[_a-z0-9-]+(.[_a-z0-9-]+)*@(?:\\w+\\.)+\\w+$",
             message="아이디(이메일) 형식에 맞지 않습니다.")
     @NotBlank(message="아이디는 필수 입력값입니다.")
