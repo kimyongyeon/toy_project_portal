@@ -38,7 +38,7 @@ spring:
     default-encoding: UTF-8
 
   datasource:
-    url: ENC(p96dBiARC6AkxQGtZL925cCut/Np7JwsbExtga5IoffyhPQE9DvftPafH6yeAupbycasUvp9g8sqpfRpEQvgyzc8Pgw/A4fNwLezl/SDqVfY+H8IkAVVnpth+Fmz3leq)
+    url: jdbc:mysql://141.164.41.213:3306/okky_db?characterEncoding=UTF-8&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ENC(Bev9/LnXQMnYBO5rLKbHgRjRzYSymiuy)
     password: ENC(1SOP0D2SCzUmMfYkfw1BrwWiKeX+v7a8)
