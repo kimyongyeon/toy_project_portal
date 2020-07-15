@@ -16,11 +16,12 @@ public class CommonExceptionHandler {
     private String profileActive;
 
     private boolean isProfileActive() {
-        if (PROFILE_DEFAULT.equals(profileActive)) {
-            return true;
-        } else {
-            return false;
-        }
+        return true;
+//        if (PROFILE_DEFAULT.equals(profileActive)) {
+//            return true;
+//        } else {
+//            return false;
+//        }
     }
   
     public static final String CODE_RE = "502";

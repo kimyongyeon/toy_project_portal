@@ -210,7 +210,7 @@ public class BoardService implements BaseService {
     }
 
     @Transactional
-    public void insert(BoardDTO boardDTO) {
+    public void insert(BoardReqWriteDTO boardDTO) {
         boardRepository.save(BoardEntity.builder()
                 .title(boardDTO.getTitle())
                 .contents(boardDTO.getContents())
@@ -222,7 +222,7 @@ public class BoardService implements BaseService {
     }
 
     @Transactional
-    public void updateTitleOrContents(BoardDTO boardDTO) {
+    public void updateTitleOrContents(BoardReqUpdateDTO boardDTO) {
 
         if (boardRepository.findById(boardDTO.getId()).isEmpty()) {
             throw new BoardDetailNotException();
@@ -236,7 +236,7 @@ public class BoardService implements BaseService {
 
     @Transactional
     public void idDelete(BoardIdDTO boardIdDTO) {
-        boardRepository.delete(BoardEntity.builder().id(boardIdDTO.getId()).build());
+        boardRepository.deleteById(boardIdDTO.getId());
     }
 
 }

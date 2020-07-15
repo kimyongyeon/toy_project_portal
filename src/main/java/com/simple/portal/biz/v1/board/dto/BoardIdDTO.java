@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Data
 @AllArgsConstructor
@@ -13,6 +14,6 @@ import javax.validation.constraints.NotBlank;
 @Builder
 public class BoardIdDTO {
 
-    @NotBlank(message="기본키는 필수 입력값입니다.")
+    @NotNull(message = "Please enter id")
     private Long id;
 }

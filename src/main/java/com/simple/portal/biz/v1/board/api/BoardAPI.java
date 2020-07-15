@@ -104,7 +104,7 @@ public class BoardAPI {
      * @return
      */
     @PostMapping("/")
-    public ResponseEntity<ApiResponse> reg(@Valid BoardDTO boardDTO, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> reg(@RequestBody @Valid BoardReqWriteDTO boardDTO, BindingResult bindingResult) {
 
         isBinding(bindingResult);
 
@@ -119,7 +119,7 @@ public class BoardAPI {
      * @return
      */
     @PutMapping("/")
-    public ResponseEntity<ApiResponse> edit(@Valid BoardDTO boardDTO, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> edit(@RequestBody @Valid BoardReqUpdateDTO boardDTO, BindingResult bindingResult) {
 
         isBinding(bindingResult);
 
@@ -134,7 +134,7 @@ public class BoardAPI {
      * @return
      */
     @DeleteMapping("/")
-    public ResponseEntity<ApiResponse> remove(@Valid BoardIdDTO boardIdDTO, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> remove(@RequestBody @Valid BoardIdDTO boardIdDTO, BindingResult bindingResult) {
 
         isBinding(bindingResult);
 
@@ -149,7 +149,7 @@ public class BoardAPI {
      * @return
      */
     @DeleteMapping("/bulk/delete")
-    public ResponseEntity<ApiResponse> bulkRemove(@Valid List<BoardIdDTO> boardIdDTOList, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> bulkRemove(@RequestBody @Valid List<BoardIdDTO> boardIdDTOList, BindingResult bindingResult) {
 
         isBinding(bindingResult);
 
