@@ -5,18 +5,19 @@ import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.*;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
 import com.simple.portal.common.Interceptor.JwtUtil;
+import com.simple.portal.util.ApiHelper;
 import com.simple.portal.util.CustomMailSender;
 import com.simple.portal.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import java.io.File;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -25,12 +26,14 @@ public class UserService {
     private UserRepository userRepository;
     private CustomMailSender mailSender;
     private JwtUtil jwtUtil;
+    private RedisTemplate<String, String> redisTemplate;
 
     @Autowired
-    public void UserController(UserRepository userRepository, CustomMailSender mailSender, JwtUtil jwtUtil) {
+    public void UserController(UserRepository userRepository, CustomMailSender mailSender, JwtUtil jwtUtil, RedisTemplate redisTemplate) {
         this.userRepository = userRepository;
         this.mailSender = mailSender;
         this.jwtUtil = jwtUtil;
+        this.redisTemplate = redisTemplate;
     }
 
     public List<UserEntity> userFindAllService( ) {
@@ -74,12 +77,13 @@ public class UserService {
 
             userRepository.save(insertUser);
             try {
-                mailSender.sendMail(user.getUserId()); // 회원가입 후 해당 이메일로 인증 메일보냄
+                mailSender.sendJoinMail("Okky 회원 가입 완료 메일 !", user.getUserId()); // 회원가입 후 해당 이메일로 인증 메일보냄
             } catch (Exception e) {
                 log.info("[UserService] emailSend Error : " + e.getMessage());
                 throw new EmailSendFailedException();
             }
         } catch (Exception e) {
+
             log.info("[UserService] createUserService Error : " + e.getMessage());
             throw new CreateUserFailedException();
         }
@@ -111,9 +115,18 @@ public class UserService {
         }
     };
 
+    @Transactional
     public void deleteUserService(Long id) {
         try {
+            UserEntity deleteUser = userRepository.findById(id).get();
+            String imgDir = deleteUser.getProfileImg();
+
             userRepository.deleteById(id);
+            File deleteFile = new File(imgDir);
+            if (deleteFile.exists()) { // 프로필 이미지 삭제
+                deleteFile.delete();
+            };
+
         } catch (Exception e) {
             log.info("[UserService] deleteUserService Error : " + e.getMessage());
             throw new DeleteUserFailedException();
@@ -165,6 +178,51 @@ public class UserService {
         } catch (Exception e) {
             log.info("[UserService] userAuthCheckService Error : " + e.getMessage());
             throw new UserAuthCheckFailedException();
+        }
+    }
+
+    // 비밀번호 변경
+    public void updateUserPasswordService(Long id, String newPassword) {
+        try{
+            userRepository.updatePassword(id,  BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+        } catch (Exception e) {
+            log.info("[UserService] updateUserPassword Error : " + e.getMessage());
+            throw new UpdatePasswordFailedException();
+        }
+    }
+
+    // 비밀번호 찾기 ( = 새로운 비밀번호 전송 )
+    @Transactional
+    public void findUserPasswordService(Long id, String user_id) {
+        try {
+            // 랜덤값으로 비밀번호 변경 후 -> 이메일 발송
+            String randomValue = ApiHelper.getRandomString(); // 이 값을 메일로 전송
+            userRepository.updatePassword(id, BCrypt.hashpw(randomValue, BCrypt.gensalt()));
+            try {
+                mailSender.sendNewPwMail("신규 비밀번호 안내 !", user_id, randomValue); // 회원가입 후 해당 이메일로 인증 메일보냄
+            } catch (Exception e) {
+                log.info("[UserService] emailSend Error : " + e.getMessage());
+                throw new EmailSendFailedException();
+            }
+            // 해당 값을 이메일로 발송
+        } catch (Exception e) {
+            log.info("[UserService] findUserPassword Error : " + e.getMessage());
+            throw new FindPasswordFailedException();
+        }
+    }
+
+    // 팔로우하기
+    public void followService(Long followed_id, Long following_id) {
+        try {
+            // 매 요청마다 operation을 만들어야 되나 ?
+            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+            String followerKey = "user:follower:" + followed_id;
+            String followingKey = "user:following:" + following_id;
+            setOperations.add(followerKey, String.valueOf(following_id));
+            setOperations.add(followingKey, String.valueOf(followed_id));
+        } catch (Exception e) {
+            log.info("[UserService] followService Error : " + e.getMessage());
+            throw new FollowFailedException();
         }
     }
 }
