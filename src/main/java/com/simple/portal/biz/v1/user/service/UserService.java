@@ -235,7 +235,6 @@ public class UserService {
     }
 
     // 비밀번호 찾기 ( = 새로운 비밀번호 전송 )
-    @Transactional
     public void findUserPasswordService(Long id, String user_id) {
         try {
             // 랜덤값으로 비밀번호 변경 후 -> 이메일 발송
@@ -256,24 +255,14 @@ public class UserService {
     }
 
     // 팔로우하기
+    @Transactional
     public void followService(Long following_id, Long followed_id) {
         try {
-            redisTemplate.execute(
-                    new SessionCallback<Object>() {
-                        @Override
-                        @SuppressWarnings("unchecked")
-                        public Object execute(RedisOperations operations) throws DataAccessException {
-                            operations.multi(); // 트랜잭션 start
-                            SetOperations setOperations = operations.opsForSet();
-                            String followingKey = "user:following:" + following_id;
-                            String followerKey = "user:followed:" + followed_id;
-                            setOperations.add(followingKey, String.valueOf(followed_id));
-                            setOperations.add(followerKey, String.valueOf(following_id));
-                            operations.exec(); // 트랜잭션 commit
-                            return null;
-                        }
-                    }
-            );
+            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+            String followedKey = "user:followed:" + followed_id;
+            String followingKey = "user:following:" + following_id;
+            setOperations.add(followedKey, String.valueOf(following_id));
+            setOperations.add(followingKey, String.valueOf(followed_id));
         } catch (Exception e) {
             log.info("[UserService] followService Error : " + e.getMessage());
             throw new FollowFailedException();
@@ -281,24 +270,14 @@ public class UserService {
     }
 
     // 언팔로우하기
-    public void unfollowService(Long followed_id, Long following_id) {
+    @Transactional
+    public void unfollowService(Long following_id, Long followed_id) {
         try {
-            redisTemplate.execute(
-                    new SessionCallback<Object>() {
-                        @Override
-                        @SuppressWarnings("unchecked")
-                        public Object execute(RedisOperations operations) throws DataAccessException {
-                            operations.multi(); // 트랜잭션 start
-                            SetOperations setOperations = operations.opsForSet();
-                            String followingKey = "user:following:" + following_id;
-                            String followerKey = "user:followed:" + followed_id;
-                            setOperations.remove(followingKey, String.valueOf(followed_id));
-                            setOperations.remove(followerKey, String.valueOf(following_id));
-                            operations.exec(); // 트랜잭션 commit
-                            return null;
-                        }
-                    }
-            );
+            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+            String followingKey = "user:following:" + following_id;
+            String followedKey = "user:followed:" + followed_id;
+            setOperations.remove(followingKey, String.valueOf(followed_id));
+            setOperations.remove(followedKey, String.valueOf(following_id));
         } catch (Exception e) {
             e.printStackTrace();
             log.info("[UserService] unfollowService Error : " + e.getMessage());

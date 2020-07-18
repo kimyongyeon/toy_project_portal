@@ -11,10 +11,16 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import java.sql.SQLException;
 
 
 // 레디스 풀 설정
 @Configuration
+@EnableTransactionManagement
 public class RedisConfig {
 
     @Value("${spring.redis.host}")
@@ -38,6 +44,7 @@ public class RedisConfig {
     @Bean
     public RedisTemplate<String, String> redisTemplate( ) {
         RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setEnableTransactionSupport(true);
         redisTemplate.setConnectionFactory(redisConnectionFactory());
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new StringRedisSerializer());
