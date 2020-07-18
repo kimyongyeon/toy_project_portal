@@ -2,6 +2,7 @@ package com.simple.portal.biz.v1.note.service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.note.dto.NoteDTO;
+import com.simple.portal.biz.v1.note.dto.NoteSaveDTO;
 import com.simple.portal.biz.v1.note.entity.NoteEntity;
 import com.simple.portal.biz.v1.note.entity.QNoteEntity;
 import com.simple.portal.biz.v1.note.repository.NoteRepository;
@@ -42,17 +43,16 @@ public class NoteService {
                 .fetchOne();
 
         // 조회수 증가 ? 업데이트 증가 안함?
-        if (!noteRepository.findById(id).isEmpty()) {
-            NoteEntity viewPointUpdateEntity = noteRepository.findById(id).get();
-            viewPointUpdateEntity.setViewPoint(1);
-            noteRepository.save(viewPointUpdateEntity);
-        }
+//        if (!noteRepository.findById(id).isEmpty()) {
+//            NoteEntity viewPointUpdateEntity = noteRepository.findById(id).get();
+//            viewPointUpdateEntity.setViewPoint(1);
+//            noteRepository.save(viewPointUpdateEntity);
+//        }
 
         // LocalDateTime to Date
         Date date = Date.from(noteEntity.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant());
 
         return NoteDTO.builder()
-                .id(noteEntity.getId())
                 .writer(noteEntity.getWriter()) // 글쓴이
                 .title(noteEntity.getTitle()) // 제목
                 .contents(noteEntity.getContents()) // 상세내용
@@ -60,8 +60,7 @@ public class NoteService {
                 .build();
     }
 
-    public void save(NoteDTO noteDTO) {
-
+    public void save(NoteSaveDTO noteDTO) {
         noteRepository.save(NoteEntity.builder()
             .title(noteDTO.getTitle())
             .contents(noteDTO.getContents())
@@ -71,11 +70,11 @@ public class NoteService {
         );
     }
 
-    public void update(NoteDTO noteDTO) {
+    public void update(NoteSaveDTO noteDTO) {
         save(noteDTO);
     }
 
-    public void delete(NoteDTO noteDTO) {
-        noteRepository.delete(NoteEntity.builder().id(noteDTO.getId()).build());
+    public void delete(Long id) {
+        noteRepository.deleteById(id);
     }
 }

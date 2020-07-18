@@ -25,7 +25,7 @@ public class BoardEntity extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String title; // 제목
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     @Lob // 2020-06-17 LOB 타입 정의
     private String contents; // 내용
 
