@@ -31,7 +31,7 @@ public class NoteAPI {
      */
     @GetMapping("/send")
     public ResponseEntity<ApiResponse> sendNote(String userId) {
-        apiResponse.setBody(noteService.findAll(userId));
+        apiResponse.setBody(noteService.findAll(userId, "s"));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -42,7 +42,7 @@ public class NoteAPI {
      */
     @GetMapping("/receive")
     public ResponseEntity<ApiResponse> receiveNote(String userId) {
-        apiResponse.setBody(noteService.findAll(userId));
+        apiResponse.setBody(noteService.findAll(userId, "r"));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
