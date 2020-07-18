@@ -2,6 +2,7 @@ package com.simple.portal.biz.v1.note.api;
 
 import com.simple.portal.biz.v1.note.NoteConst;
 import com.simple.portal.biz.v1.note.dto.NoteDTO;
+import com.simple.portal.biz.v1.note.dto.NoteSaveDTO;
 import com.simple.portal.biz.v1.note.exception.InputRequiredException;
 import com.simple.portal.biz.v1.note.service.NoteService;
 import com.simple.portal.common.ApiResponse;
@@ -62,7 +63,7 @@ public class NoteAPI {
      * @return
      */
     @PostMapping("/")
-    public ResponseEntity<ApiResponse> notePost(@Valid @RequestBody NoteDTO noteDTO, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> notePost(@Valid @RequestBody NoteSaveDTO noteDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
             throw new InputRequiredException();
@@ -75,18 +76,11 @@ public class NoteAPI {
 
     /**
      * 쪽지삭제
-     * @param noteDTO
-     * @param bindingResult
      * @return
      */
-    @DeleteMapping("/")
-    public ResponseEntity<ApiResponse> delPost(@Valid @RequestBody NoteDTO noteDTO, BindingResult bindingResult) {
-
-        if (bindingResult.hasErrors()) {
-            throw new InputRequiredException();
-        }
-
-        noteService.delete(noteDTO);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse> delPost(@PathVariable Long id) {
+        noteService.delete(id);
         apiResponse.setBody(NoteConst.BODY_BLANK);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
@@ -98,7 +92,7 @@ public class NoteAPI {
      * @return
      */
     @PutMapping("/")
-    public ResponseEntity<ApiResponse> editPost(@Valid @RequestBody NoteDTO noteDTO, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> editPost(@Valid @RequestBody NoteSaveDTO noteDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
             throw new InputRequiredException();
