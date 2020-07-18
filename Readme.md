@@ -15,6 +15,9 @@
 - sockjs
 - stomp
 
+## 젠킨스 구축
+- 깃 
+
 
 ## sockjs 메모리 아키텍처
 ![sockjs architecture](https://docs.spring.io/spring/docs/5.0.0.BUILD-SNAPSHOT/spring-framework-reference/html/images/message-flow-simple-broker.png)
