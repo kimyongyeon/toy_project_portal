@@ -24,12 +24,20 @@ public class NoteService {
     @Autowired
     JPAQueryFactory query;
 
-    public List findAll(String userId) {
+    public List findAll(String userId, String gb) {
         QNoteEntity qNoteEntity = new QNoteEntity("n");
-        return query.select(qNoteEntity)
-                .from(qNoteEntity)
-//                .where(qNoteEntity.writer.contains(userId))
-                .fetch();
+        if (gb.equals("r")) { // 받은 목록
+            return query.select(qNoteEntity)
+                    .from(qNoteEntity)
+                    .where(qNoteEntity.fromWriter.contains(userId))
+                    .fetch();
+        } else { // 보낸 목록
+            return query.select(qNoteEntity)
+                    .from(qNoteEntity)
+                    .where(qNoteEntity.toWriter.contains(userId))
+                    .fetch();
+        }
+
     }
 
     @Transactional
