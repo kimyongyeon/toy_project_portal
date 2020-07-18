@@ -22,7 +22,12 @@ public class ApiHelper {
                     sb.append(random.nextInt(10));
                     break;
                 case 3: // 특수문자 ( 아스키 코드표 33 ~ 47번까지.. 모든 특수문자는 포함 하지 못함 )
-                    sb.append((char)(random.nextInt(15) + 33));
+                    char randomChar = (char)(random.nextInt(15) + 33);
+                    if(randomChar == '"' ) {
+                        i--;
+                        continue;
+                    }
+                    sb.append(randomChar);
             }
         }
         return String.valueOf(sb);
