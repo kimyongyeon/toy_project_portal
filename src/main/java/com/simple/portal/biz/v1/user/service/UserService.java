@@ -1,7 +1,9 @@
 package com.simple.portal.biz.v1.user.service;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.dto.UserDto;
+import com.simple.portal.biz.v1.user.entity.QUserEntity;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.*;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
@@ -12,7 +14,10 @@ import com.simple.portal.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -32,18 +37,20 @@ public class UserService {
     private CustomMailSender mailSender;
     private JwtUtil jwtUtil;
     private RedisTemplate<String, String> redisTemplate;
+    private JPAQueryFactory jpaQueryFactory;
+
 
     @Autowired
-    public void UserController(UserRepository userRepository, CustomMailSender mailSender, JwtUtil jwtUtil, RedisTemplate redisTemplate) {
+    public void UserController(UserRepository userRepository, CustomMailSender mailSender, JwtUtil jwtUtil, RedisTemplate redisTemplate, JPAQueryFactory jpaQueryFactory) {
         this.userRepository = userRepository;
         this.mailSender = mailSender;
         this.jwtUtil = jwtUtil;
         this.redisTemplate = redisTemplate;
+        this.jpaQueryFactory = jpaQueryFactory;
     }
 
     public List<UserDto> userFindAllService( ) {
         try {
-
             List<UserEntity> userEntityList = userRepository.findAll();
             List<UserDto> userDtoList = new ArrayList<>();
             for(int i=0; i<userEntityList.size(); i++) {
@@ -249,13 +256,24 @@ public class UserService {
     }
 
     // 팔로우하기
-    public void followService(Long followed_id, Long following_id) {
-        try {  // 1 -> 2
-            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
-            String followerKey = "user:followed:" + followed_id;
-            String followingKey = "user:following:" + following_id;
-            setOperations.add(followerKey, String.valueOf(following_id));
-            setOperations.add(followingKey, String.valueOf(followed_id));
+    public void followService(Long following_id, Long followed_id) {
+        try {
+            redisTemplate.execute(
+                    new SessionCallback<Object>() {
+                        @Override
+                        @SuppressWarnings("unchecked")
+                        public Object execute(RedisOperations operations) throws DataAccessException {
+                            operations.multi(); // 트랜잭션 start
+                            SetOperations setOperations = operations.opsForSet();
+                            String followingKey = "user:following:" + following_id;
+                            String followerKey = "user:followed:" + followed_id;
+                            setOperations.add(followingKey, String.valueOf(followed_id));
+                            setOperations.add(followerKey, String.valueOf(following_id));
+                            operations.exec(); // 트랜잭션 commit
+                            return null;
+                        }
+                    }
+            );
         } catch (Exception e) {
             log.info("[UserService] followService Error : " + e.getMessage());
             throw new FollowFailedException();
@@ -265,11 +283,22 @@ public class UserService {
     // 언팔로우하기
     public void unfollowService(Long followed_id, Long following_id) {
         try {
-            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
-            String followerKey = "user:followed:" + followed_id;
-            String followingKey = "user:following:" + following_id;
-            setOperations.remove(followerKey, String.valueOf(following_id));
-            setOperations.remove(followingKey, String.valueOf(followed_id));
+            redisTemplate.execute(
+                    new SessionCallback<Object>() {
+                        @Override
+                        @SuppressWarnings("unchecked")
+                        public Object execute(RedisOperations operations) throws DataAccessException {
+                            operations.multi(); // 트랜잭션 start
+                            SetOperations setOperations = operations.opsForSet();
+                            String followingKey = "user:following:" + following_id;
+                            String followerKey = "user:followed:" + followed_id;
+                            setOperations.remove(followingKey, String.valueOf(followed_id));
+                            setOperations.remove(followerKey, String.valueOf(following_id));
+                            operations.exec(); // 트랜잭션 commit
+                            return null;
+                        }
+                    }
+            );
         } catch (Exception e) {
             e.printStackTrace();
             log.info("[UserService] unfollowService Error : " + e.getMessage());
@@ -288,7 +317,7 @@ public class UserService {
              for(String follower : followers) {
                  follower_list.add(Long.parseLong(follower));
              };
-             return follower_list;
+            return follower_list;
         } catch (Exception e) {
             log.info("[UserService] getFollowerIdService Error : " + e.getMessage());
             throw new SelectFollowerFailedException();
@@ -297,19 +326,7 @@ public class UserService {
 
     // 내 팔로워 조회 ( 닉네임 )
     public List<String> getFollowerNicknameService(List<Long> follower_id_list) {
-        try {
-            List<String> nicknames = new ArrayList<>();
-            String sql = "Select nickname from user where id=";
-            for(int i=0; i<follower_id_list.size(); i++) {
-                sql += follower_id_list.get(i);
-                if(i != follower_id_list.size() -1) sql += "OR";
-            }
-            log.info("sql : " + sql);
-            return nicknames;
-        } catch (Exception e) {
-            log.info("[UserService] getFollowerNicknameService Error : " + e.getMessage());
-            throw new RuntimeException();
-        }
+        return new ArrayList<>();
     }
 
     // 내가 팔로잉하는 유저 조회 ( Id )
@@ -331,5 +348,8 @@ public class UserService {
     }
 
     // 내가 팔로잉 하는 유저 조회 ( 닉네임 )
+    public List<String> getFollowingNicknameService(List<Long> following_id_list) {
+        return new ArrayList<>();
+    }
 
 }
