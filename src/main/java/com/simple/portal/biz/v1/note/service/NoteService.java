@@ -28,7 +28,7 @@ public class NoteService {
         QNoteEntity qNoteEntity = new QNoteEntity("n");
         return query.select(qNoteEntity)
                 .from(qNoteEntity)
-                .where(qNoteEntity.writer.contains(userId))
+//                .where(qNoteEntity.writer.contains(userId))
                 .fetch();
     }
 
@@ -53,7 +53,8 @@ public class NoteService {
         Date date = Date.from(noteEntity.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant());
 
         return NoteDTO.builder()
-                .writer(noteEntity.getWriter()) // 글쓴이
+                .fromWriter(noteEntity.getFromWriter())
+                .toWriter(noteEntity.getToWriter())
                 .title(noteEntity.getTitle()) // 제목
                 .contents(noteEntity.getContents()) // 상세내용
                 .createdDate(DateFormatUtil.getTimeBefore(date)) // 1일전, 10일전... 변환
@@ -62,11 +63,12 @@ public class NoteService {
 
     public void save(NoteSaveDTO noteDTO) {
         noteRepository.save(NoteEntity.builder()
-            .title(noteDTO.getTitle())
-            .contents(noteDTO.getContents())
-            .writer(noteDTO.getWriter())
-            .viewPoint(noteDTO.getViewPoint())
-            .build()
+                .title(noteDTO.getTitle())
+                .contents(noteDTO.getContents())
+                .fromWriter(noteDTO.getFromWriter())
+                .toWriter(noteDTO.getToWriter())
+                .viewPoint(noteDTO.getViewPoint())
+                .build()
         );
     }
 

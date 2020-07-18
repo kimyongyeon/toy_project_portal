@@ -22,14 +22,14 @@ public class BoardEntity extends BaseEntity {
     @Column(name = "BOARD_ID")
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = false)
     private String title; // 제목
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = false)
     @Lob // 2020-06-17 LOB 타입 정의
     private String contents; // 내용
 
-    @Column(nullable = false, updatable = false, unique = true)
+    @Column(nullable = false, updatable = false, unique = false)
     @Audited
     private String writer; // 글쓴이
 
