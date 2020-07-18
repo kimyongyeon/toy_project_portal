@@ -22,7 +22,9 @@ public class NoteEntity extends BaseEntity {
     @Column
     private String contents; // 내용
     @Column
-    private String writer; // 글쓴이
+    private String fromWriter;
+    @Column
+    private String toWriter; // 글쓴이
     @Column
     private int viewPoint; // 조회수: 상세내용 확인후 +1 한다. 0이면 읽지 않는 글로 간주. 알람푸시 개수로 써야 함.
 }
