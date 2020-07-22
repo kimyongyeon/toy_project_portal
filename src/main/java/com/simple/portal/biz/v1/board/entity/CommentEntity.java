@@ -22,19 +22,13 @@ public class CommentEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // 기본키
 
-    @NotEmpty
-    @NotNull
     @Column(nullable = false, unique = true)
     private String title; // 제목
 
-    @NotEmpty
-    @NotNull
     @Column(nullable = false)
     @Lob
     private String contents; // 내용
 
-    @NotEmpty
-    @NotNull
     @Column(nullable = false, updatable = false, unique = true)
     private String writer; // 글쓴이
 
@@ -42,13 +36,11 @@ public class CommentEntity extends BaseEntity {
     private Long viewCount; // 조회수
 
     @Column
-    private int rowLike; // 좋아요
+    private Long rowLike; // 좋아요
 
     @Column
-    private int rowDisLike; // 싫어요
+    private Long rowDisLike; // 싫어요
 
-    @NotEmpty
-    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "BOARD_ID")
     BoardEntity boardEntity;

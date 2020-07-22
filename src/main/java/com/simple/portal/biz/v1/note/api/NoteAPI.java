@@ -1,5 +1,10 @@
-package com.simple.portal.biz.v1.note;
+package com.simple.portal.biz.v1.note.api;
 
+import com.simple.portal.biz.v1.note.NoteConst;
+import com.simple.portal.biz.v1.note.dto.NoteDTO;
+import com.simple.portal.biz.v1.note.dto.NoteSaveDTO;
+import com.simple.portal.biz.v1.note.exception.InputRequiredException;
+import com.simple.portal.biz.v1.note.service.NoteService;
 import com.simple.portal.common.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,32 +15,23 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("/v1/api")
+@RequestMapping("/v1/api/note")
 public class NoteAPI {
 
     @Autowired
     NoteService noteService;
 
-    /**
-     * Response 공통 처리
-     * @return
-     */
-    private ApiResponse getApiResponse() {
-        ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setCode("200");
-        apiResponse.setMsg("success");
-        return apiResponse;
-    }
+    @Autowired
+    ApiResponse apiResponse;
 
     /**
      * 보낸쪽지함 (제목,내용,시간,글쓴이(나))
      * @param userId
      * @return
      */
-    @GetMapping("/note/send")
+    @GetMapping("/send")
     public ResponseEntity<ApiResponse> sendNote(String userId) {
-        ApiResponse apiResponse = getApiResponse();
-        apiResponse.setBody(noteService.findAll(userId));
+        apiResponse.setBody(noteService.findAll(userId, "s"));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -44,10 +40,9 @@ public class NoteAPI {
      * @param userId
      * @return
      */
-    @GetMapping("/note/receive")
+    @GetMapping("/receive")
     public ResponseEntity<ApiResponse> receiveNote(String userId) {
-        ApiResponse apiResponse = getApiResponse();
-        apiResponse.setBody(noteService.findAll(userId));
+        apiResponse.setBody(noteService.findAll(userId, "r"));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -56,9 +51,8 @@ public class NoteAPI {
      * @param id
      * @return
      */
-    @GetMapping("/note/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ApiResponse> noteDetail(@PathVariable Long id) {
-        ApiResponse apiResponse = getApiResponse();
         apiResponse.setBody(noteService.findDetail(id));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
@@ -68,34 +62,26 @@ public class NoteAPI {
       * @param noteDTO
      * @return
      */
-    @PostMapping("/note")
-    public ResponseEntity<ApiResponse>  notePost(@Valid @RequestBody NoteDTO noteDTO, BindingResult bindingResult) {
+    @PostMapping("/")
+    public ResponseEntity<ApiResponse> notePost(@Valid @RequestBody NoteSaveDTO noteDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
-            throw new RuntimeException(bindingResult.getAllErrors().toString());
+            throw new InputRequiredException();
         }
+
         noteService.save(noteDTO);
-        ApiResponse apiResponse = getApiResponse();
-        apiResponse.setBody("");
+        apiResponse.setBody(NoteConst.BODY_BLANK);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
     /**
      * 쪽지삭제
-     * @param noteDTO
-     * @param bindingResult
      * @return
      */
-    @DeleteMapping("/note")
-    public ResponseEntity<ApiResponse>  delPost(@Valid @RequestBody NoteDTO noteDTO, BindingResult bindingResult) {
-
-        if (bindingResult.hasErrors()) {
-            throw new RuntimeException(bindingResult.getAllErrors().toString());
-        }
-
-        noteService.delete(noteDTO);
-        ApiResponse apiResponse = getApiResponse();
-        apiResponse.setBody("");
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse> delPost(@PathVariable Long id) {
+        noteService.delete(id);
+        apiResponse.setBody(NoteConst.BODY_BLANK);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -105,16 +91,15 @@ public class NoteAPI {
      * @param bindingResult
      * @return
      */
-    @PutMapping("/note")
-    public ResponseEntity<ApiResponse>  editPost(@Valid @RequestBody NoteDTO noteDTO, BindingResult bindingResult) {
+    @PutMapping("/")
+    public ResponseEntity<ApiResponse> editPost(@Valid @RequestBody NoteSaveDTO noteDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
-            throw new RuntimeException(bindingResult.getAllErrors().toString());
+            throw new InputRequiredException();
         }
 
         noteService.update(noteDTO);
-        ApiResponse apiResponse = getApiResponse();
-        apiResponse.setBody("");
+        apiResponse.setBody(NoteConst.BODY_BLANK);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 }

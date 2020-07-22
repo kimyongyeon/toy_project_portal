@@ -7,6 +7,7 @@ import com.simple.portal.biz.v1.board.service.BoardService;
 import com.simple.portal.biz.v1.board.service.CommentService;
 import com.simple.portal.common.storage.StorageProperties;
 import lombok.extern.slf4j.Slf4j;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -68,33 +69,34 @@ public class PortalApplication implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        for(int i=0; i<3; i++) {
-            BoardEntity boardEntity = new BoardEntity();
-            CommentEntity commentEntity = new CommentEntity();
-            save(boardEntity, commentEntity, i);
-        }
 
-        EntityManager em = emf.createEntityManager();
-        BoardEntity boardEntity = em.find(BoardEntity.class, 1L);
-        log.debug(boardEntity.toString());
-
-        /**
-         * orphanRemoval = true 로 설정해둔 컬렉션을 삭제하고 새 값으로 설정하려면,
-         * list.clear(), ARepository.saveAndFlush(a), list.addAll(newList) 를 사용해야 한다.
-         * 안 그러면 A collection with cascade="all-delete-orphan" was no longer referenced by the owning entity instance 발생
-         */
-        List commentList = new ArrayList();
-        for(int i=0; i<10; i++) {
-            CommentEntity commentEntity = new CommentEntity();
-            commentEntity.setBoardEntity(boardEntity);
-            commentEntity.setTitle("comment title:"+i);
-            commentEntity.setContents("comment contents:"+i);
-            commentEntity.setWriter("comment writer:"+i);
-            commentList.add(commentEntity);
-        }
-        boardEntity.getCommentEntityList().clear();
-        boardRepository.saveAndFlush(boardEntity);
-        boardEntity.getCommentEntityList().addAll(commentList); // DB로 값이 가느냐 마느냐
+//        for(int i=0; i<10; i++) {
+//            BoardEntity boardEntity = new BoardEntity();
+//            CommentEntity commentEntity = new CommentEntity();
+//            jpaSave(boardEntity, commentEntity, i);
+//        }
+//
+//        EntityManager em = emf.createEntityManager();
+//        BoardEntity boardEntity = em.find(BoardEntity.class, 1L);
+//        log.debug(boardEntity.toString());
+//
+//        /**
+//         * orphanRemoval = true 로 설정해둔 컬렉션을 삭제하고 새 값으로 설정하려면,
+//         * list.clear(), ARepository.saveAndFlush(a), list.addAll(newList) 를 사용해야 한다.
+//         * 안 그러면 A collection with cascade="all-delete-orphan" was no longer referenced by the owning entity instance 발생
+//         */
+//        List commentList = new ArrayList();
+//        for(int i=0; i<10; i++) {
+//            CommentEntity commentEntity = new CommentEntity();
+//            commentEntity.setBoardEntity(boardEntity);
+//            commentEntity.setTitle("comment title:"+i);
+//            commentEntity.setContents("comment contents:"+i);
+//            commentEntity.setWriter("comment writer:"+i);
+//            commentList.add(commentEntity);
+//        }
+//        boardEntity.getCommentEntityList().clear();
+//        boardRepository.saveAndFlush(boardEntity);
+//        boardEntity.getCommentEntityList().addAll(commentList); // DB로 값이 가느냐 마느냐
 
     }
 
@@ -103,9 +105,10 @@ public class PortalApplication implements ApplicationRunner {
         boardEntity.setTitle("board title:"+i);
         boardEntity.setContents("board contents:"+i);
         boardEntity.setWriter("board writer:"+i);
-        boardService.save(boardEntity);
+        boardEntity.addComment(commentEntity);
+        boardRepository.save(boardEntity);
 
-        commentEntity.setBoardEntity(boardEntity);
+//        commentEntity.setBoardEntity(boardEntity);
         commentEntity.setTitle("comment title:"+i);
         commentEntity.setContents("comment contents:"+i);
         commentEntity.setWriter("comment writer:"+i);

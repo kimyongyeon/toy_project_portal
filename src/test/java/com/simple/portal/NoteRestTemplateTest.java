@@ -1,9 +1,9 @@
 package com.simple.portal;
 
 import com.google.gson.Gson;
-import com.simple.portal.biz.v1.note.NoteDTO;
-import com.simple.portal.biz.v1.note.NoteEntity;
-import com.simple.portal.biz.v1.note.NoteRepository;
+import com.simple.portal.biz.v1.note.dto.NoteDTO;
+import com.simple.portal.biz.v1.note.entity.NoteEntity;
+import com.simple.portal.biz.v1.note.repository.NoteRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,7 +41,6 @@ public class NoteRestTemplateTest {
             noteEntity.setViewPoint(0);
             noteEntity.setTitle("note title: " + i);
             noteEntity.setContents("note content: " + i);
-            noteEntity.setWriter("note writer: " + i);
             noteRepository.save(noteEntity);
         }
     }
@@ -78,7 +77,6 @@ public class NoteRestTemplateTest {
                         NoteDTO.builder()
                                 .title("쪽지 보냅니다.")
                                 .contents("쪽지 내용은 없어요.")
-                                .writer("쪽순이")
                                 .viewPoint(0)
                                 .build()
                 )))
@@ -92,7 +90,6 @@ public class NoteRestTemplateTest {
         mvc.perform(put("/v1/api/note")
                 .content(new Gson().toJson(
                         NoteDTO.builder()
-                                .id(1L)
                                 .build()
                 )))
                 .andExpect(status().isOk())
@@ -105,7 +102,6 @@ public class NoteRestTemplateTest {
         mvc.perform(delete("/v1/api/note")
                 .content(new Gson().toJson(
                         NoteDTO.builder()
-                                .id(3L)
                                 .build()
                 )))
                 .andExpect(status().isOk())

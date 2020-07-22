@@ -22,14 +22,14 @@ public class BoardEntity extends BaseEntity {
     @Column(name = "BOARD_ID")
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = false)
     private String title; // 제목
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = false)
     @Lob // 2020-06-17 LOB 타입 정의
     private String contents; // 내용
 
-    @Column(nullable = false, updatable = false, unique = true)
+    @Column(nullable = false, updatable = false, unique = false)
     @Audited
     private String writer; // 글쓴이
 
@@ -37,10 +37,10 @@ public class BoardEntity extends BaseEntity {
     private Long viewCount; // 조회수
 
     @Column
-    private int rowLike; // 좋아요
+    private Long rowLike; // 좋아요
 
     @Column
-    private int rowDisLike; // 싫어요
+    private Long rowDisLike; // 싫어요
 
     // cascade = CascadeType.ALL: 삭제시 자식까지...
     @Transient // 테이블 필드로 만들고 싶지 않을때 사용, 해당 어노테이션이 빠지면 java.lang.StackOverflowError: null

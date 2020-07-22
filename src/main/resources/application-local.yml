@@ -30,9 +30,9 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: create
       use-new-id-generator-mappings: false
-    generate-ddl: true
+    generate-ddl: false
 
     properties:
       hibernate:
@@ -41,6 +41,8 @@ spring:
         use_sql_comments: true # 주석 표시
 
     # springboot-jpa LazyInitializationException
+  profile:
+    value: local
 #    properties:
 #      hibernate:
 #        enable_lazy_load_no_trans: true
@@ -54,3 +56,7 @@ logging:
         type:
           descriptor:
             sql: trace # 값 매핑
+
+jasypt:
+  encryptor:
+    bean: jasyptStringEncryptor
