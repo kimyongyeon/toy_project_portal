@@ -44,7 +44,7 @@ public class CommonExceptionHandler {
                 ApiResponse
                         .builder()
                         .code(CODE_RE)
-                        .msg(getMag(e))
+                        .msg(e.getMessage())
                         .body(BODY_BLANK)
                         .build()
                 , HttpStatus.BAD_REQUEST);
@@ -56,7 +56,7 @@ public class CommonExceptionHandler {
                 ApiResponse
                         .builder()
                         .code(CODE_DAE)
-                        .msg(getMag(e))
+                        .msg(e.getMessage())
                         .body(BODY_BLANK)
                         .build()
                 , HttpStatus.BAD_REQUEST);
@@ -68,7 +68,7 @@ public class CommonExceptionHandler {
                 ApiResponse
                         .builder()
                         .code(CODE_E)
-                        .msg(getMag(e))
+                        .msg(e.getMessage())
                         .body(BODY_BLANK)
                         .build()
                 , HttpStatus.BAD_REQUEST);
@@ -80,7 +80,11 @@ public class CommonExceptionHandler {
             IdCheckFailedException.class,
             TokenCreateFailedException.class,
             UserAuthGrantFailedException.class,
-            EmailSendFailedException.class
+            EmailSendFailedException.class,
+            FindPasswordFailedException.class,
+            FollowFailedException.class,
+            UnfollowFailedException.class,
+            SelectFollowerFailedException.class, SelectFollowingUsersFailedException.class
     })
     public ResponseEntity<ApiResponse> user500Exception(Exception e) {
         return new ResponseEntity<>(

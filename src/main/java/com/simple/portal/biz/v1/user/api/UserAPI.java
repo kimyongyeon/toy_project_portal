@@ -4,7 +4,9 @@ import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.dto.FollowDto;
 import com.simple.portal.biz.v1.user.dto.LoginDto;
 import com.simple.portal.biz.v1.user.dto.PasswordDto;
+import com.simple.portal.biz.v1.user.dto.UserDto;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
+import com.simple.portal.biz.v1.user.exception.FollowFailedException;
 import com.simple.portal.biz.v1.user.exception.ParamInvalidException;
 import com.simple.portal.biz.v1.user.exception.UserAuthCheckFailedException;
 import com.simple.portal.biz.v1.user.service.UserService;
@@ -22,6 +24,7 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -62,15 +65,15 @@ public class UserAPI {
     // 유저 등록 ( 회원 가입 )
     // -> 아이디 중복 체크 로직 필요
     @PostMapping("")
-    public ResponseEntity<ApiResponse> userCreate(@Valid UserEntity user, MultipartFile file, BindingResult bindingResult) {
-        log.info("[POST] /user/ userCreateAPI" + "[RequestBody] " + user.toString());
+    public ResponseEntity<ApiResponse> userCreate(@Valid UserEntity userEntity, MultipartFile file, BindingResult bindingResult) {
+        log.info("[POST] /user/ userCreateAPI" + "[RequestBody] " + userEntity.toString());
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
         if(bindingResult.hasErrors()) {
             String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
             throw new ParamInvalidException(errMsg);
         }
-        userService.createUserService(user, file);
+        userService.createUserService(userEntity, file);
         apiResponse.setMsg(UserConst.SUCCESS_CREATE_USER);
         apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -78,8 +81,8 @@ public class UserAPI {
 
     //유저 수정
     @PutMapping("")
-    public ResponseEntity<ApiResponse> userUpdate(@Valid UserEntity user, MultipartFile file, BindingResult bindingResult) {
-        log.info("[PUT] /user/ userUpdateApi" + "[RequestBody] " + user);
+    public ResponseEntity<ApiResponse> userUpdate(@Valid UserDto userDto, MultipartFile file, BindingResult bindingResult) {
+        log.info("[PUT] /user/ userUpdateApi" + "[RequestBody] " + userDto);
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
         if(bindingResult.hasErrors()) {
@@ -87,13 +90,13 @@ public class UserAPI {
             throw new ParamInvalidException(errMsg);
         }
 
-        userService.updateUserService(user, file);
+        userService.updateUserService(userDto, file);
         apiResponse.setMsg(UserConst.SUCCESS_UPDATE_USER);
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    //유저 삭제 - 회원 탈퇴
+    //유저 삭제 - 회원 탈퇴 -> redis에 있는 팔로우 정보도 삭제
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse> userDelete(@PathVariable @NotNull Long id) {
         log.info("[DELETE] /user/ " + id + " /userDelete");
@@ -195,6 +198,8 @@ public class UserAPI {
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
+    // 1. setOperation 빈으로 만들어서 주입하기
+    // 2. 팔로워 리스트 조회했는데 id이므로 id로 닉네임 조회해서 클라한테 뿌려주기
     // 팔로우 하기
     @PostMapping("/follow")
     public ResponseEntity<ApiResponse> do_follow(@Valid @RequestBody FollowDto followDto, BindingResult bindingResult) {
@@ -206,19 +211,55 @@ public class UserAPI {
             throw new ParamInvalidException(errMsg);
         }
 
-        userService.followService(followDto.getFollowed_id(),followDto.getFollowing_id());
+        userService.followService(followDto.getFollowed_id(), followDto.getFollowing_id());
         apiResponse.setMsg(UserConst.SUCCESS_FOLLOW);
         apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-
     // 팔로우 끊기 ( 언팔로우 하기 )
-    // delete
+    @DeleteMapping("/unfollow")
+    public ResponseEntity<ApiResponse> un_follow(@Valid @RequestBody FollowDto followDto, BindingResult bindingResult) {
+
+        log.info("[PUT] /user/unfollow" + " followDto : " + followDto.toString());
+
+        if(bindingResult.hasErrors()) {
+            String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
+            throw new ParamInvalidException(errMsg);
+        }
+
+        userService.unfollowService(followDto.getFollowed_id(),followDto.getFollowing_id());
+        apiResponse.setMsg(UserConst.SUCCESS_UNFOLLOW);
+        apiResponse.setBody("");
+        return  new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
 
     // 나를 팔로우 하는 유저들 조회
-    // get
+    @GetMapping("/follower")
+    public ResponseEntity<ApiResponse> get_follower(@RequestParam(value="followed_id", required = false, defaultValue = "") Long followed_id) {
+
+        log.info("[Get] /user/follower" + " followed_id : " + followed_id);
+        if(followed_id.equals("")) throw new ParamInvalidException(UserConst.ERROR_PARAMS);
+
+        List<Long> follower_list = userService.getFollowerIdService(followed_id);
+        apiResponse.setMsg(UserConst.SUCCESS_SELECT_FOLLOWERS);
+        Map<String, Object> obj = new HashMap<>();
+        obj.put("follower_list", follower_list);
+        apiResponse.setBody(obj);
+        return  new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
 
     // 내가 팔로잉 하는 유저들 조회
-    // get
+    @GetMapping("/following")
+    public ResponseEntity<ApiResponse> get_following(@RequestParam(value="following_id", required = false, defaultValue = "") Long following_id) {
+        log.info("[GET] /user/following" + " following_id : " + following_id);
+        if(following_id.equals("")) throw new ParamInvalidException(UserConst.ERROR_PARAMS);
+
+        List<Long> following_list = userService.getFollowingIdService(following_id);
+        apiResponse.setMsg(UserConst.SUCCESS_SELECT_FOLLOWING_USERS);
+        Map<String, Object> obj = new HashMap<>();
+        obj.put("following_list", following_list);
+        apiResponse.setBody(obj);
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
 }

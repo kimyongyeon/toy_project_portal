@@ -23,24 +23,19 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // 값 자동 생성 ( IDENTITY는 기본 키 생성을 데이터베이스에 위임하는 방식이다.)
     private Long id; // 기본키(PK)로 지정
 
-    @Column(name="user_id", nullable=false, unique = true)
-    @Pattern(regexp = "^[_a-z0-9-]+(.[_a-z0-9-]+)*@(?:\\w+\\.)+\\w+$",
-            message="아이디(이메일) 형식에 맞지 않습니다.")
-    @NotBlank(message="아이디는 필수 입력값입니다.")
+    @Column(name="user_id", nullable=false, updatable = false, unique = true)
     private String userId;
 
-    @NotBlank(message="닉네임은 필수 입력값 입니다.")
-    @Size(min=2, max=8, message="닉네임을 2~8자 사이로 입력해주세요.")
+    @Column(nullable = false)
     private String nickname;
 
-    @NotBlank(message="비밀번호는 필수 입력값입니다.")
-    //@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @Column(nullable = false)
     private String password;
 
-    @Column(name="git_addr")
+    @Column(name="git_addr", nullable = true)
     private String gitAddr;
 
-    @Column(name="profile_img")
+    @Column(name="profile_img", nullable = true)
     private String profileImg;
 
     @Column(name="activity_score")
@@ -49,10 +44,10 @@ public class UserEntity {
     @Column(columnDefinition = "CHAR(1) DEFAULT 'N'")
     private char authority; // 'Y', 'N'
 
-    @Nullable
+    @Column(nullable = true)
     private String created;
 
-    @Nullable
+    @Column(nullable = true)
     private String updated;
 
     @Builder

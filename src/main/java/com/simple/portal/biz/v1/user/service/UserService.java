@@ -1,6 +1,9 @@
 package com.simple.portal.biz.v1.user.service;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.user.UserConst;
+import com.simple.portal.biz.v1.user.dto.UserDto;
+import com.simple.portal.biz.v1.user.entity.QUserEntity;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.*;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
@@ -11,14 +14,21 @@ import com.simple.portal.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.SetOperations;
+import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -27,18 +37,36 @@ public class UserService {
     private CustomMailSender mailSender;
     private JwtUtil jwtUtil;
     private RedisTemplate<String, String> redisTemplate;
+    private JPAQueryFactory jpaQueryFactory;
+
 
     @Autowired
-    public void UserController(UserRepository userRepository, CustomMailSender mailSender, JwtUtil jwtUtil, RedisTemplate redisTemplate) {
+    public void UserController(UserRepository userRepository, CustomMailSender mailSender, JwtUtil jwtUtil, RedisTemplate redisTemplate, JPAQueryFactory jpaQueryFactory) {
         this.userRepository = userRepository;
         this.mailSender = mailSender;
         this.jwtUtil = jwtUtil;
         this.redisTemplate = redisTemplate;
+        this.jpaQueryFactory = jpaQueryFactory;
     }
 
-    public List<UserEntity> userFindAllService( ) {
+    public List<UserDto> userFindAllService( ) {
         try {
-            return userRepository.findAll();
+            List<UserEntity> userEntityList = userRepository.findAll();
+            List<UserDto> userDtoList = new ArrayList<>();
+            for(int i=0; i<userEntityList.size(); i++) {
+               userDtoList.add(UserDto.builder()
+                       .id(userEntityList.get(i).getId())
+                       .userId(userEntityList.get(i).getUserId())
+                       .nickname(userEntityList.get(i).getNickname())
+                       .gitAddr(userEntityList.get(i).getGitAddr())
+                       .profileImg(userEntityList.get(i).getProfileImg())
+                       .activityScore(userEntityList.get(i).getActivityScore())
+                       .authority(userEntityList.get(i).getAuthority())
+                       .updated(DateFormatUtil.makeNowTimeStamp())
+                       .build());
+            }
+
+            return userDtoList;
         }
         catch(Exception e) {
             log.info("[UserService] userFindAllService Error : " + e.getMessage());
@@ -47,9 +75,22 @@ public class UserService {
     }
 
      // 유저의 기본키로 유저 조회
-    public UserEntity userFineOneService(Long id) {
+    public UserDto userFineOneService(Long id) {
         try {
-            return userRepository.findById(id).get();
+
+            UserEntity userEntity = userRepository.findById(id).get();
+            UserDto userDto = UserDto.builder()
+                    .id(userEntity.getId())
+                    .userId(userEntity.getUserId())
+                    .nickname(userEntity.getNickname())
+                    .gitAddr(userEntity.getGitAddr())
+                    .profileImg(userEntity.getProfileImg())
+                    .activityScore(userEntity.getActivityScore())
+                    .authority(userEntity.getAuthority())
+                    .updated(DateFormatUtil.makeNowTimeStamp())
+                    .build();
+
+            return userDto;
         } catch (Exception e) {
             log.info("[UserService] userFindOneService Error : " + e.getMessage());
             throw new SelectUserFailedException();
@@ -89,22 +130,24 @@ public class UserService {
         }
     };
 
-    public void updateUserService(UserEntity user, MultipartFile file) {
+    public void updateUserService(UserDto user, MultipartFile file) {
         try {
-
             String imgDir = "/E:\\file_test\\" + user.getUserId() + "-profileImg.png";
             file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
+
+            UserEntity originUser = userRepository.findById(user.getId()).get();
+
             // 빌더 패턴 적용
             UserEntity updateUser = UserEntity.builder()
-                    .id(user.getId())
-                    .userId(user.getUserId())
-                    .nickname(user.getNickname())
-                    .password(user.getPassword()) // 비밀번호
-                    .gitAddr(user.getGitAddr())
-                    .profileImg(imgDir)
-                    .activityScore(user.getActivityScore())
-                    .authority(user.getAuthority())
-                    .created(user.getCreated())
+                    .id(originUser.getId())
+                    .userId(originUser.getUserId())
+                    .nickname(user.getNickname()) // 변경 가능
+                    .password(originUser.getPassword())
+                    .gitAddr(user.getGitAddr()) // 변경 가능
+                    .profileImg(imgDir) // 변경 가능
+                    .activityScore(originUser.getActivityScore())
+                    .authority(originUser.getAuthority())
+                    .created(originUser.getCreated())
                     .updated(DateFormatUtil.makeNowTimeStamp())
                     .build();
 
@@ -192,12 +235,12 @@ public class UserService {
     }
 
     // 비밀번호 찾기 ( = 새로운 비밀번호 전송 )
-    @Transactional
     public void findUserPasswordService(Long id, String user_id) {
         try {
             // 랜덤값으로 비밀번호 변경 후 -> 이메일 발송
             String randomValue = ApiHelper.getRandomString(); // 이 값을 메일로 전송
             userRepository.updatePassword(id, BCrypt.hashpw(randomValue, BCrypt.gensalt()));
+            log.info("new Password : " + randomValue);
             try {
                 mailSender.sendNewPwMail("신규 비밀번호 안내 !", user_id, randomValue); // 회원가입 후 해당 이메일로 인증 메일보냄
             } catch (Exception e) {
@@ -212,17 +255,80 @@ public class UserService {
     }
 
     // 팔로우하기
-    public void followService(Long followed_id, Long following_id) {
+    @Transactional
+    public void followService(Long following_id, Long followed_id) {
         try {
-            // 매 요청마다 operation을 만들어야 되나 ?
             SetOperations<String, String> setOperations = redisTemplate.opsForSet();
-            String followerKey = "user:follower:" + followed_id;
+            String followedKey = "user:followed:" + followed_id;
             String followingKey = "user:following:" + following_id;
-            setOperations.add(followerKey, String.valueOf(following_id));
+            setOperations.add(followedKey, String.valueOf(following_id));
             setOperations.add(followingKey, String.valueOf(followed_id));
         } catch (Exception e) {
             log.info("[UserService] followService Error : " + e.getMessage());
             throw new FollowFailedException();
         }
     }
+
+    // 언팔로우하기
+    @Transactional
+    public void unfollowService(Long following_id, Long followed_id) {
+        try {
+            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+            String followingKey = "user:following:" + following_id;
+            String followedKey = "user:followed:" + followed_id;
+            setOperations.remove(followingKey, String.valueOf(followed_id));
+            setOperations.remove(followedKey, String.valueOf(following_id));
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.info("[UserService] unfollowService Error : " + e.getMessage());
+            throw new UnfollowFailedException();
+        }
+    }
+
+    // 내 팔로워 조회 ( ID )
+    public List<Long> getFollowerIdService(Long followed_id) {
+        try {
+            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+            String followerKey = "user:followed:" + followed_id;
+            Set<String> followers = setOperations.members(followerKey);
+            List<Long> follower_list = new ArrayList<>();
+
+             for(String follower : followers) {
+                 follower_list.add(Long.parseLong(follower));
+             };
+            return follower_list;
+        } catch (Exception e) {
+            log.info("[UserService] getFollowerIdService Error : " + e.getMessage());
+            throw new SelectFollowerFailedException();
+        }
+    }
+
+    // 내 팔로워 조회 ( 닉네임 )
+    public List<String> getFollowerNicknameService(List<Long> follower_id_list) {
+        return new ArrayList<>();
+    }
+
+    // 내가 팔로잉하는 유저 조회 ( Id )
+    public List<Long> getFollowingIdService(Long following_id) {
+        try {
+            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+            String followingKey = "user:following:" + following_id;
+            Set<String> following_users = setOperations.members(followingKey);
+            List<Long> following_list = new ArrayList<>();
+
+            for(String follower : following_users) {
+                following_list.add(Long.parseLong(follower));
+            };
+            return following_list;
+        } catch (Exception e) {
+            log.info("[UserService] getFollowingIdService Error : " + e.getMessage());
+            throw new SelectFollowingUsersFailedException();
+        }
+    }
+
+    // 내가 팔로잉 하는 유저 조회 ( 닉네임 )
+    public List<String> getFollowingNicknameService(List<Long> following_id_list) {
+        return new ArrayList<>();
+    }
+
 }
