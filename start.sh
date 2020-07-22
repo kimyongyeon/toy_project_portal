@@ -1,5 +1,5 @@
 #!/bin/bash
-echo 'be-portal-app start'
+echo 'be-portal-app start '
 git pull origin release
 ./mvnw clean package -Dmaven.test.skip=true
 docker build -t be-portal-app .
