@@ -21,6 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/v1/api/board")
 @Slf4j
+@CrossOrigin
 public class BoardAPI {
 
     @Autowired
