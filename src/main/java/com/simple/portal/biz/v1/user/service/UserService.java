@@ -2,8 +2,9 @@ package com.simple.portal.biz.v1.user.service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.user.UserConst;
+import com.simple.portal.biz.v1.user.dto.FollowedList;
+import com.simple.portal.biz.v1.user.dto.FollowingList;
 import com.simple.portal.biz.v1.user.dto.UserDto;
-import com.simple.portal.biz.v1.user.entity.QUserEntity;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.*;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
@@ -14,13 +15,8 @@ import com.simple.portal.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.SetOperations;
-import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -65,7 +61,6 @@ public class UserService {
                        .updated(DateFormatUtil.makeNowTimeStamp())
                        .build());
             }
-
             return userDtoList;
         }
         catch(Exception e) {
@@ -75,8 +70,21 @@ public class UserService {
     }
 
      // 유저의 기본키로 유저 조회
+    @Transactional
     public UserDto userFineOneService(Long id) {
         try {
+            List<Long> followedList = getFollowerIdService(id);
+            List<Long> followingList = getFollowingIdService(id);
+
+            FollowedList followedDto = FollowedList.builder()
+                    .cnt(followedList.size())
+                    .followed_users(followedList)
+                    .build();
+
+            FollowingList followingDto = FollowingList.builder()
+                    .cnt(followingList.size())
+                    .following_users(followingList)
+                    .build();
 
             UserEntity userEntity = userRepository.findById(id).get();
             UserDto userDto = UserDto.builder()
@@ -88,6 +96,8 @@ public class UserService {
                     .activityScore(userEntity.getActivityScore())
                     .authority(userEntity.getAuthority())
                     .updated(DateFormatUtil.makeNowTimeStamp())
+                    .followedList(followedDto)
+                    .followingList(followingDto)
                     .build();
 
             return userDto;
@@ -235,12 +245,12 @@ public class UserService {
     }
 
     // 비밀번호 찾기 ( = 새로운 비밀번호 전송 )
+    @Transactional
     public void findUserPasswordService(Long id, String user_id) {
         try {
             // 랜덤값으로 비밀번호 변경 후 -> 이메일 발송
             String randomValue = ApiHelper.getRandomString(); // 이 값을 메일로 전송
             userRepository.updatePassword(id, BCrypt.hashpw(randomValue, BCrypt.gensalt()));
-            log.info("new Password : " + randomValue);
             try {
                 mailSender.sendNewPwMail("신규 비밀번호 안내 !", user_id, randomValue); // 회원가입 후 해당 이메일로 인증 메일보냄
             } catch (Exception e) {
