@@ -9,7 +9,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class FollowingList {
+public class FollowingList { // 팔로잉 출력할때 사용
     int cnt;
-    List<Long> following_users;
+    List<FollowData> following_users;
 }

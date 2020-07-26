@@ -2,6 +2,7 @@ package com.simple.portal.biz.v1.user.service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.user.UserConst;
+import com.simple.portal.biz.v1.user.dto.FollowData;
 import com.simple.portal.biz.v1.user.dto.FollowedList;
 import com.simple.portal.biz.v1.user.dto.FollowingList;
 import com.simple.portal.biz.v1.user.dto.UserDto;
@@ -20,6 +21,9 @@ import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.transaction.Transactional;
 import java.io.File;
 import java.util.ArrayList;
@@ -35,6 +39,8 @@ public class UserService {
     private RedisTemplate<String, String> redisTemplate;
     private JPAQueryFactory jpaQueryFactory;
 
+    @PersistenceContext
+    private EntityManager entityManager; // native query를 위해 entityManger 추가
 
     @Autowired
     public void UserController(UserRepository userRepository, CustomMailSender mailSender, JwtUtil jwtUtil, RedisTemplate redisTemplate, JPAQueryFactory jpaQueryFactory) {
@@ -73,8 +79,8 @@ public class UserService {
     @Transactional
     public UserDto userFineOneService(Long id) {
         try {
-            List<Long> followedList = getFollowerIdService(id);
-            List<Long> followingList = getFollowingIdService(id);
+            List<FollowData> followedList = getFollowerIdService(id);
+            List<FollowData> followingList = getFollowingIdService(id);
 
             FollowedList followedDto = FollowedList.builder()
                     .cnt(followedList.size())
@@ -296,17 +302,36 @@ public class UserService {
     }
 
     // 내 팔로워 조회 ( ID )
-    public List<Long> getFollowerIdService(Long followed_id) {
+    public List<FollowData> getFollowerIdService(Long followed_id) {
         try {
             SetOperations<String, String> setOperations = redisTemplate.opsForSet();
             String followerKey = "user:followed:" + followed_id;
             Set<String> followers = setOperations.members(followerKey);
-            List<Long> follower_list = new ArrayList<>();
+            List<Long> follower_id_list = new ArrayList<>();
+            List<FollowData> follower_result_list = new ArrayList<>();
 
+            // String -> Long
              for(String follower : followers) {
-                 follower_list.add(Long.parseLong(follower));
+                 follower_id_list.add(Long.parseLong(follower));
              };
-            return follower_list;
+
+             // 유저 id로 닉네임 조회
+             String sql = "Select nickname from UserEntity where id=";
+             boolean flag = false;
+             for(int i=0; i<follower_id_list.size(); i++) {
+                 flag = true;
+                 sql += follower_id_list.get(i);
+                 if(i != follower_id_list.size()-1) sql += " OR id=";
+             }
+
+             if(flag) { // 팔로워가 1명 이상인 경우 ( 팔로워가 존재하는 경우 )
+                 Query query = entityManager.createQuery(sql);
+                 List<String> follower_nickname_list = query.getResultList();
+                 for(int i=0; i<follower_nickname_list.size(); i++) {
+                     follower_result_list.add(new FollowData(follower_id_list.get(i), follower_nickname_list.get(i)));
+                 }
+             }
+            return follower_result_list;
         } catch (Exception e) {
             log.info("[UserService] getFollowerIdService Error : " + e.getMessage());
             throw new SelectFollowerFailedException();
@@ -319,17 +344,37 @@ public class UserService {
     }
 
     // 내가 팔로잉하는 유저 조회 ( Id )
-    public List<Long> getFollowingIdService(Long following_id) {
+    public List<FollowData> getFollowingIdService(Long following_id) {
         try {
             SetOperations<String, String> setOperations = redisTemplate.opsForSet();
             String followingKey = "user:following:" + following_id;
             Set<String> following_users = setOperations.members(followingKey);
-            List<Long> following_list = new ArrayList<>();
+            List<Long> following_id_list = new ArrayList<>();
+            List<FollowData> following_result_list = new ArrayList<>();
 
+            // String -> Long
             for(String follower : following_users) {
-                following_list.add(Long.parseLong(follower));
+                following_id_list.add(Long.parseLong(follower));
             };
-            return following_list;
+
+            // 유저 id로 닉네임 조회
+            String sql = "Select nickname from UserEntity where id=";
+            boolean flag = false;
+            for(int i=0; i<following_id_list.size(); i++) {
+                flag = true;
+                sql += following_id_list.get(i);
+                if(i != following_id_list.size()-1) sql += " OR id=";
+            }
+
+            if(flag) { // 팔로워가 1명 이상인 경우 ( 팔로워가 존재하는 경우 )
+                Query query = entityManager.createQuery(sql);
+                List<String> following_nickname_list = query.getResultList();
+                for(int i=0; i<following_nickname_list.size(); i++) {
+                    following_result_list.add(new FollowData(following_id_list.get(i), following_nickname_list.get(i)));
+                }
+            }
+            return following_result_list;
+
         } catch (Exception e) {
             log.info("[UserService] getFollowingIdService Error : " + e.getMessage());
             throw new SelectFollowingUsersFailedException();

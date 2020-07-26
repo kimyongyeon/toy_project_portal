@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class FollowDto {
+public class FollowDto { // 팔로잉 팔로우 할때 파라미터로 받음
 
     @NotNull(message = "팔로잉 유저 id는 필수 값 입니다.")
     private Long following_id; // 팔로잉 하는 유저 id
