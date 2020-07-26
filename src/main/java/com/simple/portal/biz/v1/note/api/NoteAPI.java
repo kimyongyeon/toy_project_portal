@@ -6,6 +6,10 @@ import com.simple.portal.biz.v1.note.dto.NoteSaveDTO;
 import com.simple.portal.biz.v1.note.exception.InputRequiredException;
 import com.simple.portal.biz.v1.note.service.NoteService;
 import com.simple.portal.common.ApiResponse;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,9 +17,12 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/api/note")
+@Api(tags = "NoteAPI", description = "쪽지 API")
 public class NoteAPI {
 
     @Autowired
@@ -30,8 +37,12 @@ public class NoteAPI {
      * @return
      */
     @GetMapping("/send")
+    @ApiOperation(value="쪽지 보낸쪽지함")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "userId", value = "보낸아이디", required = true, dataType = "string", paramType = "query", defaultValue = ""),
+    })
     public ResponseEntity<ApiResponse> sendNote(String userId) {
-        apiResponse.setBody(noteService.findAll(userId, "s"));
+        apiResponse.setBody(noteService.findAll(userId, "S"));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -41,8 +52,12 @@ public class NoteAPI {
      * @return
      */
     @GetMapping("/receive")
+    @ApiOperation(value="쪽지 받은쪽지함")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "userId", value = "받는아이디", required = true, dataType = "string", paramType = "query", defaultValue = ""),
+    })
     public ResponseEntity<ApiResponse> receiveNote(String userId) {
-        apiResponse.setBody(noteService.findAll(userId, "r"));
+        apiResponse.setBody(noteService.findAll(userId, "R"));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -51,9 +66,14 @@ public class NoteAPI {
      * @param id
      * @return
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse> noteDetail(@PathVariable Long id) {
-        apiResponse.setBody(noteService.findDetail(id));
+    @GetMapping("/detail/{gb}/{id}")
+    @ApiOperation(value="쪽지 상세보기")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "gb", value = "구분(R:받는편지함,S:보낸편지함)", required = true, dataType = "string", paramType = "path", defaultValue = ""),
+            @ApiImplicitParam(name = "id", value = "편지함기본키", required = true, dataType = "string", paramType = "path", defaultValue = ""),
+    })
+    public ResponseEntity<ApiResponse> noteDetail(@PathVariable Long id, @PathVariable String gb) {
+        apiResponse.setBody(noteService.findDetail(id, gb));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -62,15 +82,16 @@ public class NoteAPI {
       * @param noteDTO
      * @return
      */
-    @PostMapping("/")
+    @PostMapping("/write")
+    @ApiOperation(value="쪽지 쓰기")
     public ResponseEntity<ApiResponse> notePost(@Valid @RequestBody NoteSaveDTO noteDTO, BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
             throw new InputRequiredException();
         }
 
-        noteService.save(noteDTO);
-        apiResponse.setBody(NoteConst.BODY_BLANK);
+        Long id = noteService.save(noteDTO);
+        apiResponse.setBody(noteService.findDetail(id, "S"));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -78,28 +99,16 @@ public class NoteAPI {
      * 쪽지삭제
      * @return
      */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse> delPost(@PathVariable Long id) {
-        noteService.delete(id);
+    @PostMapping("/remove/{gb}/{id}")
+    @ApiOperation(value="쪽지 삭제")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "gb", value = "구분(R:받는편지함,S:보낸편지함)", required = true, dataType = "string", paramType = "path", defaultValue = ""),
+            @ApiImplicitParam(name = "id", value = "편지함기본키", required = true, dataType = "string", paramType = "path", defaultValue = ""),
+    })
+    public ResponseEntity<ApiResponse> delPost(@PathVariable Long id, @PathVariable String gb) {
+        noteService.delete(id, gb);
         apiResponse.setBody(NoteConst.BODY_BLANK);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    /**
-     * 쪽지수정
-     * @param noteDTO
-     * @param bindingResult
-     * @return
-     */
-    @PutMapping("/")
-    public ResponseEntity<ApiResponse> editPost(@Valid @RequestBody NoteSaveDTO noteDTO, BindingResult bindingResult) {
-
-        if (bindingResult.hasErrors()) {
-            throw new InputRequiredException();
-        }
-
-        noteService.update(noteDTO);
-        apiResponse.setBody(NoteConst.BODY_BLANK);
-        return new ResponseEntity(apiResponse, HttpStatus.OK);
-    }
 }

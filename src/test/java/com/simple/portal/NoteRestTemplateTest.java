@@ -2,8 +2,6 @@ package com.simple.portal;
 
 import com.google.gson.Gson;
 import com.simple.portal.biz.v1.note.dto.NoteDTO;
-import com.simple.portal.biz.v1.note.entity.NoteEntity;
-import com.simple.portal.biz.v1.note.repository.NoteRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,19 +28,8 @@ public class NoteRestTemplateTest {
     @Autowired
     MockMvc mvc;
 
-    @Autowired
-    NoteRepository noteRepository;
-
     @BeforeEach()
     void 초기화() {
-        NoteEntity noteEntity;
-        for (int i = 0; i < 3; i++) {
-            noteEntity = new NoteEntity();
-            noteEntity.setViewPoint(0);
-            noteEntity.setTitle("note title: " + i);
-            noteEntity.setContents("note content: " + i);
-            noteRepository.save(noteEntity);
-        }
     }
 
     @Test

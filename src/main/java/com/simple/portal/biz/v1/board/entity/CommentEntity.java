@@ -22,14 +22,14 @@ public class CommentEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // 기본키
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String title; // 제목
 
     @Column(nullable = false)
     @Lob
     private String contents; // 내용
 
-    @Column(nullable = false, updatable = false, unique = true)
+    @Column(nullable = false)
     private String writer; // 글쓴이
 
     @Column

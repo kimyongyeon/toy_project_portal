@@ -1,12 +1,12 @@
 package com.simple.portal.biz.v1.board.service;
 
 import com.querydsl.core.QueryResults;
+import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.querydsl.jpa.sql.JPASQLQuery;
-import com.simple.portal.biz.v1.board.BoardConst;
 import com.simple.portal.biz.v1.board.dto.*;
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.entity.QBoardEntity;
@@ -17,17 +17,15 @@ import com.simple.portal.biz.v1.board.repository.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.querydsl.core.types.ExpressionUtils.count;
 
 @Service
 public class BoardService implements BaseService {
@@ -41,16 +39,16 @@ public class BoardService implements BaseService {
     @Override
     public void setLikeTransaction(Long id) {
         BoardEntity boardEntity = boardRepository.findById(id).get();
-        boardEntity.setRowLike(increase(boardEntity.getRowLike())); // 좋아요 증가
-        boardEntity.setRowDisLike(decrease(boardEntity.getRowDisLike())); // 싫어요 감소
+        boardEntity.setRowLike(increase(1L)); // 좋아요 증가
+        boardEntity.setRowDisLike(decrease(1L)); // 싫어요 감소
         boardRepository.save(boardEntity);
     }
 
     @Override
     public void setDisLikeTransaction(Long id) {
         BoardEntity boardEntity = boardRepository.findById(id).get();
-        boardEntity.setRowLike(decrease(boardEntity.getRowLike())); // 좋아요 감소
-        boardEntity.setRowDisLike(increase(boardEntity.getRowDisLike())); // 싫어요 증가
+        boardEntity.setRowLike(decrease(1L)); // 좋아요 감소
+        boardEntity.setRowDisLike(increase(1L)); // 싫어요 증가
         boardRepository.save(boardEntity);
     }
 
@@ -88,8 +86,16 @@ public class BoardService implements BaseService {
 
     public Page<BoardDTO> pageList(BoardSearchDTO boardSearchDTO, Pageable pageable) {
 
+        /**
+         * SELECT *,
+         *  (SELECT count(*) FROM tb_comment WHERE tb_comment.board_id = b.board_id ) AS comment_cnt
+         * FROM tb_board b
+         * order by comment_cnt desc
+         */
+
         // boardSearchDTO.getTitle(), PageRequest.of(boardSearchDTO.getPage(), boardSearchDTO.getSize()))
         QBoardEntity qBoardEntity = new QBoardEntity("b");
+        QCommentEntity qCommentEntity = new QCommentEntity("c");
         // 테이블 구조 그대로 목록을 뽑는다.
         QueryResults<BoardDTO> boards = query
 //                .select(qBoardEntity)
@@ -97,7 +103,14 @@ public class BoardService implements BaseService {
                         qBoardEntity.id,
                         qBoardEntity.title,
                         qBoardEntity.contents,
-                        qBoardEntity.writer, qBoardEntity.createdDate))
+                        qBoardEntity.writer,
+                        qBoardEntity.createdDate,
+                        ExpressionUtils.as(
+                                JPAExpressions.select(count(qCommentEntity.id))
+                                        .from(qCommentEntity)
+                                        .where(qCommentEntity.id.eq(qBoardEntity.id)),
+                                "cnt")
+                        ))
                 .from(qBoardEntity)
                 .where(getContains(boardSearchDTO, qBoardEntity)) // 검색 조건
                 .orderBy(getDesc(qBoardEntity, boardSearchDTO.getSort())) // 정렬
@@ -119,14 +132,21 @@ public class BoardService implements BaseService {
         }
     }
 
-    private OrderSpecifier<String> getDesc(QBoardEntity qBoardEntity, String sort) {
+    private OrderSpecifier<?> getDesc(QBoardEntity qBoardEntity, String sort) {
         if (sort.equals("title")) {
             return qBoardEntity.title.desc();
         } else if (sort.equals("contents")) {
             return qBoardEntity.contents.desc();
         } else if (sort.equals("writer")) {
             return qBoardEntity.writer.desc();
-        } else {
+        } else if (sort.equals("like")) { // 좋아요 순
+            return qBoardEntity.rowLike.desc();
+        } else if (sort.equals("totCount")) { // 조회수 순
+            return qBoardEntity.viewCount.desc();
+        } else if (sort.equals("cnt")) { /// 댓글 순
+            return qBoardEntity.cnt.desc();
+        }
+        else {
             return qBoardEntity.title.desc();
         }
     }
@@ -210,8 +230,8 @@ public class BoardService implements BaseService {
     }
 
     @Transactional
-    public void insert(BoardReqWriteDTO boardDTO) {
-        boardRepository.save(BoardEntity.builder()
+    public Long insert(BoardReqWriteDTO boardDTO) {
+        BoardEntity boardEntity = boardRepository.save(BoardEntity.builder()
                 .title(boardDTO.getTitle())
                 .contents(boardDTO.getContents())
                 .viewCount(0L)
@@ -219,6 +239,7 @@ public class BoardService implements BaseService {
                 .rowDisLike(0L)
                 .writer(boardDTO.getWriter())
                 .build());
+        return boardEntity.getId();
     }
 
     @Transactional
@@ -235,8 +256,8 @@ public class BoardService implements BaseService {
     }
 
     @Transactional
-    public void idDelete(BoardIdDTO boardIdDTO) {
-        boardRepository.deleteById(boardIdDTO.getId());
+    public void idDelete(Long id) {
+        boardRepository.deleteById(id);
     }
 
 }
