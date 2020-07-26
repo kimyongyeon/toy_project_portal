@@ -1,10 +1,10 @@
 package com.simple.portal.biz.v1.board.service;
 
 import com.querydsl.core.QueryResults;
-import com.querydsl.core.types.ExpressionUtils;
-import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.*;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.ComparableExpressionBase;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.board.dto.*;
@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -104,12 +105,15 @@ public class BoardService implements BaseService {
                         qBoardEntity.title,
                         qBoardEntity.contents,
                         qBoardEntity.writer,
+                        qBoardEntity.rowLike,
+                        qBoardEntity.rowDisLike,
+                        qBoardEntity.viewCount,
                         qBoardEntity.createdDate,
                         ExpressionUtils.as(
                                 JPAExpressions.select(count(qCommentEntity.id))
                                         .from(qCommentEntity)
-                                        .where(qCommentEntity.id.eq(qBoardEntity.id)),
-                                "cnt")
+                                        .where(qCommentEntity.boardEntity.id.eq(qBoardEntity.id)),
+                                "commentCnt")
                         ))
                 .from(qBoardEntity)
                 .where(getContains(boardSearchDTO, qBoardEntity)) // 검색 조건
@@ -132,7 +136,7 @@ public class BoardService implements BaseService {
         }
     }
 
-    private OrderSpecifier<?> getDesc(QBoardEntity qBoardEntity, String sort) {
+    private OrderSpecifier getDesc(QBoardEntity qBoardEntity, String sort) {
         if (sort.equals("title")) {
             return qBoardEntity.title.desc();
         } else if (sort.equals("contents")) {
@@ -141,10 +145,11 @@ public class BoardService implements BaseService {
             return qBoardEntity.writer.desc();
         } else if (sort.equals("like")) { // 좋아요 순
             return qBoardEntity.rowLike.desc();
-        } else if (sort.equals("totCount")) { // 조회수 순
+        } else if (sort.equals("viewCount")) { // 조회수 순
             return qBoardEntity.viewCount.desc();
-        } else if (sort.equals("cnt")) { /// 댓글 순
-            return qBoardEntity.cnt.desc();
+        } else if (sort.equals("commentCnt")) { /// 댓글 순
+            Path<Long> commentCnt = Expressions.numberPath(Long.class, "commentCnt");
+            return ((ComparableExpressionBase<Long>) commentCnt).desc();
         }
         else {
             return qBoardEntity.title.desc();

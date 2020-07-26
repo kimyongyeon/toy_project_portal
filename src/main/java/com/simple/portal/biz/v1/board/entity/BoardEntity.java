@@ -53,9 +53,6 @@ public class BoardEntity extends BaseEntity {
     @OneToMany(mappedBy = "boardEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<FileEntity> fileEntities = new ArrayList<>();
 
-    @Column
-    public Long cnt;
-
     public void addComment(CommentEntity commentEntity) {
         commentEntity.setBoardEntity(this);
         commentEntityList.add(commentEntity);

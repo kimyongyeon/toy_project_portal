@@ -30,7 +30,7 @@ public class BoardDTO {
     private Long rowDisLike = 0L; // 싫어요 개수
     private String itemGb = ""; // 아이템 구분 L:D
     private LocalDateTime createdDate; // 작성일자
-    private Long cnt = 0L; // 댓글수
+    private Long commentCnt = 0L;
 
     // QueryDSL를 활용한 조인쿼리에서 사용함.
     public BoardDTO(String title, String writer) {

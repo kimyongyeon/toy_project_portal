@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class BoardSearchDTO {
-    private String keyword;
+    private String keyword = "";
     private String gb; // title, contents, writer
     private String sort;
 }
