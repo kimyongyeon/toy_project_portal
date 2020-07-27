@@ -6,12 +6,10 @@ import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfigura
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableAutoConfiguration(exclude = { FreeMarkerAutoConfiguration.class })
-@EnableWebMvc
 public class OkkyConfiguration implements WebMvcConfigurer   {
 
     @Bean
@@ -24,7 +22,8 @@ public class OkkyConfiguration implements WebMvcConfigurer   {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**");
+        registry.addMapping("/**")
+            .allowedOrigins("http://localhost:3000");
 
     }
 
