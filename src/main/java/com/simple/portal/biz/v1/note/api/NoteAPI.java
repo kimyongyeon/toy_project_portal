@@ -2,6 +2,7 @@ package com.simple.portal.biz.v1.note.api;
 
 import com.simple.portal.biz.v1.note.NoteConst;
 import com.simple.portal.biz.v1.note.dto.NoteDTO;
+import com.simple.portal.biz.v1.note.dto.NoteRemoveDTO;
 import com.simple.portal.biz.v1.note.dto.NoteSaveDTO;
 import com.simple.portal.biz.v1.note.exception.InputRequiredException;
 import com.simple.portal.biz.v1.note.service.NoteService;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -109,6 +111,29 @@ public class NoteAPI {
         noteService.delete(id, gb);
         apiResponse.setBody(NoteConst.BODY_BLANK);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    /**
+     * 쪽지 멀티삭제
+     * @return
+     */
+    @PostMapping("/remove/bulk")
+    @ApiOperation(value="쪽지 멀티삭제")
+    public ResponseEntity<ApiResponse> delPost(@Valid @RequestBody NoteRemoveDTO noteRemoveDTO, BindingResult bindingResult) {
+
+        isBinding(bindingResult);
+
+        for (Long id : noteRemoveDTO.getId()) {
+            noteService.delete(id, noteRemoveDTO.getGb());
+        }
+        apiResponse.setBody(NoteConst.BODY_BLANK);
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    private void isBinding(BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            throw new com.simple.portal.biz.v1.board.exception.InputRequiredException();
+        }
     }
 
 }

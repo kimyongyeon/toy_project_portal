@@ -1,10 +1,7 @@
 package com.simple.portal.biz.v1.user.api;
 
 import com.simple.portal.biz.v1.user.UserConst;
-import com.simple.portal.biz.v1.user.dto.FollowDto;
-import com.simple.portal.biz.v1.user.dto.LoginDto;
-import com.simple.portal.biz.v1.user.dto.PasswordDto;
-import com.simple.portal.biz.v1.user.dto.UserDto;
+import com.simple.portal.biz.v1.user.dto.*;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.FollowFailedException;
 import com.simple.portal.biz.v1.user.exception.ParamInvalidException;
@@ -241,7 +238,7 @@ public class UserAPI {
         log.info("[Get] /user/follower" + " followed_id : " + followed_id);
         if(followed_id.equals("")) throw new ParamInvalidException(UserConst.ERROR_PARAMS);
 
-        List<Long> follower_list = userService.getFollowerIdService(followed_id);
+        List<FollowData> follower_list = userService.getFollowerIdService(followed_id);
         apiResponse.setMsg(UserConst.SUCCESS_SELECT_FOLLOWERS);
         Map<String, Object> obj = new HashMap<>();
         obj.put("follower_list", follower_list);
@@ -255,7 +252,7 @@ public class UserAPI {
         log.info("[GET] /user/following" + " following_id : " + following_id);
         if(following_id.equals("")) throw new ParamInvalidException(UserConst.ERROR_PARAMS);
 
-        List<Long> following_list = userService.getFollowingIdService(following_id);
+        List<FollowData> following_list = userService.getFollowingIdService(following_id);
         apiResponse.setMsg(UserConst.SUCCESS_SELECT_FOLLOWING_USERS);
         Map<String, Object> obj = new HashMap<>();
         obj.put("following_list", following_list);
