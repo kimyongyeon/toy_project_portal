@@ -1,9 +1,15 @@
 package com.simple.portal.biz.v1.board.service;
 
+import com.querydsl.core.QueryResults;
+import com.querydsl.core.types.Projections;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.board.BoardConst;
+import com.simple.portal.biz.v1.board.dto.BoardDTO;
 import com.simple.portal.biz.v1.board.dto.CommentDTO;
+import com.simple.portal.biz.v1.board.dto.CommentEditDTO;
 import com.simple.portal.biz.v1.board.dto.CommentLikeDTO;
 import com.simple.portal.biz.v1.board.entity.CommentEntity;
+import com.simple.portal.biz.v1.board.entity.QCommentEntity;
 import com.simple.portal.biz.v1.board.exception.BoardDetailNotException;
 import com.simple.portal.biz.v1.board.exception.ItemGubunExecption;
 import com.simple.portal.biz.v1.board.repository.CommentRepository;
@@ -15,6 +21,7 @@ import javax.swing.text.html.HTMLDocument;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Service
 public class CommentService implements BaseService {
@@ -22,19 +29,22 @@ public class CommentService implements BaseService {
     @Autowired
     CommentRepository commentRepository;
 
+    @Autowired
+    JPAQueryFactory query;
+
     @Override
     public void setLikeTransaction(Long id) {
         CommentEntity commentEntity = findByIdComment(id);
-        commentEntity.setRowLike(increase(commentEntity.getRowLike())); // 좋아요 증가
-        commentEntity.setRowDisLike(decrease(commentEntity.getRowDisLike())); // 싫어요 감소
+        commentEntity.setRowLike(increase(1L)); // 좋아요 증가
+        commentEntity.setRowDisLike(decrease(1L)); // 싫어요 감소
         commentRepository.save(commentEntity);
     }
 
     @Override
     public void setDisLikeTransaction(Long id) {
         CommentEntity commentEntity = findByIdComment(id);
-        commentEntity.setRowLike(decrease(commentEntity.getRowLike())); // 좋아요 감소
-        commentEntity.setRowDisLike(increase(commentEntity.getRowDisLike())); // 싫어요 증가
+        commentEntity.setRowLike(decrease(1L)); // 좋아요 감소
+        commentEntity.setRowDisLike(increase(1L)); // 싫어요 증가
         commentRepository.save(commentEntity);
     }
 
@@ -54,7 +64,7 @@ public class CommentService implements BaseService {
         if (BoardComponent.isItemGbLike(commentLikeDTO.getItemGb())) { // 좋아요
             setLikeTransaction(commentLikeDTO.getId());
 
-        } else if(BoardComponent.isItemGbDisLike(commentLikeDTO.getItemGb())) { // 싫어요
+        } else if (BoardComponent.isItemGbDisLike(commentLikeDTO.getItemGb())) { // 싫어요
             setDisLikeTransaction(commentLikeDTO.getId());
 
         } else {
@@ -62,8 +72,21 @@ public class CommentService implements BaseService {
         }
     }
 
+    public CommentDTO findById(Long id) {
+        CommentEntity commentEntity = commentRepository.findById(id).get();
+        CommentDTO commentDTO = new CommentDTO();
+        commentDTO.setId(commentEntity.getId());
+        commentDTO.setTitle(commentEntity.getTitle());
+        commentDTO.setContents(commentEntity.getContents());
+        commentDTO.setRowLike(commentEntity.getRowLike());
+        commentDTO.setRowDisLike(commentEntity.getRowDisLike());
+        commentDTO.setViewCount(commentEntity.getViewCount());
+        commentDTO.setBoardId(commentEntity.getBoardEntity().getId());
+        return commentDTO;
+    }
+
     public CommentEntity findByIdComment(Long id) {
-        if (commentRepository.findById(id).isEmpty()){
+        if (commentRepository.findById(id).isEmpty()) {
             throw new BoardDetailNotException();
         }
         return commentRepository.findById(id).get();
@@ -75,16 +98,38 @@ public class CommentService implements BaseService {
     }
 
     @Transactional
-    public void updateComment(CommentEntity commentEntity) {
+    public Long updateComment(CommentEntity commentEntity) {
         CommentEntity upCommentEntity = commentRepository.findById(commentEntity.getId()).get();
         // upCommentEntity.setWriter(commentEntity.getWriter());
         upCommentEntity.setTitle(commentEntity.getTitle());
         upCommentEntity.setContents(commentEntity.getContents());
-        commentRepository.save(upCommentEntity);
+        CommentEntity commentEntity1 = commentRepository.save(upCommentEntity);
+        return commentEntity1.getId();
     }
 
-    public List listComment() {
-        return commentRepository.findAllBy();
+    public List listComment(Long boardId) {
+
+        QCommentEntity qCommentEntity = new QCommentEntity("c");
+        QueryResults<CommentDTO> comments = query
+                .select(Projections.bean(CommentDTO.class,
+                        qCommentEntity.id,
+                        qCommentEntity.writer,
+                        qCommentEntity.title,
+                        qCommentEntity.contents,
+                        qCommentEntity.rowDisLike,
+                        qCommentEntity.rowLike,
+                        qCommentEntity.viewCount))
+                .from(qCommentEntity)
+                .where(qCommentEntity.boardEntity.id.eq(boardId))
+                .limit(10)
+                .fetchResults();
+
+        return comments.getResults().stream().map(c -> {
+                    c.setBoardId(boardId);
+                    return c;
+                })
+                .collect(Collectors.toList());
+
     }
 
 }

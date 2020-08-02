@@ -1,16 +1,12 @@
 package com.simple.portal.biz.v1.user.api;
 
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.dto.*;
-import com.simple.portal.biz.v1.user.entity.QUserEntity;
-import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.ParamInvalidException;
 import com.simple.portal.biz.v1.user.exception.UserAuthCheckFailedException;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.common.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -267,7 +263,6 @@ public class UserAPI {
     public ResponseEntity<ApiResponse> get_following(@RequestParam(value="following_id", required = false, defaultValue = "") Long following_id) {
         log.info("[GET] /user/following" + " following_id : " + following_id);
         if(following_id.equals("")) throw new ParamInvalidException(UserConst.ERROR_PARAMS);
-
         FollowingList following_list = userService.getFollowingIdService(following_id);
         apiResponse.setMsg(UserConst.SUCCESS_SELECT_FOLLOWING_USERS);
         Map<String, Object> obj = new HashMap<>();

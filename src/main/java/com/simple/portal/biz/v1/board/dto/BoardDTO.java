@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Data
@@ -16,19 +17,20 @@ import java.time.LocalDateTime;
 @Builder
 public class BoardDTO {
 
-    @NotBlank(message="기본키는 필수 입력값입니다.")
+    @NotNull(message = "Please enter id")
     private Long id;
-    @NotBlank(message="제목은 필수 입력값입니다.")
+    @NotNull(message="제목은 필수 입력값입니다.")
     private String title; // 제목
-    @NotBlank(message="내용은 필수 입력값입니다.")
+    @NotNull(message="내용은 필수 입력값입니다.")
     private String contents; // 내용
-    @NotBlank(message="아이디는 필수 입력값입니다.")
+    @NotNull(message="아이디는 필수 입력값입니다.")
     private String writer; // 글쓴이
     private Long viewCount = 0L; // 조회수
     private Long rowLike = 0L; // 좋아요 개수
     private Long rowDisLike = 0L; // 싫어요 개수
     private String itemGb = ""; // 아이템 구분 L:D
     private LocalDateTime createdDate; // 작성일자
+    private Long commentCnt = 0L;
 
     // QueryDSL를 활용한 조인쿼리에서 사용함.
     public BoardDTO(String title, String writer) {

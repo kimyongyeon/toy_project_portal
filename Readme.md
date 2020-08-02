@@ -17,6 +17,10 @@
 - stomp
 - Jsaypt : 암호화 적용
 
+# 젠킨스 구축
+- 삽질 1일차
+- vi 변경 0.1 0.2 0.3
+
 ## 개발 표준 가이드 
 - 트랜잭션 기능에 대한 메서드는 Transaction을 붙여준다.  
 예) setLikeTransaction, setDisLikeTransaction  
