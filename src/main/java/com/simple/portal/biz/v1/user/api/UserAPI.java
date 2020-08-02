@@ -157,7 +157,7 @@ public class UserAPI {
 
         apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
         Map<String, String> obj = new HashMap<>();
-        obj.put("userId", id);
+        obj.put("userId", id);// 로그인 return값에 userId 추가
         obj.put("token", token);
         apiResponse.setBody(obj);  // user_id 기반 토큰 생성
         return new ResponseEntity(apiResponse, HttpStatus.OK);
