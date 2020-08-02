@@ -1,18 +1,16 @@
 package com.simple.portal.biz.v1.user.api;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.user.UserConst;
-import com.simple.portal.biz.v1.user.dto.FollowDto;
-import com.simple.portal.biz.v1.user.dto.LoginDto;
-import com.simple.portal.biz.v1.user.dto.PasswordDto;
-import com.simple.portal.biz.v1.user.dto.UserDto;
+import com.simple.portal.biz.v1.user.dto.*;
+import com.simple.portal.biz.v1.user.entity.QUserEntity;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
-import com.simple.portal.biz.v1.user.exception.FollowFailedException;
 import com.simple.portal.biz.v1.user.exception.ParamInvalidException;
 import com.simple.portal.biz.v1.user.exception.UserAuthCheckFailedException;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.common.ApiResponse;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +40,20 @@ public class UserAPI {
         this.apiResponse = apiResponse;
     }
 
+/*
+    @GetMapping("/jsaypt")
+    public void jsapt( ) {
+        StandardPBEStringEncryptor jasypt = new StandardPBEStringEncryptor();
+        jasypt.setPassword("test");      //암호화 키(password)
+        jasypt.setAlgorithm("PBEWithMD5AndDES");
+
+        String encryptedText = jasypt.encrypt("dkwmfrjdns1!");    //암호화
+        String plainText = jasypt.decrypt(encryptedText);  //복호화
+
+        System.out.println("encryptedText:  " + encryptedText); //암호화된 값
+        System.out.println("plainText:  " + plainText);         //복호화된 값
+    }
+*/
     //전체 유저 조회
     @GetMapping("")
     public ResponseEntity<?> userFindAll( ) {
@@ -52,7 +64,7 @@ public class UserAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     };
 
-    //특정 유저 조회
+    //특정 유저 조회 -> 팔로잉, 팔로워 수도 같이 출력
     @GetMapping("/{id}")
     public ResponseEntity<?> userFindOne(@PathVariable @NotNull Long id) {
         log.info("[GET] /user/{id}" + id + "/userFindOne/");
@@ -65,15 +77,15 @@ public class UserAPI {
     // 유저 등록 ( 회원 가입 )
     // -> 아이디 중복 체크 로직 필요
     @PostMapping("")
-    public ResponseEntity<ApiResponse> userCreate(@Valid UserEntity userEntity, MultipartFile file, BindingResult bindingResult) {
-        log.info("[POST] /user/ userCreateAPI" + "[RequestBody] " + userEntity.toString());
+    public ResponseEntity<ApiResponse> userCreate(@Valid UserCreateDto userCreateDto, MultipartFile file, BindingResult bindingResult) {
+        log.info("[POST] /user/ userCreateAPI" + "[RequestBody] " + userCreateDto.toString());
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
         if(bindingResult.hasErrors()) {
             String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
             throw new ParamInvalidException(errMsg);
         }
-        userService.createUserService(userEntity, file);
+        userService.createUserService(userCreateDto, file);
         apiResponse.setMsg(UserConst.SUCCESS_CREATE_USER);
         apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -81,8 +93,8 @@ public class UserAPI {
 
     //유저 수정
     @PutMapping("")
-    public ResponseEntity<ApiResponse> userUpdate(@Valid UserDto userDto, MultipartFile file, BindingResult bindingResult) {
-        log.info("[PUT] /user/ userUpdateApi" + "[RequestBody] " + userDto);
+    public ResponseEntity<ApiResponse> userUpdate(@Valid UserUpdateDto userUpdateDto, MultipartFile file, BindingResult bindingResult) {
+        log.info("[PUT] /user/ userUpdateApi" + "[RequestBody] " + userUpdateDto);
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
         if(bindingResult.hasErrors()) {
@@ -90,7 +102,7 @@ public class UserAPI {
             throw new ParamInvalidException(errMsg);
         }
 
-        userService.updateUserService(userDto, file);
+        userService.updateUserService(userUpdateDto, file);
         apiResponse.setMsg(UserConst.SUCCESS_UPDATE_USER);
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -145,6 +157,7 @@ public class UserAPI {
 
         apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
         Map<String, String> obj = new HashMap<>();
+        obj.put("userId", id);
         obj.put("token", token);
         apiResponse.setBody(obj);  // user_id 기반 토큰 생성
         return new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -211,7 +224,7 @@ public class UserAPI {
             throw new ParamInvalidException(errMsg);
         }
 
-        userService.followService(followDto.getFollowed_id(), followDto.getFollowing_id());
+        userService.followService(followDto.getFollowing_id(), followDto.getFollowed_id());
         apiResponse.setMsg(UserConst.SUCCESS_FOLLOW);
         apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -228,7 +241,7 @@ public class UserAPI {
             throw new ParamInvalidException(errMsg);
         }
 
-        userService.unfollowService(followDto.getFollowed_id(),followDto.getFollowing_id());
+        userService.unfollowService(followDto.getFollowing_id(),followDto.getFollowed_id());
         apiResponse.setMsg(UserConst.SUCCESS_UNFOLLOW);
         apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -241,10 +254,10 @@ public class UserAPI {
         log.info("[Get] /user/follower" + " followed_id : " + followed_id);
         if(followed_id.equals("")) throw new ParamInvalidException(UserConst.ERROR_PARAMS);
 
-        List<Long> follower_list = userService.getFollowerIdService(followed_id);
+        FollowedList follower_list = userService.getFollowerIdService(followed_id);
         apiResponse.setMsg(UserConst.SUCCESS_SELECT_FOLLOWERS);
         Map<String, Object> obj = new HashMap<>();
-        obj.put("follower_list", follower_list);
+        obj.put("followedList", follower_list);
         apiResponse.setBody(obj);
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
     }
@@ -255,10 +268,10 @@ public class UserAPI {
         log.info("[GET] /user/following" + " following_id : " + following_id);
         if(following_id.equals("")) throw new ParamInvalidException(UserConst.ERROR_PARAMS);
 
-        List<Long> following_list = userService.getFollowingIdService(following_id);
+        FollowingList following_list = userService.getFollowingIdService(following_id);
         apiResponse.setMsg(UserConst.SUCCESS_SELECT_FOLLOWING_USERS);
         Map<String, Object> obj = new HashMap<>();
-        obj.put("following_list", following_list);
+        obj.put("followingList", following_list);
         apiResponse.setBody(obj);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }

@@ -14,8 +14,8 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 @Builder
 public class UserDto { // 클라이언트에 뿌려줄 값
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // 값 자동 생성 ( IDENTITY는 기본 키 생성을 데이터베이스에 위임하는 방식이다.)
+
+    @NotBlank(message="유저 pk id는 필수 입력값입니다.")
     private Long id; // 기본키(PK)로 지정
 
     @NotBlank(message="아이디는 필수 입력값입니다.")
@@ -32,6 +32,9 @@ public class UserDto { // 클라이언트에 뿌려줄 값
     private int activityScore;
 
     private char authority; // 'Y', 'N'
+
+    @Nullable
+    private String created;
 
     @Nullable
     private String updated;
@@ -52,6 +55,7 @@ public class UserDto { // 클라이언트에 뿌려줄 값
                 + "profile_img : " + this.profileImg + "\n"
                 + "activity_score : " + this.activityScore + "\n"
                 + "authority : " + this.authority + "\n"
+                + "created : " + this.created + "\n"
                 + "updated : " + this.updated + "\n";
     };
 }

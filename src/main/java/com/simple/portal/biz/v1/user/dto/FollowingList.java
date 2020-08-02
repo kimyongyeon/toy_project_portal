@@ -10,6 +10,6 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class FollowingList { // 팔로잉 출력할때 사용
-    int cnt;
-    List<FollowData> following_users;
+    private int cnt;
+    private List<FollowData> following_users;
 }
