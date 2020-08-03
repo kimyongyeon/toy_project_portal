@@ -66,7 +66,7 @@ public class UserService {
                        .activityScore(userEntityList.get(i).getActivityScore())
                        .authority(userEntityList.get(i).getAuthority())
                        .created(userEntityList.get(i).getCreated())
-                       .updated(DateFormatUtil.makeNowTimeStamp())
+                       .updated(userEntityList.get(i).getUpdated())
                        .followedList(followedList)
                        .followingList(followingList)
                        .build());
@@ -96,7 +96,7 @@ public class UserService {
                     .activityScore(userEntity.getActivityScore())
                     .authority(userEntity.getAuthority())
                     .created(userEntity.getCreated())
-                    .updated(DateFormatUtil.makeNowTimeStamp())
+                    .updated(userEntity.getUpdated())
                     .followedList(followedList)
                     .followingList(followingList)
                     .build();
@@ -109,10 +109,12 @@ public class UserService {
     }
 
     @Transactional
-    public void createUserService(UserCreateDto user, MultipartFile file) {
+    public void createUserService(UserCreateDto user) {
         try {
-            String imgDir = "/E:\\file_test\\" + user.getUserId() + "-profileImg.png";
-            file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
+            //String imgDir = "/E:\\file_test\\" + user.getUserId() + "-profileImg.png";
+            //file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
+
+            String BaseImgUrl = "https://lh3.googleusercontent.com/proxy/fOZw66Nm8F2zdZAF8Z30q1p05rFcKqPnXWYbg_5xc-uMbSScLJRmvOgx2qQPrlyLRtlxgnq56r6aB9rjWN8J6dvx23Nt3g10tH8JGr05K8eNkjAIB_JzKvBcMROK4FKCzptssl1F9M-JsWFbdi8wTKe5jj-L_BofTqIjxBmG";
 
             // 빌더 패턴 적용
             UserEntity insertUser = UserEntity.builder()
@@ -120,7 +122,7 @@ public class UserService {
                     .nickname(user.getNickname())
                     .password(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())) // 비밀번호
                     .gitAddr("https://github.com") // default 깃 주소
-                    .profileImg(imgDir)
+                    .profileImg(BaseImgUrl)
                     .activityScore(0) // 초기점수 0 점
                     .authority('N') // 초기 권한 N
                     .created(DateFormatUtil.makeNowTimeStamp())
@@ -174,6 +176,8 @@ public class UserService {
         try {
             UserEntity deleteUser = userRepository.findById(id).get();
             String imgDir = deleteUser.getProfileImg();
+            String delFollowedKey = "user:followed:";
+            String delFollowingKey = "user:following:";
 
             userRepository.deleteById(id);
             File deleteFile = new File(imgDir);
@@ -181,7 +185,38 @@ public class UserService {
                 deleteFile.delete();
             };
 
-            //나의 팔로워 및 팔로잉 정보 삭제....
+            //나의 팔로워 및 팔로잉 정보 삭제.
+            //내 꺼에서 followed, following 지우면서 각 유저의 것들도 지워줘야함.
+            try {
+                SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+
+                //내 팔로잉 조회
+                FollowingList followingList = getFollowingIdService(id);
+
+                //내 팔로워 조회
+                FollowedList followedList = getFollowerIdService(id);
+
+                // 내가 팔로잉한 유저들의 팔로워 정보에서 내 id 삭제
+                for(int i=0; i<followingList.getCnt(); i++) {
+                    String followedKey = "user:followed:" + followingList.getFollowing_users().get(i).getId();
+                    setOperations.remove(followedKey, String.valueOf(id));
+                }
+
+                //나를 팔로우한 유저들의 팔로잉 정보에서 내 id 삭제
+                for(int i=0; i<followedList.getCnt(); i++) {
+                    String followingKey = "user:following:" + followedList.getFollowed_users().get(i).getId();
+                    setOperations.remove(followingKey, String.valueOf(id));
+                }
+
+                //내 팔로잉/팔로우 정보 삭제
+                redisTemplate.delete(delFollowedKey + id);
+                redisTemplate.delete(delFollowingKey + id);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.info("[UserService] unfollowService Error : " + e.getMessage());
+                throw new UnfollowFailedException();
+            }
 
         } catch (Exception e) {
             log.info("[UserService] deleteUserService Error : " + e.getMessage());
@@ -240,7 +275,10 @@ public class UserService {
     // 비밀번호 변경
     public void updateUserPasswordService(Long id, String newPassword) {
         try{
-            userRepository.updatePassword(id,  BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+            UserEntity originUser = userRepository.findById(id).get();
+            originUser.setUpdated(DateFormatUtil.makeNowTimeStamp());   // 비밀번호 변경했을때 updateTime 갱신
+            originUser.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+            userRepository.save(originUser);
         } catch (Exception e) {
             log.info("[UserService] updateUserPassword Error : " + e.getMessage());
             throw new UpdatePasswordFailedException();
