@@ -67,6 +67,7 @@ public class PortalApplication implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
 
+
 //        for(int i=0; i<10; i++) {
 //            BoardEntity boardEntity = new BoardEntity();
 //            CommentEntity commentEntity = new CommentEntity();

@@ -70,10 +70,10 @@ public class UserAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    // 유저 등록 ( 회원 가입 )
+    // 유저 등록 ( 회원 가입 ) -> 회원가입시 이미지를 받을건지는 추후 결정 필요
     // -> 아이디 중복 체크 로직 필요
     @PostMapping("")
-    public ResponseEntity<ApiResponse> userCreate(@Valid UserCreateDto userCreateDto, MultipartFile file, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> userCreate(@Valid UserCreateDto userCreateDto, BindingResult bindingResult) {
         log.info("[POST] /user/ userCreateAPI" + "[RequestBody] " + userCreateDto.toString());
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
@@ -81,7 +81,7 @@ public class UserAPI {
             String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
             throw new ParamInvalidException(errMsg);
         }
-        userService.createUserService(userCreateDto, file);
+        userService.createUserService(userCreateDto);
         apiResponse.setMsg(UserConst.SUCCESS_CREATE_USER);
         apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -172,6 +172,7 @@ public class UserAPI {
             return new ModelAndView("/mail-redirect-fail-page");
         }
     }
+
 
     // 비밀번호 변경
     // 값이 없을때는 체크하는데 잘못된 값일경우도 체크하는지? (디비조회 필요) 클라에서 체크 됬다고 판단하고 체크 안해도 되는지 ?

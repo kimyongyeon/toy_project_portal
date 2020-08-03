@@ -109,10 +109,12 @@ public class UserService {
     }
 
     @Transactional
-    public void createUserService(UserCreateDto user, MultipartFile file) {
+    public void createUserService(UserCreateDto user) {
         try {
-            String imgDir = "/E:\\file_test\\" + user.getUserId() + "-profileImg.png";
-            file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
+            //String imgDir = "/E:\\file_test\\" + user.getUserId() + "-profileImg.png";
+            //file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
+
+            String BaseImgUrl = "https://lh3.googleusercontent.com/proxy/fOZw66Nm8F2zdZAF8Z30q1p05rFcKqPnXWYbg_5xc-uMbSScLJRmvOgx2qQPrlyLRtlxgnq56r6aB9rjWN8J6dvx23Nt3g10tH8JGr05K8eNkjAIB_JzKvBcMROK4FKCzptssl1F9M-JsWFbdi8wTKe5jj-L_BofTqIjxBmG";
 
             // 빌더 패턴 적용
             UserEntity insertUser = UserEntity.builder()
@@ -120,7 +122,7 @@ public class UserService {
                     .nickname(user.getNickname())
                     .password(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())) // 비밀번호
                     .gitAddr("https://github.com") // default 깃 주소
-                    .profileImg(imgDir)
+                    .profileImg(BaseImgUrl)
                     .activityScore(0) // 초기점수 0 점
                     .authority('N') // 초기 권한 N
                     .created(DateFormatUtil.makeNowTimeStamp())
