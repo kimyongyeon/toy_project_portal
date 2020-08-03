@@ -66,7 +66,7 @@ public class UserService {
                        .activityScore(userEntityList.get(i).getActivityScore())
                        .authority(userEntityList.get(i).getAuthority())
                        .created(userEntityList.get(i).getCreated())
-                       .updated(DateFormatUtil.makeNowTimeStamp())
+                       .updated(userEntityList.get(i).getUpdated())
                        .followedList(followedList)
                        .followingList(followingList)
                        .build());
@@ -96,7 +96,7 @@ public class UserService {
                     .activityScore(userEntity.getActivityScore())
                     .authority(userEntity.getAuthority())
                     .created(userEntity.getCreated())
-                    .updated(DateFormatUtil.makeNowTimeStamp())
+                    .updated(userEntity.getUpdated())
                     .followedList(followedList)
                     .followingList(followingList)
                     .build();
@@ -183,6 +183,7 @@ public class UserService {
 
             //나의 팔로워 및 팔로잉 정보 삭제....
 
+
         } catch (Exception e) {
             log.info("[UserService] deleteUserService Error : " + e.getMessage());
             throw new DeleteUserFailedException();
@@ -240,7 +241,10 @@ public class UserService {
     // 비밀번호 변경
     public void updateUserPasswordService(Long id, String newPassword) {
         try{
-            userRepository.updatePassword(id,  BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+            UserEntity originUser = userRepository.findById(id).get();
+            originUser.setUpdated(DateFormatUtil.makeNowTimeStamp());   // 비밀번호 변경했을때 updateTime 갱신
+            originUser.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+            userRepository.save(originUser);
         } catch (Exception e) {
             log.info("[UserService] updateUserPassword Error : " + e.getMessage());
             throw new UpdatePasswordFailedException();
