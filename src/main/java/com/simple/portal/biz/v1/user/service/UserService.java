@@ -108,6 +108,17 @@ public class UserService {
         }
     }
 
+    // 유저id로 pk id 조회
+    public Long userFindPkService(String userId) {
+        try {
+            UserEntity userEntity = userRepository.findByUserId(userId);
+            return userEntity.getId();
+        } catch (Exception e) {
+            log.info("[UserService] userFindPkService Error : " + e.getMessage());
+            throw new SelectUserPkFailedException();
+        }
+    }
+
     @Transactional
     public void createUserService(UserCreateDto user) {
         try {
