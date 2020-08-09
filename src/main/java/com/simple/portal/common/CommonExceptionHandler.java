@@ -76,7 +76,7 @@ public class CommonExceptionHandler {
 
     //유저 관련 Exception 처리 ( 500 )
     @ExceptionHandler({CreateUserFailedException.class, UpdateUserFailedException.class,
-            SelectUserFailedException.class, DeleteUserFailedException.class,
+            SelectUserFailedException.class, SelectUserPkFailedException.class, DeleteUserFailedException.class,
             IdCheckFailedException.class,
             TokenCreateFailedException.class,
             UserAuthGrantFailedException.class,

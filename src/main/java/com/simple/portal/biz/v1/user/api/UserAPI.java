@@ -73,7 +73,7 @@ public class UserAPI {
     // 유저 등록 ( 회원 가입 ) -> 회원가입시 이미지를 받을건지는 추후 결정 필요
     // -> 아이디 중복 체크 로직 필요
     @PostMapping("")
-    public ResponseEntity<ApiResponse> userCreate(@Valid UserCreateDto userCreateDto, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> userCreate(@Valid @RequestBody UserCreateDto userCreateDto, BindingResult bindingResult) {
         log.info("[POST] /user/ userCreateAPI" + "[RequestBody] " + userCreateDto.toString());
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
@@ -89,7 +89,7 @@ public class UserAPI {
 
     //유저 수정
     @PutMapping("")
-    public ResponseEntity<ApiResponse> userUpdate(@Valid UserUpdateDto userUpdateDto, MultipartFile file, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> userUpdate(@Valid @RequestBody UserUpdateDto userUpdateDto, MultipartFile file, BindingResult bindingResult) {
         log.info("[PUT] /user/ userUpdateApi" + "[RequestBody] " + userUpdateDto);
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
@@ -143,6 +143,7 @@ public class UserAPI {
 
         String id = loginDto.getId();
         String pw = loginDto.getPassword();
+        Long pk_id = userService.userFindPkService(id);
         log.info("[POST] /user/login " + "[ID] :  "  + id + "[PW] : " + pw + " /userLogin");
 
         String token = userService.userLoginService(id, pw);
@@ -153,6 +154,7 @@ public class UserAPI {
 
         apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
         Map<String, String> obj = new HashMap<>();
+        obj.put("userPkId", pk_id.toString());
         obj.put("userId", id);// 로그인 return값에 userId 추가
         obj.put("token", token);
         apiResponse.setBody(obj);  // user_id 기반 토큰 생성
@@ -172,7 +174,6 @@ public class UserAPI {
             return new ModelAndView("/mail-redirect-fail-page");
         }
     }
-
 
     // 비밀번호 변경
     // 값이 없을때는 체크하는데 잘못된 값일경우도 체크하는지? (디비조회 필요) 클라에서 체크 됬다고 판단하고 체크 안해도 되는지 ?

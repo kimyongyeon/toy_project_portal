@@ -16,6 +16,7 @@ public class UserConst {
     public static final String FAILED_UNFOLLOW = "언팔로우에 실패하였습니다.";
     public static final String FAILED_SELECT_FOLLOWERS = "팔로워 조회에 실패하였습니다.";
     public static final String FAILED_SELECT_FOLLOWING_USERS = "팔로잉한 유저 리스트 조회에 실패하였습니다.";
+    public static final String FAILED_SELECT_USER_PK = "유저 PK 조회에 실패하였습니다.";
 
     public static final String FIND_USER_ERROR ="해당 아이디의 유저 검색에 실패했습니다.";
     public static final String LOGIN_ERROR ="로그인에 실패하였습니다.";
