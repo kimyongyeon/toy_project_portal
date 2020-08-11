@@ -34,8 +34,7 @@ public class SocketApi {
     @MessageMapping("/comment/notread")
     @SendTo("/socket/sub/comment/notread")
     public ResponseEntity<ApiResponse> notread(String UserId){
-        //apiResponse.setBody(socketService.findNotReadNote(UserId));
-        apiResponse.setBody(noteService.findDetail((long)1));
+        apiResponse.setBody(socketService.findNotReadNote(UserId));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
 
     }
