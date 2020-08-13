@@ -1,5 +1,7 @@
 package com.simple.portal.biz.v1.board.entity;
 
+import com.querydsl.core.annotations.PropertyType;
+import com.querydsl.core.annotations.QueryType;
 import com.simple.portal.common.BaseEntity;
 import lombok.*;
 import org.hibernate.envers.Audited;
@@ -45,11 +47,11 @@ public class BoardEntity extends BaseEntity {
     // cascade = CascadeType.ALL: 삭제시 자식까지...
     @Transient // 테이블 필드로 만들고 싶지 않을때 사용, 해당 어노테이션이 빠지면 java.lang.StackOverflowError: null
     @OneToMany(mappedBy = "boardEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    List<CommentEntity> commentEntityList = new ArrayList<>();
+    private List<CommentEntity> commentEntityList = new ArrayList<>();
 
     @Transient // 테이블 필드로 만들고 싶지 않을때 사용
     @OneToMany(mappedBy = "boardEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    List<FileEntity> fileEntities = new ArrayList<>();
+    private List<FileEntity> fileEntities = new ArrayList<>();
 
     public void addComment(CommentEntity commentEntity) {
         commentEntity.setBoardEntity(this);

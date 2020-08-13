@@ -2,8 +2,7 @@ package com.simple.portal.biz.v1.user.service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.user.UserConst;
-import com.simple.portal.biz.v1.user.dto.UserDto;
-import com.simple.portal.biz.v1.user.entity.QUserEntity;
+import com.simple.portal.biz.v1.user.dto.*;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.*;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
@@ -14,16 +13,14 @@ import com.simple.portal.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.SetOperations;
-import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.transaction.Transactional;
 import java.io.File;
 import java.util.ArrayList;
@@ -39,6 +36,8 @@ public class UserService {
     private RedisTemplate<String, String> redisTemplate;
     private JPAQueryFactory jpaQueryFactory;
 
+    @PersistenceContext
+    private EntityManager entityManager; // native query를 위해 entityManger 추가
 
     @Autowired
     public void UserController(UserRepository userRepository, CustomMailSender mailSender, JwtUtil jwtUtil, RedisTemplate redisTemplate, JPAQueryFactory jpaQueryFactory) {
@@ -54,6 +53,10 @@ public class UserService {
             List<UserEntity> userEntityList = userRepository.findAll();
             List<UserDto> userDtoList = new ArrayList<>();
             for(int i=0; i<userEntityList.size(); i++) {
+
+               FollowedList followedList = getFollowerIdService(userEntityList.get(i).getId());
+               FollowingList followingList = getFollowingIdService(userEntityList.get(i).getId());
+
                userDtoList.add(UserDto.builder()
                        .id(userEntityList.get(i).getId())
                        .userId(userEntityList.get(i).getUserId())
@@ -62,10 +65,12 @@ public class UserService {
                        .profileImg(userEntityList.get(i).getProfileImg())
                        .activityScore(userEntityList.get(i).getActivityScore())
                        .authority(userEntityList.get(i).getAuthority())
-                       .updated(DateFormatUtil.makeNowTimeStamp())
+                       .created(userEntityList.get(i).getCreated())
+                       .updated(userEntityList.get(i).getUpdated())
+                       .followedList(followedList)
+                       .followingList(followingList)
                        .build());
             }
-
             return userDtoList;
         }
         catch(Exception e) {
@@ -75,8 +80,11 @@ public class UserService {
     }
 
      // 유저의 기본키로 유저 조회
+    @Transactional
     public UserDto userFineOneService(Long id) {
         try {
+            FollowedList followedList = getFollowerIdService(id);
+            FollowingList followingList = getFollowingIdService(id);
 
             UserEntity userEntity = userRepository.findById(id).get();
             UserDto userDto = UserDto.builder()
@@ -87,7 +95,10 @@ public class UserService {
                     .profileImg(userEntity.getProfileImg())
                     .activityScore(userEntity.getActivityScore())
                     .authority(userEntity.getAuthority())
-                    .updated(DateFormatUtil.makeNowTimeStamp())
+                    .created(userEntity.getCreated())
+                    .updated(userEntity.getUpdated())
+                    .followedList(followedList)
+                    .followingList(followingList)
                     .build();
 
             return userDto;
@@ -97,21 +108,34 @@ public class UserService {
         }
     }
 
-    @Transactional
-    public void createUserService(UserEntity user, MultipartFile file) {
+    // 유저id로 pk id 조회
+    public Long userFindPkService(String userId) {
         try {
-            String imgDir = "/E:\\file_test\\" + user.getUserId() + "-profileImg.png";
-            file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
+            UserEntity userEntity = userRepository.findByUserId(userId);
+            return userEntity.getId();
+        } catch (Exception e) {
+            log.info("[UserService] userFindPkService Error : " + e.getMessage());
+            throw new SelectUserPkFailedException();
+        }
+    }
+
+    @Transactional
+    public void createUserService(UserCreateDto user) {
+        try {
+            //String imgDir = "/E:\\file_test\\" + user.getUserId() + "-profileImg.png";
+            //file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
+
+            String BaseImgUrl = "https://lh3.googleusercontent.com/proxy/fOZw66Nm8F2zdZAF8Z30q1p05rFcKqPnXWYbg_5xc-uMbSScLJRmvOgx2qQPrlyLRtlxgnq56r6aB9rjWN8J6dvx23Nt3g10tH8JGr05K8eNkjAIB_JzKvBcMROK4FKCzptssl1F9M-JsWFbdi8wTKe5jj-L_BofTqIjxBmG";
 
             // 빌더 패턴 적용
             UserEntity insertUser = UserEntity.builder()
                     .userId(user.getUserId())
                     .nickname(user.getNickname())
                     .password(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())) // 비밀번호
-                    .gitAddr(user.getGitAddr())
-                    .profileImg(imgDir)
-                    .activityScore(user.getActivityScore())
-                    .authority(user.getAuthority())
+                    .gitAddr("https://github.com") // default 깃 주소
+                    .profileImg(BaseImgUrl)
+                    .activityScore(0) // 초기점수 0 점
+                    .authority('N') // 초기 권한 N
                     .created(DateFormatUtil.makeNowTimeStamp())
                     .updated(DateFormatUtil.makeNowTimeStamp())
                     .build();
@@ -130,7 +154,7 @@ public class UserService {
         }
     };
 
-    public void updateUserService(UserDto user, MultipartFile file) {
+    public void updateUserService(UserUpdateDto user, MultipartFile file) {
         try {
             String imgDir = "/E:\\file_test\\" + user.getUserId() + "-profileImg.png";
             file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
@@ -139,16 +163,16 @@ public class UserService {
 
             // 빌더 패턴 적용
             UserEntity updateUser = UserEntity.builder()
-                    .id(originUser.getId())
-                    .userId(originUser.getUserId())
+                    .id(originUser.getId()) // 변경 불가
+                    .userId(originUser.getUserId()) // 변경 불가
                     .nickname(user.getNickname()) // 변경 가능
-                    .password(originUser.getPassword())
+                    .password(originUser.getPassword()) // 변경 불가 ( 비밀번호 변경 api 따로 존재 )
                     .gitAddr(user.getGitAddr()) // 변경 가능
                     .profileImg(imgDir) // 변경 가능
-                    .activityScore(originUser.getActivityScore())
-                    .authority(originUser.getAuthority())
-                    .created(originUser.getCreated())
-                    .updated(DateFormatUtil.makeNowTimeStamp())
+                    .activityScore(originUser.getActivityScore()) // 변경 불가
+                    .authority(originUser.getAuthority()) // 변경 불가
+                    .created(originUser.getCreated()) // 변경 불가
+                    .updated(DateFormatUtil.makeNowTimeStamp()) // 현재시간으로 변경
                     .build();
 
             userRepository.save(updateUser);
@@ -163,12 +187,47 @@ public class UserService {
         try {
             UserEntity deleteUser = userRepository.findById(id).get();
             String imgDir = deleteUser.getProfileImg();
+            String delFollowedKey = "user:followed:";
+            String delFollowingKey = "user:following:";
 
             userRepository.deleteById(id);
             File deleteFile = new File(imgDir);
             if (deleteFile.exists()) { // 프로필 이미지 삭제
                 deleteFile.delete();
             };
+
+            //나의 팔로워 및 팔로잉 정보 삭제.
+            //내 꺼에서 followed, following 지우면서 각 유저의 것들도 지워줘야함.
+            try {
+                SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+
+                //내 팔로잉 조회
+                FollowingList followingList = getFollowingIdService(id);
+
+                //내 팔로워 조회
+                FollowedList followedList = getFollowerIdService(id);
+
+                // 내가 팔로잉한 유저들의 팔로워 정보에서 내 id 삭제
+                for(int i=0; i<followingList.getCnt(); i++) {
+                    String followedKey = "user:followed:" + followingList.getFollowing_users().get(i).getId();
+                    setOperations.remove(followedKey, String.valueOf(id));
+                }
+
+                //나를 팔로우한 유저들의 팔로잉 정보에서 내 id 삭제
+                for(int i=0; i<followedList.getCnt(); i++) {
+                    String followingKey = "user:following:" + followedList.getFollowed_users().get(i).getId();
+                    setOperations.remove(followingKey, String.valueOf(id));
+                }
+
+                //내 팔로잉/팔로우 정보 삭제
+                redisTemplate.delete(delFollowedKey + id);
+                redisTemplate.delete(delFollowingKey + id);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.info("[UserService] unfollowService Error : " + e.getMessage());
+                throw new UnfollowFailedException();
+            }
 
         } catch (Exception e) {
             log.info("[UserService] deleteUserService Error : " + e.getMessage());
@@ -227,7 +286,10 @@ public class UserService {
     // 비밀번호 변경
     public void updateUserPasswordService(Long id, String newPassword) {
         try{
-            userRepository.updatePassword(id,  BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+            UserEntity originUser = userRepository.findById(id).get();
+            originUser.setUpdated(DateFormatUtil.makeNowTimeStamp());   // 비밀번호 변경했을때 updateTime 갱신
+            originUser.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+            userRepository.save(originUser);
         } catch (Exception e) {
             log.info("[UserService] updateUserPassword Error : " + e.getMessage());
             throw new UpdatePasswordFailedException();
@@ -235,12 +297,12 @@ public class UserService {
     }
 
     // 비밀번호 찾기 ( = 새로운 비밀번호 전송 )
+    @Transactional
     public void findUserPasswordService(Long id, String user_id) {
         try {
             // 랜덤값으로 비밀번호 변경 후 -> 이메일 발송
             String randomValue = ApiHelper.getRandomString(); // 이 값을 메일로 전송
             userRepository.updatePassword(id, BCrypt.hashpw(randomValue, BCrypt.gensalt()));
-            log.info("new Password : " + randomValue);
             try {
                 mailSender.sendNewPwMail("신규 비밀번호 안내 !", user_id, randomValue); // 회원가입 후 해당 이메일로 인증 메일보냄
             } catch (Exception e) {
@@ -286,49 +348,89 @@ public class UserService {
     }
 
     // 내 팔로워 조회 ( ID )
-    public List<Long> getFollowerIdService(Long followed_id) {
+    public FollowedList getFollowerIdService(Long followed_id) {
         try {
             SetOperations<String, String> setOperations = redisTemplate.opsForSet();
             String followerKey = "user:followed:" + followed_id;
             Set<String> followers = setOperations.members(followerKey);
-            List<Long> follower_list = new ArrayList<>();
+            List<Long> follower_id_list = new ArrayList<>();
+            List<FollowData> follower_result_list = new ArrayList<>();
 
+            // String -> Long
              for(String follower : followers) {
-                 follower_list.add(Long.parseLong(follower));
+                 follower_id_list.add(Long.parseLong(follower));
              };
-            return follower_list;
+
+             // 유저 id로 닉네임 조회
+             String sql = "Select nickname from UserEntity where id=";
+             boolean flag = false;
+             for(int i=0; i<follower_id_list.size(); i++) {
+                 flag = true;
+                 sql += follower_id_list.get(i);
+                 if(i != follower_id_list.size()-1) sql += " OR id=";
+             }
+
+             if(flag) { // 팔로워가 1명 이상인 경우 ( 팔로워가 존재하는 경우 )
+                 Query query = entityManager.createQuery(sql);
+                 List<String> follower_nickname_list = query.getResultList();
+                 for(int i=0; i<follower_nickname_list.size(); i++) {
+                     follower_result_list.add(new FollowData(follower_id_list.get(i), follower_nickname_list.get(i)));
+                 }
+             }
+
+            FollowedList followedDto = FollowedList.builder()
+                    .cnt(follower_result_list.size())
+                    .followed_users(follower_result_list)
+                    .build();
+
+            return followedDto;
         } catch (Exception e) {
             log.info("[UserService] getFollowerIdService Error : " + e.getMessage());
             throw new SelectFollowerFailedException();
         }
     }
 
-    // 내 팔로워 조회 ( 닉네임 )
-    public List<String> getFollowerNicknameService(List<Long> follower_id_list) {
-        return new ArrayList<>();
-    }
-
     // 내가 팔로잉하는 유저 조회 ( Id )
-    public List<Long> getFollowingIdService(Long following_id) {
+    public FollowingList getFollowingIdService(Long following_id) {
         try {
             SetOperations<String, String> setOperations = redisTemplate.opsForSet();
             String followingKey = "user:following:" + following_id;
             Set<String> following_users = setOperations.members(followingKey);
-            List<Long> following_list = new ArrayList<>();
+            List<Long> following_id_list = new ArrayList<>();
+            List<FollowData> following_result_list = new ArrayList<>();
 
+            // String -> Long
             for(String follower : following_users) {
-                following_list.add(Long.parseLong(follower));
+                following_id_list.add(Long.parseLong(follower));
             };
-            return following_list;
+
+            // 유저 id로 닉네임 조회
+            String sql = "Select nickname from UserEntity where id=";
+            boolean flag = false;
+            for(int i=0; i<following_id_list.size(); i++) {
+                flag = true;
+                sql += following_id_list.get(i);
+                if(i != following_id_list.size()-1) sql += " OR id=";
+            }
+
+            if(flag) { // 팔로워가 1명 이상인 경우 ( 팔로워가 존재하는 경우 )
+                Query query = entityManager.createQuery(sql);
+                List<String> following_nickname_list = query.getResultList();
+                for(int i=0; i<following_nickname_list.size(); i++) {
+                    following_result_list.add(new FollowData(following_id_list.get(i), following_nickname_list.get(i)));
+                }
+            }
+
+            FollowingList followingDto = FollowingList.builder()
+                    .cnt(following_result_list.size())
+                    .following_users(following_result_list)
+                    .build();
+
+            return followingDto;
+
         } catch (Exception e) {
             log.info("[UserService] getFollowingIdService Error : " + e.getMessage());
             throw new SelectFollowingUsersFailedException();
         }
     }
-
-    // 내가 팔로잉 하는 유저 조회 ( 닉네임 )
-    public List<String> getFollowingNicknameService(List<Long> following_id_list) {
-        return new ArrayList<>();
-    }
-
 }
