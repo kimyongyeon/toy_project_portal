@@ -69,11 +69,11 @@ public class PortalApplication implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
 
 
-        for(int i=0; i<1000; i++) {
-            BoardEntity boardEntity = new BoardEntity();
-            CommentEntity commentEntity = new CommentEntity();
-            jpaSave(boardEntity, commentEntity, i);
-        }
+//        for(int i=0; i<1000; i++) {
+//            BoardEntity boardEntity = new BoardEntity();
+//            CommentEntity commentEntity = new CommentEntity();
+//            jpaSave(boardEntity, commentEntity, i);
+//        }
 //
 //        EntityManager em = emf.createEntityManager();
 //        BoardEntity boardEntity = em.find(BoardEntity.class, 1L);
