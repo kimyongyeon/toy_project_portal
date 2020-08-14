@@ -79,7 +79,7 @@ public class BoardAPI {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "keyword", value = "키워드", required = false, dataType = "string", paramType = "query", defaultValue = ""),
             @ApiImplicitParam(name = "gb", value = "조회구분[title(제목)/contents(내용)/writer(글쓴이)]", required = true, dataType = "string", paramType = "query", defaultValue = "title"),
-            @ApiImplicitParam(name = "sort", value = "정렬[like(좋아요)/viewCount(조회수)/commentCnt(댓글순)]", required = true, dataType = "string", paramType = "query", defaultValue = "like"),
+            @ApiImplicitParam(name = "sort", value = "정렬[date(최신순)/like(좋아요)/viewCount(조회수)/commentCnt(댓글순)]", required = true, dataType = "string", paramType = "query", defaultValue = "like"),
 
     })
     public ResponseEntity<ApiResponse> page(BoardSearchDTO boardSearchDTO, Pageable pageable) {

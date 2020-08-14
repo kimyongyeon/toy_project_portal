@@ -143,6 +143,8 @@ public class BoardService implements BaseService {
             return qBoardEntity.contents.desc();
         } else if (sort.equals("writer")) {
             return qBoardEntity.writer.desc();
+        } else if (sort.equals("date")) { // 날짜
+            return qBoardEntity.createdDate.desc();
         } else if (sort.equals("like")) { // 좋아요 순
             return qBoardEntity.rowLike.desc();
         } else if (sort.equals("viewCount")) { // 조회수 순
