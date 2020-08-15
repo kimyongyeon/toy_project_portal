@@ -95,6 +95,7 @@ public class BoardService implements BaseService {
         QBoardEntity qBoardEntity = new QBoardEntity("b");
         QCommentEntity qCommentEntity = new QCommentEntity("c");
         // 테이블 구조 그대로 목록을 뽑는다.
+        int offset = (boardSearchDTO.getCurrentPage() - 1) * boardSearchDTO.getSize();
         QueryResults<BoardDTO> boards = query
 //                .select(qBoardEntity)
                 .select(Projections.bean(BoardDTO.class,
@@ -115,7 +116,7 @@ public class BoardService implements BaseService {
                 .from(qBoardEntity)
                 .where(getContains(boardSearchDTO, qBoardEntity)) // 검색 조건
                 .orderBy(getDesc(qBoardEntity, boardSearchDTO.getSort())) // 정렬
-                .offset(boardSearchDTO.getCurrentPage())
+                .offset(offset)
                 .limit(boardSearchDTO.getSize())
                 .fetchResults();
         return new PageImpl(boards.getResults(), PageRequest.of(boardSearchDTO.getCurrentPage(), boardSearchDTO.getSize()),boards.getTotal());
