@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class BoardSearchDTO {
+public class BoardSearchDTO extends BasePageDTO {
     private String keyword = "";
     private String gb; // title, contents, writer
-    private String sort;
+
 }

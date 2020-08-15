@@ -15,10 +15,7 @@ import com.simple.portal.biz.v1.board.exception.BoardDetailNotException;
 import com.simple.portal.biz.v1.board.exception.ItemGubunExecption;
 import com.simple.portal.biz.v1.board.repository.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -85,7 +82,7 @@ public class BoardService implements BaseService {
 //        return boardRepository.findAllByTitleOrContents(boardDTO.getTitle(), boardDTO.getContents());
 //    }
 
-    public Page<BoardDTO> pageList(BoardSearchDTO boardSearchDTO, Pageable pageable) {
+    public Page<BoardDTO> pageList(BoardSearchDTO boardSearchDTO) {
 
         /**
          * SELECT *,
@@ -118,10 +115,10 @@ public class BoardService implements BaseService {
                 .from(qBoardEntity)
                 .where(getContains(boardSearchDTO, qBoardEntity)) // 검색 조건
                 .orderBy(getDesc(qBoardEntity, boardSearchDTO.getSort())) // 정렬
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
+                .offset(boardSearchDTO.getOffset())
+                .limit(boardSearchDTO.getSize())
                 .fetchResults();
-        return new PageImpl(boards.getResults(),pageable,boards.getTotal());
+        return new PageImpl(boards.getResults(), PageRequest.of(boardSearchDTO.getPage(), boardSearchDTO.getSize()),boards.getTotal());
     }
 
     private BooleanExpression getContains(BoardSearchDTO boardSearchDTO, QBoardEntity qBoardEntity) {
