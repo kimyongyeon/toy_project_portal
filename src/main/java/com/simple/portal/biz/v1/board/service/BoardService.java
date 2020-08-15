@@ -115,10 +115,10 @@ public class BoardService implements BaseService {
                 .from(qBoardEntity)
                 .where(getContains(boardSearchDTO, qBoardEntity)) // 검색 조건
                 .orderBy(getDesc(qBoardEntity, boardSearchDTO.getSort())) // 정렬
-                .offset(boardSearchDTO.getOffset())
+                .offset(boardSearchDTO.getCurrentPage())
                 .limit(boardSearchDTO.getSize())
                 .fetchResults();
-        return new PageImpl(boards.getResults(), PageRequest.of(boardSearchDTO.getPage(), boardSearchDTO.getSize()),boards.getTotal());
+        return new PageImpl(boards.getResults(), PageRequest.of(boardSearchDTO.getCurrentPage(), boardSearchDTO.getSize()),boards.getTotal());
     }
 
     private BooleanExpression getContains(BoardSearchDTO boardSearchDTO, QBoardEntity qBoardEntity) {

@@ -4,8 +4,7 @@ import lombok.Data;
 
 @Data
 public class BasePageDTO {
-    int page = 1;
-    int offset = 10;
+    int currentPage = 1;
     int size = 20;
     private String sort;
 }

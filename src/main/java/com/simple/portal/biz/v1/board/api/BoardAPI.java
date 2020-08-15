@@ -80,8 +80,7 @@ public class BoardAPI {
             @ApiImplicitParam(name = "keyword", value = "키워드", required = false, dataType = "string", paramType = "query", defaultValue = ""),
             @ApiImplicitParam(name = "gb", value = "조회구분[title(제목)/contents(내용)/writer(글쓴이)]", required = true, dataType = "string", paramType = "query", defaultValue = "title"),
             @ApiImplicitParam(name = "sort", value = "정렬[date(최신순)/like(좋아요)/viewCount(조회수)/commentCnt(댓글순)]", required = true, dataType = "string", paramType = "query", defaultValue = "like"),
-            @ApiImplicitParam(name = "offset", value = "페이지번호 목록 개수, 기본, 10", required = true, dataType = "string", paramType = "query", defaultValue = "10"),
-            @ApiImplicitParam(name = "page", value = "페이지번호, default: 1", required = true, dataType = "string", paramType = "query", defaultValue = "1"),
+            @ApiImplicitParam(name = "currentPage", value = "페이지번호, default: 1", required = true, dataType = "string", paramType = "query", defaultValue = "1"),
             @ApiImplicitParam(name = "size", value = "한페이지당 20개씩 출력, default: 20", required = true, dataType = "string", paramType = "query", defaultValue = "20"),
 
     })
