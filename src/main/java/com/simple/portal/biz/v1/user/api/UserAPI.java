@@ -14,7 +14,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -36,6 +35,7 @@ public class UserAPI {
         this.userService = userService;
         this.apiResponse = apiResponse;
     }
+
 /*
     @GetMapping("/jsaypt")
     public void jsapt( ) {
@@ -163,18 +163,16 @@ public class UserAPI {
 
     // 권한 업데이트
     @GetMapping("/auth")
-    public RedirectView auth_update(@RequestParam(value="userId") @NotNull String userId) {
+    public ModelAndView auth_update(@RequestParam(value="userId") @NotNull String userId) {
 
         log.info("[GET] /user/auth/ " + userId);
         Boolean res = userService.updateUserAuthService(userId);
-        RedirectView redirectView = new RedirectView();
 
         if(res) { // 권한 업데이트 성공
-            redirectView.setUrl("http://www.naver.com"); // 인증 성공했을때 페이지
+           return new ModelAndView("/mail-redirect-success-page");
         } else { // 권한 업데이트 실패
-            redirectView.setUrl("http://www.naver.com"); // 인증 실패했을때 페이지
+            return new ModelAndView("/mail-redirect-fail-page");
         }
-        return redirectView;
     }
 
     // 비밀번호 변경
