@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title></head>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <body>
        <h2>로그인</h2><br/><br/>
 
@@ -15,9 +16,11 @@
     let socials = document.getElementsByClassName("btn_social");
     for (let social of socials) {
         social.addEventListener('click', function () {
-        let socialType = this.getAttribute('data-social');
-        location.href = "/oauth2/authorization/" + socialType;
-    })
-} </script>
+            let socialType = this.getAttribute('data-social');
+            location.href = "/oauth2/authorization/" + socialType;
+        })
+    }
+
+</script>
 </body>
 </html>

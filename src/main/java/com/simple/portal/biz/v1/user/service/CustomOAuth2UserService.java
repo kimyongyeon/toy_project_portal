@@ -43,9 +43,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         log.info("platform : " + attributes.getPlatform());
         log.info("full data : " + attributes.getAttributes());
         */
-
-        Map<String, Object> attributesWithPlatform = new LinkedHashMap<>(attributes.getAttributes());
-        attributesWithPlatform.put("platform", registrationId);
+        // OAuth2User에서 필요한 것들만 파싱
+        Map<String, Object> userOauthData = new LinkedHashMap<>();
+        if(registrationId.equals("google")) userOauthData.put("sub",  attributes.getNameAttributeKey()); // 구글일때는 키가 sub임
+        else userOauthData.put("id",  attributes.getNameAttributeKey());
+        userOauthData.put("platform", registrationId);
+        userOauthData.put("nickname", attributes.getName());
+        userOauthData.put("email", attributes.getEmail());
+        userOauthData.put("profile", attributes.getPicture());
 
         Set<GrantedAuthority> authorities = new LinkedHashSet<>();
         authorities.add(new OAuth2UserAuthority(attributes.getAttributes()));
@@ -56,7 +61,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         return new DefaultOAuth2User(
                 authorities,
-                attributesWithPlatform,
+                userOauthData,
                 attributes.getNameAttributeKey());
     }
 }
