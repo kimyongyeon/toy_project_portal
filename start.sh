@@ -2,6 +2,7 @@
 echo 'be-portal-app start '
 git pull origin release
 ./mvnw clean package -Dmaven.test.skip=true
+export APP_ENCRYPTION_PASSWORD=test
 docker build -t be-portal-app .
 docker stop be-portal-app
 docker rm be-portal-app
