@@ -7,7 +7,7 @@ docker stop be-portal-app
 docker rm be-portal-app
 docker run -it -d -p 8081:8081  \
     -e spring.profiles.active="dev"  \
-    -e jasypt.encryptor.password="test"  \
+    -e APP_ENCRYPTION_PASSWORD="test"  \
     --add-host=database:141.164.41.213 \
     --name be-portal-app \
     be-portal-app
