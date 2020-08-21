@@ -57,7 +57,7 @@ public class CommentAPI {
         BoardEntity boardEntity = new BoardEntity();
         boardEntity.setId(commentDTO.getBoardId());
         commentService.writeComment(CommentEntity.builder()
-                .id(commentDTO.getId())
+//                .id(commentDTO.getId())
                 .title(commentDTO.getContent())
                 .contents(commentDTO.getTitle())
                 .writer(commentDTO.getWriter())
