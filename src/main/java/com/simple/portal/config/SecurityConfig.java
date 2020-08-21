@@ -6,14 +6,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
 import static com.simple.portal.biz.v1.user.security.SocialType.*;
 
 @Configuration
-@EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     /**
@@ -61,9 +59,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         web.ignoring().antMatchers("/v2/api-docs", "/configuration/ui",
                 "/swagger-resources", "/configuration/security",
                 "/swagger-ui.html", "/webjars/**", "/swagger/**", "/websocket-client.html", "/websocket-client",
-                "/websocket", "/sockjs", "/websockethandler/**", "/webjars/**", "/greetings/**");
+                "/websocket", "/sockjs","/stomp", "/websockethandler/**", "/webjars/**", "/greetings/**", "/ws-stomp/**");
     }
-
     /*
     @Bean
     @Override

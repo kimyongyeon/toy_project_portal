@@ -37,32 +37,6 @@ public class UserAPI {
         this.apiResponse = apiResponse;
     }
 
-    @GetMapping("/jsaypt")
-    public void jsapt( ) {
-        StandardPBEStringEncryptor jasypt = new StandardPBEStringEncryptor();
-        jasypt.setPassword("okky-project");      //암호화 키(password)
-        jasypt.setAlgorithm("PBEWithMD5AndDES");
-
-        String encryptedText = jasypt.encrypt("dkwmfrjdns1!");    //암호화
-        String encryptedText2 = jasypt.encrypt("jdbc:mysql://141.164.41.213:3306/okky_db?characterEncoding=UTF-8&serverTimezone=UTC!");    //암호화
-        String encryptedText3 = jasypt.encrypt("kimcoding");    //암호화
-        String encryptedText4 = jasypt.encrypt("dkwmfrjdns1!");    //암호화
-        String encryptedText5 = jasypt.encrypt("dkwmfrjdns1!");    //암호화
-        String encryptedText6 = jasypt.encrypt("dkwmfrjdns1!");    //암호화
-
-   //     String plainText = jasypt.decrypt("p96dBiARC6AkxQGtZL925cCut/Np7JwsbExtga5IoffyhPQE9DvftPafH6yeAupbycasUvp9g8sqpfRpEQvgyzc8Pgw/A4fNwLezl/SDqVfY+H8IkAVVnpth+Fmz3leq");  //복호화
-
-       System.out.println("encryptedText:  " + encryptedText); //암호화된 값
-        System.out.println("encryptedText2:  " + encryptedText2); //암호화된 값
-        System.out.println("encryptedText3:  " + encryptedText3); //암호화된 값
-        System.out.println("encryptedText4:  " + encryptedText4); //암호화된 값
-        System.out.println("encryptedText5:  " + encryptedText5); //암호화된 값
-        System.out.println("encryptedText6:  " + encryptedText6); //암호화된 값
-
-
-     //   System.out.println("plainText:  " + plainText);         //복호화된 값
-    }
-
     //전체 유저 조회
     @GetMapping("")
     public ResponseEntity<?> userFindAll( ) {
