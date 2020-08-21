@@ -129,7 +129,7 @@ public class CommentService implements BaseService {
                         qCommentEntity.contents,
                         qCommentEntity.rowDisLike,
                         qCommentEntity.rowLike,
-                        qCommentEntity.viewCount))
+                        qCommentEntity.viewCount, qCommentEntity.createdDate))
                 .from(qCommentEntity)
                 .where(qCommentEntity.boardEntity.id.eq(boardId))
                 .limit(10)
