@@ -9,6 +9,34 @@ spring:
     user:
       name: admin
       password: 1234
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 570359168440-4c9rb93ojhnjeqa0oeo68u5snn6eqems.apps.googleusercontent.com
+            client-secret: ENC(DiBIF3zRy1synu9+qwAfWSBQo+xWdi5cEAvcbNNyrS1oFI0A2CSEFw==)
+            scope: profile, email
+          facebook:
+            client-id: 483242102474956
+            client-secret: ENC(lBSEhAZujqs7DAPy2GGP/pGd9kOuKai5thdwiLRFInQI4tQCLMbVwob/NFmZ0kYo)
+          naver:
+            client-id: GmzOlRvlSvYxqdF5PP7a
+            client-secret: ENC(NLJ8Ufq1QoosfYZbJMWkDEwMViWAljSc)
+            redirect-uri: '{baseUrl}/{action}/oauth2/code/{registrationId}'
+            authorization-grant-type: authorization_code
+            scope: name, email, profile_image
+            client-name: Naver
+          github:
+            clientId: ab0174180f853666f31f
+            clientSecret: ENC(++LIvWFvLDzU/R4UDd2bLWivCT7rAH49wiaqxR60lClLv8E8VmX/gf4+MSOLzP1BXhWBjHAQcoo=)
+        provider:
+          facebook:
+            user-info-uri: https://graph.facebook.com/me?fields=id,name,email,picture,link
+          naver:
+            authorization-uri: https://nid.naver.com/oauth2.0/authorize
+            token-uri: https://nid.naver.com/oauth2.0/token
+            user-info-uri: https://openapi.naver.com/v1/nid/me
+            user-name-attribute: response
 
   servlet:
     multipart:
@@ -32,7 +60,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: kimcoding9418@gmail.com
-    password: ENC(wy2eRMUPV71DZW9d4KhZGEmKGSMm28i7)
+    password: ENC(3XCwNNVyBH1PRmYmKVR0T1e57cn3SuDz)
     properties:
       mail:
         debug: true
@@ -47,13 +75,14 @@ spring:
     default-encoding: UTF-8
 
   datasource:
-    url: ENC(p96dBiARC6AkxQGtZL925cCut/Np7JwsbExtga5IoffyhPQE9DvftPafH6yeAupbycasUvp9g8sqpfRpEQvgyzc8Pgw/A4fNwLezl/SDqVfY+H8IkAVVnpth+Fmz3leq)
+    url: ENC(YiWYSfhrbovnmj4KZgnk+/8I9/9k/vPJt6abqpOWVHT+LPlobxIeFom2Z1lzVwmiStbWQEPx2K3o4Oap9HMsc2JLSzY41jXhkD9OeANse9SR04F2qTn1RBq+VwGvNEF2)
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ENC(Bev9/LnXQMnYBO5rLKbHgRjRzYSymiuy)
-    password: ENC(1SOP0D2SCzUmMfYkfw1BrwWiKeX+v7a8)
+    username: ENC(ptBSLcSbF1df/aINeR+/is4wMBMQtyiP)
+    password: ENC(3XCwNNVyBH1PRmYmKVR0T1e57cn3SuDz)
     platform: mariadb
 
   jpa:
+
     hibernate:
       ddl-auto: none
       use-new-id-generator-mappings: true
@@ -72,6 +101,3 @@ logging:
     root: error
     #com.simple.portal: error
     com.simple.portal: info
-jasypt:
-  encryptor:
-    password: test
