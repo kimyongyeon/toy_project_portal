@@ -2,6 +2,7 @@ package com.simple.portal.config;
 
 import org.jasypt.encryption.StringEncryptor;
 import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
+import org.jasypt.encryption.pbe.config.EnvironmentStringPBEConfig;
 import org.jasypt.encryption.pbe.config.SimpleStringPBEConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,15 +13,20 @@ public class JasyptConfig {
     @Bean("jasyptStringEncryptor")
     public StringEncryptor stringEncryptor() {
         PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
-        SimpleStringPBEConfig config = new SimpleStringPBEConfig();
-        config.setPassword("test");
-        config.setAlgorithm("PBEWithMD5AndDES"); //사용할 알고리즘
-        config.setKeyObtentionIterations("1000");
-        config.setPoolSize("1");
-        config.setProviderName("SunJCE");
-        config.setSaltGeneratorClassName("org.jasypt.salt.RandomSaltGenerator");
-        config.setStringOutputType("base64");
-        encryptor.setConfig(config);
+        encryptor.setConfig(environmentStringPBEConfig());
         return encryptor;
+    }
+
+    @Bean("environmentStringPBEConfig")
+    public EnvironmentStringPBEConfig environmentStringPBEConfig() {
+        EnvironmentStringPBEConfig environmentStringPBEConfig = new EnvironmentStringPBEConfig();
+        environmentStringPBEConfig.setPasswordEnvName("APP_ENCRYPTION_PASSWORD");
+        environmentStringPBEConfig.setAlgorithm("PBEWithMD5AndDES");
+        environmentStringPBEConfig.setPoolSize(1);
+        environmentStringPBEConfig.setKeyObtentionIterations("1000");
+        environmentStringPBEConfig.setProviderName("SunJCE");
+        environmentStringPBEConfig.setSaltGeneratorClassName("org.jasypt.salt.RandomSaltGenerator");
+        environmentStringPBEConfig.setStringOutputType("base64");
+        return environmentStringPBEConfig;
     }
 }

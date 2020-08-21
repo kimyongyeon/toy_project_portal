@@ -7,6 +7,7 @@ import com.simple.portal.biz.v1.user.exception.UserAuthCheckFailedException;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.common.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -36,20 +36,33 @@ public class UserAPI {
         this.userService = userService;
         this.apiResponse = apiResponse;
     }
-/*
+
     @GetMapping("/jsaypt")
     public void jsapt( ) {
         StandardPBEStringEncryptor jasypt = new StandardPBEStringEncryptor();
-        jasypt.setPassword("test");      //암호화 키(password)
+        jasypt.setPassword("okky-project");      //암호화 키(password)
         jasypt.setAlgorithm("PBEWithMD5AndDES");
 
         String encryptedText = jasypt.encrypt("dkwmfrjdns1!");    //암호화
-        String plainText = jasypt.decrypt(encryptedText);  //복호화
+        String encryptedText2 = jasypt.encrypt("jdbc:mysql://141.164.41.213:3306/okky_db?characterEncoding=UTF-8&serverTimezone=UTC!");    //암호화
+        String encryptedText3 = jasypt.encrypt("kimcoding");    //암호화
+        String encryptedText4 = jasypt.encrypt("dkwmfrjdns1!");    //암호화
+        String encryptedText5 = jasypt.encrypt("dkwmfrjdns1!");    //암호화
+        String encryptedText6 = jasypt.encrypt("dkwmfrjdns1!");    //암호화
 
-        System.out.println("encryptedText:  " + encryptedText); //암호화된 값
-        System.out.println("plainText:  " + plainText);         //복호화된 값
+   //     String plainText = jasypt.decrypt("p96dBiARC6AkxQGtZL925cCut/Np7JwsbExtga5IoffyhPQE9DvftPafH6yeAupbycasUvp9g8sqpfRpEQvgyzc8Pgw/A4fNwLezl/SDqVfY+H8IkAVVnpth+Fmz3leq");  //복호화
+
+       System.out.println("encryptedText:  " + encryptedText); //암호화된 값
+        System.out.println("encryptedText2:  " + encryptedText2); //암호화된 값
+        System.out.println("encryptedText3:  " + encryptedText3); //암호화된 값
+        System.out.println("encryptedText4:  " + encryptedText4); //암호화된 값
+        System.out.println("encryptedText5:  " + encryptedText5); //암호화된 값
+        System.out.println("encryptedText6:  " + encryptedText6); //암호화된 값
+
+
+     //   System.out.println("plainText:  " + plainText);         //복호화된 값
     }
-*/
+
     //전체 유저 조회
     @GetMapping("")
     public ResponseEntity<?> userFindAll( ) {
@@ -163,18 +176,16 @@ public class UserAPI {
 
     // 권한 업데이트
     @GetMapping("/auth")
-    public RedirectView auth_update(@RequestParam(value="userId") @NotNull String userId) {
+    public ModelAndView auth_update(@RequestParam(value="userId") @NotNull String userId) {
 
         log.info("[GET] /user/auth/ " + userId);
         Boolean res = userService.updateUserAuthService(userId);
-        RedirectView redirectView = new RedirectView();
 
         if(res) { // 권한 업데이트 성공
-            redirectView.setUrl("http://www.naver.com"); // 인증 성공했을때 페이지
+           return new ModelAndView("/mail-redirect-success-page");
         } else { // 권한 업데이트 실패
-            redirectView.setUrl("http://www.naver.com"); // 인증 실패했을때 페이지
+            return new ModelAndView("/mail-redirect-fail-page");
         }
-        return redirectView;
     }
 
     // 비밀번호 변경

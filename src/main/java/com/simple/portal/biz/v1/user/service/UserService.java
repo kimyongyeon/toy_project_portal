@@ -253,7 +253,6 @@ public class UserService {
                 String pwOrigin = user.getPassword();
                 if (BCrypt.checkpw(password, pwOrigin)) return jwtUtil.createToken(user.getUserId());
                 else throw new Exception(UserConst.INVALID_PASSWORD); // 비밀번호 오류
-
             }
         } catch (Exception e) {
             log.info("[UserService] userLoginService Error : " + e.getMessage());

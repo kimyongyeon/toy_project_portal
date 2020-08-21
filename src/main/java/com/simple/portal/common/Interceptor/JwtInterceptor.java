@@ -1,6 +1,5 @@
 package com.simple.portal.common.Interceptor;
 
-import com.simple.portal.biz.v1.user.exception.TokenCreateFailedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

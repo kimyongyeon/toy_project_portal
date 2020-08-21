@@ -59,6 +59,17 @@ public class CommentService implements BaseService {
     }
 
     @Transactional
+    public void remove(Long id) {
+        commentRepository.deleteById(id);
+    }
+    @Transactional
+    public void removeAll(List<Long> ids) {
+        for(Long id: ids) {
+            remove(id);
+        }
+    }
+
+    @Transactional
     public void setLikeAndDisLike(CommentLikeDTO commentLikeDTO) {
 
         if (BoardComponent.isItemGbLike(commentLikeDTO.getItemGb())) { // 좋아요
@@ -118,7 +129,7 @@ public class CommentService implements BaseService {
                         qCommentEntity.contents,
                         qCommentEntity.rowDisLike,
                         qCommentEntity.rowLike,
-                        qCommentEntity.viewCount))
+                        qCommentEntity.viewCount, qCommentEntity.createdDate))
                 .from(qCommentEntity)
                 .where(qCommentEntity.boardEntity.id.eq(boardId))
                 .limit(10)

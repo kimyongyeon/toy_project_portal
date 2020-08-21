@@ -23,6 +23,7 @@ import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
+import java.util.Random;
 import java.util.concurrent.Executor;
 
 @EnableAsync
@@ -68,7 +69,7 @@ public class PortalApplication implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
 
 
-//        for(int i=0; i<10; i++) {
+//        for(int i=0; i<1000; i++) {
 //            BoardEntity boardEntity = new BoardEntity();
 //            CommentEntity commentEntity = new CommentEntity();
 //            jpaSave(boardEntity, commentEntity, i);
@@ -100,9 +101,15 @@ public class PortalApplication implements ApplicationRunner {
 
     public void jpaSave(BoardEntity boardEntity, CommentEntity commentEntity, int i) {
 
+        long generatedLong = new Random().nextLong();
         boardEntity.setTitle("board title:"+i);
         boardEntity.setContents("board contents:"+i);
         boardEntity.setWriter("board writer:"+i);
+        boardEntity.setRowDisLike(generatedLong);
+        generatedLong = new Random().nextLong();
+        boardEntity.setRowLike(generatedLong);
+        generatedLong = new Random().nextLong();
+        boardEntity.setViewCount(generatedLong);
         boardEntity.addComment(commentEntity);
         boardRepository.save(boardEntity);
 

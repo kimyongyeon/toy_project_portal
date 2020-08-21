@@ -15,10 +15,7 @@ import com.simple.portal.biz.v1.board.exception.BoardDetailNotException;
 import com.simple.portal.biz.v1.board.exception.ItemGubunExecption;
 import com.simple.portal.biz.v1.board.repository.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -85,7 +82,7 @@ public class BoardService implements BaseService {
 //        return boardRepository.findAllByTitleOrContents(boardDTO.getTitle(), boardDTO.getContents());
 //    }
 
-    public Page<BoardDTO> pageList(BoardSearchDTO boardSearchDTO, Pageable pageable) {
+    public Page<BoardDTO> pageList(BoardSearchDTO boardSearchDTO) {
 
         /**
          * SELECT *,
@@ -98,6 +95,7 @@ public class BoardService implements BaseService {
         QBoardEntity qBoardEntity = new QBoardEntity("b");
         QCommentEntity qCommentEntity = new QCommentEntity("c");
         // 테이블 구조 그대로 목록을 뽑는다.
+        int offset = (boardSearchDTO.getCurrentPage() - 1) * boardSearchDTO.getSize();
         QueryResults<BoardDTO> boards = query
 //                .select(qBoardEntity)
                 .select(Projections.bean(BoardDTO.class,
@@ -118,10 +116,10 @@ public class BoardService implements BaseService {
                 .from(qBoardEntity)
                 .where(getContains(boardSearchDTO, qBoardEntity)) // 검색 조건
                 .orderBy(getDesc(qBoardEntity, boardSearchDTO.getSort())) // 정렬
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
+                .offset(offset)
+                .limit(boardSearchDTO.getSize())
                 .fetchResults();
-        return new PageImpl(boards.getResults(),pageable,boards.getTotal());
+        return new PageImpl(boards.getResults(), PageRequest.of(boardSearchDTO.getCurrentPage(), boardSearchDTO.getSize()),boards.getTotal());
     }
 
     private BooleanExpression getContains(BoardSearchDTO boardSearchDTO, QBoardEntity qBoardEntity) {
@@ -143,6 +141,8 @@ public class BoardService implements BaseService {
             return qBoardEntity.contents.desc();
         } else if (sort.equals("writer")) {
             return qBoardEntity.writer.desc();
+        } else if (sort.equals("date")) { // 날짜
+            return qBoardEntity.createdDate.desc();
         } else if (sort.equals("like")) { // 좋아요 순
             return qBoardEntity.rowLike.desc();
         } else if (sort.equals("viewCount")) { // 조회수 순

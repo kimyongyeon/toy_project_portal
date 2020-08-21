@@ -3,7 +3,6 @@ package com.simple.portal.config;
 import com.simple.portal.biz.v1.user.service.CustomOAuth2UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -35,9 +34,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.cors().and()
-            .csrf()
-            .disable()// rest api이므로 csrf 보안이 필요없으므로 disable처리.
-            .authorizeRequests().antMatchers("/", "/oauth2/**", "/login/**", "/css/**", "/images/**", "/js/**", "/console/**", "/favicon.ico/**") // // url 별 권한 관리를 설정하는 옵션의 시작점. 이게 선언되어야 antMatchers  옵션을 사용할 수 있음.
+                .csrf()
+                .disable()// rest api이므로 csrf 보안이 필요없으므로 disable처리.
+                .authorizeRequests().antMatchers("/", "/oauth2/**", "/login/**", "/css/**", "/images/**", "/js/**", "/console/**", "/favicon.ico/**") // // url 별 권한 관리를 설정하는 옵션의 시작점. 이게 선언되어야 antMatchers  옵션을 사용할 수 있음.
                 .permitAll()  // 위에 있는 경로는 누구나 접근 가능
                 .antMatchers("/google").hasAuthority(GOOGLE.getRoleType()) // 관리 대상을 지정하는 옵션. google, facebook, naver는 role을 가지고 있어야만 접근가능. 즉, 인증된 사용자만 가능
                 .antMatchers("/facebook").hasAuthority(FACEBOOK.getRoleType())
@@ -55,9 +54,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .exceptionHandling()
                 .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"));
-        //
-        //       .logout();
-        //  http.headers().frameOptions().disable();
     }
 
     @Override
@@ -74,5 +70,5 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
     }
-    */
+     */
 }
