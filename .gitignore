@@ -29,3 +29,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+Dockerfile-dev
+Dockerfile
+start.sh

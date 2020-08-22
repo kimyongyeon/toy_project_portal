@@ -14,8 +14,8 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @Builder
 public class CommentWriteDTO {
-    @NotNull(message = "Please enter id")
-    private Long id; // 아이디
+//    @NotNull(message = "Please enter id")
+//    private Long id; // 아이디
 
     @NotNull(message="게시판 기본키는 필수 입력값입니다.")
     private Long boardId; // 게시글 아이디
@@ -28,14 +28,6 @@ public class CommentWriteDTO {
 
     @NotNull(message="아이디는 필수 입력값입니다.")
     private String writer; // 글쓴이
-
-    @NotNull(message="아이템 구분은 필수 입력값입니다.")
-    private String itemGb; // 아이템 구분 L:D
-
-    private Long viewCount; // 조회수
-    private Long rowLike; // 좋아요
-    private Long rowDisLike; // 싫어요
-
 
 
 }

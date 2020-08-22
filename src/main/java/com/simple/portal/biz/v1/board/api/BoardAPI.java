@@ -178,7 +178,7 @@ public class BoardAPI {
 
         isBinding(bindingResult);
         boardService.setLikeAndDisLike(boardLikeDTO);
-        apiResponse.setBody(BoardConst.BODY_BLANK);
+        apiResponse.setBody(boardService.findById(boardLikeDTO.getId()));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 

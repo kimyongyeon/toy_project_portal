@@ -1,10 +1,7 @@
 package com.simple.portal.biz.v1.board.api;
 
 import com.simple.portal.biz.v1.board.BoardConst;
-import com.simple.portal.biz.v1.board.dto.CommentDTO;
-import com.simple.portal.biz.v1.board.dto.CommentEditDTO;
-import com.simple.portal.biz.v1.board.dto.CommentLikeDTO;
-import com.simple.portal.biz.v1.board.dto.CommentWriteDTO;
+import com.simple.portal.biz.v1.board.dto.*;
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.entity.CommentEntity;
 import com.simple.portal.biz.v1.board.exception.InputRequiredException;
@@ -59,15 +56,17 @@ public class CommentAPI {
 
         BoardEntity boardEntity = new BoardEntity();
         boardEntity.setId(commentDTO.getBoardId());
-        commentService.writeComment(CommentEntity.builder()
-                .id(commentDTO.getId())
+        CommentEntity commentEntity = commentService.writeComment(CommentEntity.builder()
+//                .id(commentDTO.getId())
                 .title(commentDTO.getContent())
                 .contents(commentDTO.getTitle())
                 .writer(commentDTO.getWriter())
                 .boardEntity(boardEntity)
+                .rowLike(0L)
+                .rowDisLike(0L)
+                .viewCount(0L)
                 .build());
-
-        apiResponse.setBody(BoardConst.BODY_BLANK);
+        apiResponse.setBody(commentEntity);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -107,6 +106,18 @@ public class CommentAPI {
         isBinding(bindingResult);
 
         commentService.setLikeAndDisLike(commentLikeDTO);
+        apiResponse.setBody(commentService.findById(commentLikeDTO.getId()));
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+
+    }
+
+    @PostMapping("/remove")
+    @ApiOperation(value = "댓글 삭제")
+    public ResponseEntity<ApiResponse> rowRemove(@Valid @RequestBody CommentRemoveDTO commentRemoveDTO, BindingResult bindingResult) {
+
+        isBinding(bindingResult);
+
+        commentService.remove(commentRemoveDTO.getId());
         apiResponse.setBody(BoardConst.BODY_BLANK);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
 

@@ -37,16 +37,18 @@ public class BoardService implements BaseService {
     @Override
     public void setLikeTransaction(Long id) {
         BoardEntity boardEntity = boardRepository.findById(id).get();
-        boardEntity.setRowLike(increase(1L)); // 좋아요 증가
-        boardEntity.setRowDisLike(decrease(1L)); // 싫어요 감소
+        // 좋아요/싫어요 따로 집계
+        boardEntity.setRowLike(increase(boardEntity.getRowLike())); // 좋아요 증가
+//        boardEntity.setRowDisLike(decrease(boardEntity.getRowDisLike())); // 싫어요 감소
         boardRepository.save(boardEntity);
     }
 
     @Override
     public void setDisLikeTransaction(Long id) {
         BoardEntity boardEntity = boardRepository.findById(id).get();
-        boardEntity.setRowLike(decrease(1L)); // 좋아요 감소
-        boardEntity.setRowDisLike(increase(1L)); // 싫어요 증가
+        // 좋아요/싫어요 따로 집계
+//        boardEntity.setRowLike(decrease(boardEntity.getRowLike())); // 좋아요 감소
+        boardEntity.setRowDisLike(increase(boardEntity.getRowDisLike())); // 싫어요 증가
         boardRepository.save(boardEntity);
     }
 
@@ -57,7 +59,14 @@ public class BoardService implements BaseService {
 
     @Override
     public Long decrease(Long currVal) {
-        return currVal - 1;
+        if (currVal < 0) {
+            return 0L;
+        } else if (currVal == 0) {
+            return 0L;
+        }   else {
+            return currVal - 1;
+        }
+
     }
 
     /**
@@ -68,10 +77,10 @@ public class BoardService implements BaseService {
     public void setLikeAndDisLike(BoardLikeDTO boardLikeDTO) {
 
         if (BoardComponent.isItemGbLike(boardLikeDTO.getItemGb())) { // 좋아요
-            setLikeTransaction(Long.parseLong(boardLikeDTO.getId()));
+            setLikeTransaction(boardLikeDTO.getId());
 
         } else if (BoardComponent.isItemGbDisLike(boardLikeDTO.getItemGb())){ // 싫어요
-            setDisLikeTransaction(Long.parseLong(boardLikeDTO.getId()));
+            setDisLikeTransaction(boardLikeDTO.getId());
 
         } else {
             throw new ItemGubunExecption();
@@ -119,7 +128,10 @@ public class BoardService implements BaseService {
                 .offset(offset)
                 .limit(boardSearchDTO.getSize())
                 .fetchResults();
-        return new PageImpl(boards.getResults(), PageRequest.of(boardSearchDTO.getCurrentPage(), boardSearchDTO.getSize()),boards.getTotal());
+//        return new PageImpl(boards.getResults(), PageRequest.of(boardSearchDTO.getCurrentPage(), boardSearchDTO.getSize()
+//        , Sort.by("createdDate").descending()),boards.getTotal());
+        return new PageImpl(boards.getResults(), PageRequest.of(0, boardSearchDTO.getSize()
+        , Sort.by("createdDate").descending()),boards.getTotal());
     }
 
     private BooleanExpression getContains(BoardSearchDTO boardSearchDTO, QBoardEntity qBoardEntity) {

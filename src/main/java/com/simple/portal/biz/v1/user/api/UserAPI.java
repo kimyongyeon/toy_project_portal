@@ -7,6 +7,7 @@ import com.simple.portal.biz.v1.user.exception.UserAuthCheckFailedException;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.common.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,20 +37,6 @@ public class UserAPI {
         this.apiResponse = apiResponse;
     }
 
-/*
-    @GetMapping("/jsaypt")
-    public void jsapt( ) {
-        StandardPBEStringEncryptor jasypt = new StandardPBEStringEncryptor();
-        jasypt.setPassword("test");      //암호화 키(password)
-        jasypt.setAlgorithm("PBEWithMD5AndDES");
-
-        String encryptedText = jasypt.encrypt("dkwmfrjdns1!");    //암호화
-        String plainText = jasypt.decrypt(encryptedText);  //복호화
-
-        System.out.println("encryptedText:  " + encryptedText); //암호화된 값
-        System.out.println("plainText:  " + plainText);         //복호화된 값
-    }
-*/
     //전체 유저 조회
     @GetMapping("")
     public ResponseEntity<?> userFindAll( ) {
