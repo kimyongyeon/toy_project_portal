@@ -7,7 +7,6 @@ import com.simple.portal.biz.v1.board.service.BoardService;
 import com.simple.portal.biz.v1.board.service.CommentService;
 import com.simple.portal.common.storage.StorageProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -24,8 +23,7 @@ import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Executor;
 
 @EnableAsync
@@ -70,7 +68,8 @@ public class PortalApplication implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
 
-//        for(int i=0; i<10; i++) {
+
+//        for(int i=0; i<1000; i++) {
 //            BoardEntity boardEntity = new BoardEntity();
 //            CommentEntity commentEntity = new CommentEntity();
 //            jpaSave(boardEntity, commentEntity, i);
@@ -102,9 +101,15 @@ public class PortalApplication implements ApplicationRunner {
 
     public void jpaSave(BoardEntity boardEntity, CommentEntity commentEntity, int i) {
 
+        long generatedLong = new Random().nextLong();
         boardEntity.setTitle("board title:"+i);
         boardEntity.setContents("board contents:"+i);
         boardEntity.setWriter("board writer:"+i);
+        boardEntity.setRowDisLike(generatedLong);
+        generatedLong = new Random().nextLong();
+        boardEntity.setRowLike(generatedLong);
+        generatedLong = new Random().nextLong();
+        boardEntity.setViewCount(generatedLong);
         boardEntity.addComment(commentEntity);
         boardRepository.save(boardEntity);
 

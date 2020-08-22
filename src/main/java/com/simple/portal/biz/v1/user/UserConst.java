@@ -8,11 +8,15 @@ public class UserConst {
     public static final String NO_USER="존재하지 않는 유저 입니다.";
     public static final String INVALID_PASSWORD="비밀번호가 올바르지 않습니다.";
     public static final String FAILED_LOGIN ="아이디 혹은 비밀번호가 틀렸습니다.";
-    public static final String ERROR_PARAMS = "요청인자를 잘못 입력하였습니다.";
+    public static final String ERROR_PARAMS = "요청 필수 파라미터가 없습니다.";
     public static final String FAILED_EMAIL_SEND = "가입 이메일 전송에 실패하였습니다.";
     public static final String FAILED_UPDATE_PASSWORD = "비밀번호 변경에 실패하였습니다.";
     public static final String FAILED_SEND_NEW_PASSWORD = "새로운 비밀번호 전송에 실패하였습니다.";
     public static final String FAILED_FOLLOW = "팔로우에 실패 하였습니다.";
+    public static final String FAILED_UNFOLLOW = "언팔로우에 실패하였습니다.";
+    public static final String FAILED_SELECT_FOLLOWERS = "팔로워 조회에 실패하였습니다.";
+    public static final String FAILED_SELECT_FOLLOWING_USERS = "팔로잉한 유저 리스트 조회에 실패하였습니다.";
+    public static final String FAILED_SELECT_USER_PK = "유저 PK 조회에 실패하였습니다.";
 
     public static final String FIND_USER_ERROR ="해당 아이디의 유저 검색에 실패했습니다.";
     public static final String LOGIN_ERROR ="로그인에 실패하였습니다.";
@@ -27,6 +31,9 @@ public class UserConst {
     public static final String SUCCESS_UPDATE_PASSWORD="비밀번호 변경에 성공하였습니다.";
     public static final String SUCCESS_SEND_NEW_PASSWORD="새로운 비밀번호 전송에 성공하였습니다.";
     public static final String SUCCESS_FOLLOW = "팔로우에 성공 하였습니다.";
+    public static final String SUCCESS_UNFOLLOW = "언팔로우에 성공 하였습니다.";
+    public static final String SUCCESS_SELECT_FOLLOWERS = "팔로워 조회에 성공하였습니다.";
+    public static final String SUCCESS_SELECT_FOLLOWING_USERS ="팔로잉한 유저 리스트 조회에 성공하였습니다.";
 
     public static final String FAILED_CHECK_USER_AUTH="로그인 권한이 없는 유저입니다.";
     public static final String FAILED_GRANT_USER_AUTH="가입유저에 로그인 권한 부여가 실패하였습니다.";

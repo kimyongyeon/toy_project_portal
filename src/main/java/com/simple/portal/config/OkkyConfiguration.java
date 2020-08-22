@@ -1,16 +1,16 @@
 package com.simple.portal.config;
 
-import com.simple.portal.biz.v1.board.exception.InputRequiredException;
 import com.simple.portal.common.ApiResponse;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableAutoConfiguration(exclude = { FreeMarkerAutoConfiguration.class })
-public class OkkyConfiguration {
+public class OkkyConfiguration implements WebMvcConfigurer   {
 
     @Bean
     public ApiResponse apiResponse() { //  response bean
@@ -20,4 +20,9 @@ public class OkkyConfiguration {
         return apiResponse;
     }
 
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:3000");
+    }
 }

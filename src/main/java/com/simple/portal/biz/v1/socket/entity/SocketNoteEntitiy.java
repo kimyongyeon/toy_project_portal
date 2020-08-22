@@ -10,7 +10,7 @@ import javax.persistence.*;
 @Entity
 @Builder
 @ToString
-@Table(name="TB_RECV_NOTE")
+@Table(name="TB_SOCKET_RECV_NOTE")
 public class SocketNoteEntitiy {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
