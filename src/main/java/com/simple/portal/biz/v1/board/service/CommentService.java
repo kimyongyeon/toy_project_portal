@@ -35,16 +35,16 @@ public class CommentService implements BaseService {
     @Override
     public void setLikeTransaction(Long id) {
         CommentEntity commentEntity = findByIdComment(id);
-        commentEntity.setRowLike(increase(1L)); // 좋아요 증가
-        commentEntity.setRowDisLike(decrease(1L)); // 싫어요 감소
+        commentEntity.setRowLike(increase(commentEntity.getRowLike())); // 좋아요 증가
+//        commentEntity.setRowDisLike(decrease(1L)); // 싫어요 감소
         commentRepository.save(commentEntity);
     }
 
     @Override
     public void setDisLikeTransaction(Long id) {
         CommentEntity commentEntity = findByIdComment(id);
-        commentEntity.setRowLike(decrease(1L)); // 좋아요 감소
-        commentEntity.setRowDisLike(increase(1L)); // 싫어요 증가
+//        commentEntity.setRowLike(decrease(commentEntity.getRowLike())); // 좋아요 감소
+        commentEntity.setRowDisLike(increase(commentEntity.getRowDisLike())); // 싫어요 증가
         commentRepository.save(commentEntity);
     }
 
@@ -104,8 +104,8 @@ public class CommentService implements BaseService {
     }
 
     @Transactional
-    public void writeComment(CommentEntity commentEntity) {
-        commentRepository.save(commentEntity);
+    public CommentEntity writeComment(CommentEntity commentEntity) {
+        return commentRepository.save(commentEntity);
     }
 
     @Transactional

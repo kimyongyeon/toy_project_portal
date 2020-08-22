@@ -2,6 +2,7 @@ package com.simple.portal.biz.v1.note.api;
 
 import com.simple.portal.biz.v1.note.NoteConst;
 import com.simple.portal.biz.v1.note.dto.NoteDTO;
+import com.simple.portal.biz.v1.note.dto.NoteListDTO;
 import com.simple.portal.biz.v1.note.dto.NoteRemoveDTO;
 import com.simple.portal.biz.v1.note.dto.NoteSaveDTO;
 import com.simple.portal.biz.v1.note.exception.InputRequiredException;
@@ -35,31 +36,35 @@ public class NoteAPI {
 
     /**
      * 보낸쪽지함 (제목,내용,시간,글쓴이(나))
-     * @param userId
      * @return
      */
     @GetMapping("/send")
     @ApiOperation(value="쪽지 보낸쪽지함")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userId", value = "보낸아이디", required = true, dataType = "string", paramType = "query", defaultValue = ""),
+            @ApiImplicitParam(name = "gb", value = "R:받는사람,S:보낸사람", required = true, dataType = "string", paramType = "query", defaultValue = "title"),
+            @ApiImplicitParam(name = "currentPage", value = "페이지번호, default: 1", required = true, dataType = "string", paramType = "query", defaultValue = "1"),
+            @ApiImplicitParam(name = "size", value = "한페이지당 20개씩 출력, default: 20", required = true, dataType = "string", paramType = "query", defaultValue = "20"),
     })
-    public ResponseEntity<ApiResponse> sendNote(String userId) {
-        apiResponse.setBody(noteService.findAll(userId, "S"));
+    public ResponseEntity<ApiResponse> sendNote(NoteListDTO noteListDTO) {
+        apiResponse.setBody(noteService.findAll(noteListDTO));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
     /**
      * 받은쪽지함 (제목,내용,글쓴이,시간(몇초전,몇분전,몇시간전...트위터처럼 표현))
-     * @param userId
      * @return
      */
     @GetMapping("/receive")
     @ApiOperation(value="쪽지 받은쪽지함")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userId", value = "받는아이디", required = true, dataType = "string", paramType = "query", defaultValue = ""),
+            @ApiImplicitParam(name = "gb", value = "R:받는사람,S:보낸사람", required = true, dataType = "string", paramType = "query", defaultValue = "title"),
+            @ApiImplicitParam(name = "currentPage", value = "페이지번호, default: 1", required = true, dataType = "string", paramType = "query", defaultValue = "1"),
+            @ApiImplicitParam(name = "size", value = "한페이지당 20개씩 출력, default: 20", required = true, dataType = "string", paramType = "query", defaultValue = "20"),
     })
-    public ResponseEntity<ApiResponse> receiveNote(String userId) {
-        apiResponse.setBody(noteService.findAll(userId, "R"));
+    public ResponseEntity<ApiResponse> receiveNote(NoteListDTO noteListDTO) {
+        apiResponse.setBody(noteService.findAll(noteListDTO));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 

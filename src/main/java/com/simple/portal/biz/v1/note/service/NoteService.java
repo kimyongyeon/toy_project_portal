@@ -1,7 +1,10 @@
 package com.simple.portal.biz.v1.note.service;
 
+import com.querydsl.core.QueryResults;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.note.dto.NoteDTO;
+import com.simple.portal.biz.v1.note.dto.NoteListDTO;
 import com.simple.portal.biz.v1.note.dto.NoteSaveDTO;
 import com.simple.portal.biz.v1.note.entity.*;
 
@@ -9,6 +12,10 @@ import com.simple.portal.biz.v1.note.repository.RecvNoteRepository;
 import com.simple.portal.biz.v1.note.repository.SendNoteRepository;
 import com.simple.portal.util.DateFormatUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -29,50 +36,76 @@ public class NoteService {
     @Autowired
     JPAQueryFactory query;
 
-    public List<NoteDTO> findAll(String userId, String gb) {
+    public Page<NoteDTO> findAll(NoteListDTO noteListDTO) {
 
         QSendNoteEntity qSendNoteEntity = new QSendNoteEntity("s");
         QRecvNoteEntity qRecvNoteEntity = new QRecvNoteEntity("r");
-        if (gb.equals("R")) { // 받은 목록
 
-            return query.select(qRecvNoteEntity)
+        int offset = (noteListDTO.getCurrentPage() - 1) * noteListDTO.getSize();
+
+        if (noteListDTO.getGb().equals("R")) { // 받은 목록
+
+            QueryResults<NoteDTO> list = query.select(Projections.bean(NoteDTO.class,
+                    qRecvNoteEntity.id,
+                    qRecvNoteEntity.revId,
+                    qRecvNoteEntity.sendId,
+                    qRecvNoteEntity.title,
+                    qRecvNoteEntity.contents,
+                    qRecvNoteEntity.createdDate
+                    ))
                     .from(qRecvNoteEntity)
-                    .where(qRecvNoteEntity.revId.contains(userId)
+                    .where(qRecvNoteEntity.revId.contains(noteListDTO.getUserId())
                             .and(qRecvNoteEntity.delYn.eq(false))) // 삭제 안된것만 검색
-                    .fetch()
-                    .stream()
+                    .offset(offset)
+                    .limit(noteListDTO.getSize())
+                    .fetchResults();
+
+            List<NoteDTO> results = list.getResults().stream()
                     .map(r -> {
                         NoteDTO noteDTO =new NoteDTO();
                         Date date = Date.from(r.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant());
                         String createDate = DateFormatUtil.getTimeBefore(date);
+                        noteDTO.setStrCreateDate(createDate);
                         noteDTO.setId(r.getId()); // 상세보기, 삭제 할때 사용하기 위함.
                         noteDTO.setRevId(r.getRevId());
                         noteDTO.setSendId(r.getSendId());
                         noteDTO.setTitle(r.getTitle());
                         noteDTO.setContents(r.getContents());
-                        noteDTO.setCreatedDate(createDate);
                         return noteDTO;
                     }).collect(Collectors.toList());
 
+            return new PageImpl(results, PageRequest.of(0, noteListDTO.getSize()), list.getTotal());
+
         } else { // 보낸 목록
-            return query.select(qSendNoteEntity)
+            QueryResults<NoteDTO> list = query.select(Projections.bean(NoteDTO.class,
+                    qSendNoteEntity.id,
+                    qSendNoteEntity.revId,
+                    qSendNoteEntity.sendId,
+                    qSendNoteEntity.title,
+                    qSendNoteEntity.contents,
+                    qSendNoteEntity.createdDate))
                     .from(qSendNoteEntity)
-                    .where(qSendNoteEntity.sendId.contains(userId)
+                    .where(qSendNoteEntity.sendId.contains(noteListDTO.getUserId())
                             .and(qSendNoteEntity.delYn.eq(false))) // 삭제 안된것만 검색
-                    .fetch()
-                    .stream()
-                    .map(s -> {
+                    .offset(offset)
+                    .limit(noteListDTO.getSize())
+                    .fetchResults();
+
+            List<NoteDTO> results = list.getResults().stream()
+                    .map(r -> {
                         NoteDTO noteDTO =new NoteDTO();
-                        Date date = Date.from(s.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant());
+                        Date date = Date.from(r.getCreatedDate().atZone(ZoneId.systemDefault()).toInstant());
                         String createDate = DateFormatUtil.getTimeBefore(date);
-                        noteDTO.setId(s.getId()); // 상세보기, 삭제 할때 사용하기 위함.
-                        noteDTO.setRevId(s.getRevId());
-                        noteDTO.setSendId(s.getSendId());
-                        noteDTO.setTitle(s.getTitle());
-                        noteDTO.setContents(s.getContents());
-                        noteDTO.setCreatedDate(createDate);
+                        noteDTO.setStrCreateDate(createDate);
+                        noteDTO.setId(r.getId()); // 상세보기, 삭제 할때 사용하기 위함.
+                        noteDTO.setRevId(r.getRevId());
+                        noteDTO.setSendId(r.getSendId());
+                        noteDTO.setTitle(r.getTitle());
+                        noteDTO.setContents(r.getContents());
                         return noteDTO;
                     }).collect(Collectors.toList());
+
+            return new PageImpl(results, PageRequest.of(0, noteListDTO.getSize()), list.getTotal());
         }
     }
     @Transactional
@@ -104,7 +137,7 @@ public class NoteService {
             noteDTO.setRevId(recvNoteEntity.getRevId());
             noteDTO.setTitle(recvNoteEntity.getTitle());
             noteDTO.setContents(recvNoteEntity.getContents());
-            noteDTO.setCreatedDate(createDate);
+            noteDTO.setStrCreateDate(createDate);
             return noteDTO;
 
         } else {
@@ -130,7 +163,7 @@ public class NoteService {
             noteDTO.setRevId(sendNoteEntity.getRevId());
             noteDTO.setTitle(sendNoteEntity.getTitle());
             noteDTO.setContents(sendNoteEntity.getContents());
-            noteDTO.setCreatedDate(createDate);
+            noteDTO.setStrCreateDate(createDate);
             return noteDTO;
         }
     }
