@@ -2,6 +2,7 @@ package com.simple.portal.biz.v1.board.dto;
 
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.entity.CommentEntity;
+import com.simple.portal.biz.v1.board.entity.ScrapEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -52,6 +53,17 @@ public class BoardDTO {
     }
 
     public BoardDTO(BoardEntity boardEntity, CommentEntity commentEntity) {
+        this.id = boardEntity.getId();
+        this.title = boardEntity.getTitle();
+        this.contents = boardEntity.getContents();
+        this.writer = boardEntity.getWriter();
+        this.viewCount = boardEntity.getViewCount();
+        this.rowLike = boardEntity.getRowLike();
+        this.rowDisLike = boardEntity.getRowDisLike();
+        this.createdDate = boardEntity.getCreatedDate();
+    }
+
+    public BoardDTO(BoardEntity boardEntity, ScrapEntity scrapEntity) {
         this.id = boardEntity.getId();
         this.title = boardEntity.getTitle();
         this.contents = boardEntity.getContents();

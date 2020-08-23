@@ -8,10 +8,12 @@ import com.simple.portal.biz.v1.board.dto.BoardDTO;
 import com.simple.portal.biz.v1.board.dto.CommentDTO;
 import com.simple.portal.biz.v1.board.dto.CommentEditDTO;
 import com.simple.portal.biz.v1.board.dto.CommentLikeDTO;
-import com.simple.portal.biz.v1.board.entity.CommentEntity;
-import com.simple.portal.biz.v1.board.entity.QCommentEntity;
+import com.simple.portal.biz.v1.board.entity.*;
 import com.simple.portal.biz.v1.board.exception.BoardDetailNotException;
 import com.simple.portal.biz.v1.board.exception.ItemGubunExecption;
+import com.simple.portal.biz.v1.board.repository.ActivityScoreRepository;
+import com.simple.portal.biz.v1.board.repository.AlarmHistRepository;
+import com.simple.portal.biz.v1.board.repository.BoardRepository;
 import com.simple.portal.biz.v1.board.repository.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 import javax.swing.text.html.HTMLDocument;
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -31,6 +34,15 @@ public class CommentService implements BaseService {
 
     @Autowired
     JPAQueryFactory query;
+
+    @Autowired
+    ActivityScoreRepository activityScoreRepository;
+
+    @Autowired
+    AlarmHistRepository alarmHistRepository;
+
+    @Autowired
+    BoardRepository boardRepository;
 
     @Override
     public void setLikeTransaction(Long id) {
@@ -55,7 +67,13 @@ public class CommentService implements BaseService {
 
     @Override
     public Long decrease(Long currVal) {
-        return currVal - 1;
+        if (currVal < 0) {
+            return 0L;
+        } else if (currVal == 0) {
+            return 0L;
+        }   else {
+            return currVal - 1;
+        }
     }
 
     @Transactional
@@ -105,7 +123,36 @@ public class CommentService implements BaseService {
 
     @Transactional
     public CommentEntity writeComment(CommentEntity commentEntity) {
-        return commentRepository.save(commentEntity);
+
+        // 1. 댓글 저장
+        CommentEntity commentEntity1 = commentRepository.save(commentEntity);
+        if (commentEntity1 != null) {
+
+            // 2. 활동점수 저장 : 활동점수는 댓글난 당사자의 잠수가 올라간다.
+            ActivityScoreEntity activityScoreEntity = new ActivityScoreEntity();
+            activityScoreEntity.setType(ActivityScoreEntity.ScoreType.COMMENT);
+            activityScoreEntity.setUserId(commentEntity1.getWriter());
+            activityScoreEntity.setScore(2L);
+            activityScoreRepository.save(activityScoreEntity);
+
+            // 3. 댓글알람 저장 : 댓글을 달면 댓글에 해당하는 게시글 주인에게 알람 카운트를 올려준다.
+            // 댓글알람 +1
+            // 댓글을 쓰면 이 댓글의 게시글의 주인을 찾아서 알람을 추가 한다.
+            Long boardId = commentEntity.getBoardEntity().getId();
+            Optional<BoardEntity> boardEntity = boardRepository.findById(boardId);
+            if (!boardEntity.isEmpty()) {
+                String userId = boardEntity.get().getWriter();
+                AlarmHistEntity alarmHistEntity = new AlarmHistEntity();
+                alarmHistEntity.setUserId(userId);
+                alarmHistEntity.setBoardId(boardId);
+                alarmHistEntity.setEventType(AlarmHistEntity.EventType.EVT_BC);
+                alarmHistRepository.save(alarmHistEntity);
+
+            } else {
+                throw new RuntimeException("존재 하지 않는 게시글 입니다.");
+            }
+        }
+        return commentEntity1;
     }
 
     @Transactional

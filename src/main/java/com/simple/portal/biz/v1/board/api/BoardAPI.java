@@ -178,7 +178,7 @@ public class BoardAPI {
 
         isBinding(bindingResult);
         boardService.setLikeAndDisLike(boardLikeDTO);
-        apiResponse.setBody(boardService.findById(boardLikeDTO.getId()));
+        apiResponse.setBody(boardService.findByIdNoTran(boardLikeDTO.getId()));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -186,6 +186,37 @@ public class BoardAPI {
         if (bindingResult.hasErrors()) {
             throw new InputRequiredException();
         }
+    }
+
+    /**
+     * 게시글 스크랩
+     * @param scrapDTO
+     * @return
+     */
+    @PostMapping("/scrap")
+    @ApiOperation(value="게시글 스크랩")
+    public ResponseEntity<ApiResponse> scrap(@RequestBody @Valid ScrapDTO scrapDTO, BindingResult bindingResult) {
+
+        isBinding(bindingResult);
+
+        apiResponse.setBody(boardService.saveScrap(scrapDTO));
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    /**
+     * 게시글 스크랩 해제
+     * @param scrapDTO
+     * @return
+     */
+    @PostMapping("/scrap/delete")
+    @ApiOperation(value="게시글 스크랩 해제")
+    public ResponseEntity<ApiResponse> scrapDelete(@RequestBody @Valid ScrapDTO scrapDTO, BindingResult bindingResult) {
+
+        isBinding(bindingResult);
+
+        boardService.removeScrap(scrapDTO);
+        apiResponse.setBody(BoardConst.BODY_BLANK);
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
 }
