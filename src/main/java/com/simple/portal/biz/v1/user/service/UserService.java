@@ -25,6 +25,7 @@ import javax.transaction.Transactional;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -302,11 +303,17 @@ public class UserService {
     // 비밀번호 찾기 ( = 새로운 비밀번호 전송 )
     @Transactional
     public void findUserPasswordService(String user_id) {
+
+        // 입력된 user_id가 회원 가입된 아이디인지 판별
+        if(!userRepository.existsUserByUserId(user_id)) { // 회원가입이 안된 유저일 경우
+            throw new UserNotFoundException();
+        }
+
         try {
             // 랜덤값으로 비밀번호 변경 후 -> 이메일 발송
             String randomValue = ApiHelper.getRandomString(); // 이 값을 메일로 전송
 
-            String userEmail = userRepository.findByUserId(user_id).getEmail();
+            String userEmail = userRepository.findByUserId(user_id).getEmail(); // 해당 id로 가입된 이메일 조회
             userRepository.updatePassword(user_id, BCrypt.hashpw(randomValue, BCrypt.gensalt()));
             try {
                 mailSender.sendNewPwMail("신규 비밀번호 안내 !", userEmail, user_id, randomValue); // 회원가입 후 해당 이메일로 인증 메일보냄
