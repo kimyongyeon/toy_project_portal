@@ -301,13 +301,15 @@ public class UserService {
 
     // 비밀번호 찾기 ( = 새로운 비밀번호 전송 )
     @Transactional
-    public void findUserPasswordService(Long id, String user_id) {
+    public void findUserPasswordService(String user_id) {
         try {
             // 랜덤값으로 비밀번호 변경 후 -> 이메일 발송
             String randomValue = ApiHelper.getRandomString(); // 이 값을 메일로 전송
-            userRepository.updatePassword(id, BCrypt.hashpw(randomValue, BCrypt.gensalt()));
+
+            String userEmail = userRepository.findByUserId(user_id).getEmail();
+            userRepository.updatePassword(user_id, BCrypt.hashpw(randomValue, BCrypt.gensalt()));
             try {
-                mailSender.sendNewPwMail("신규 비밀번호 안내 !", user_id, randomValue); // 회원가입 후 해당 이메일로 인증 메일보냄
+                mailSender.sendNewPwMail("신규 비밀번호 안내 !", userEmail, user_id, randomValue); // 회원가입 후 해당 이메일로 인증 메일보냄
             } catch (Exception e) {
                 log.info("[UserService] emailSend Error : " + e.getMessage());
                 throw new EmailSendFailedException();
