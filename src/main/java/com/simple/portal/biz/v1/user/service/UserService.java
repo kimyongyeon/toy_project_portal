@@ -48,18 +48,19 @@ public class UserService {
         this.jpaQueryFactory = jpaQueryFactory;
     }
 
-    public List<UserDto> userFindAllService( ) {
+    public List<UserReadDto> userFindAllService( ) {
         try {
             List<UserEntity> userEntityList = userRepository.findAll();
-            List<UserDto> userDtoList = new ArrayList<>();
+            List<UserReadDto> userReadDtoList = new ArrayList<>();
             for(int i=0; i<userEntityList.size(); i++) {
 
                FollowedList followedList = getFollowerIdService(userEntityList.get(i).getId());
                FollowingList followingList = getFollowingIdService(userEntityList.get(i).getId());
 
-               userDtoList.add(UserDto.builder()
+               userReadDtoList.add(UserReadDto.builder()
                        .id(userEntityList.get(i).getId())
                        .userId(userEntityList.get(i).getUserId())
+                       .email(userEntityList.get(i).getEmail())
                        .nickname(userEntityList.get(i).getNickname())
                        .gitAddr(userEntityList.get(i).getGitAddr())
                        .profileImg(userEntityList.get(i).getProfileImg())
@@ -71,7 +72,7 @@ public class UserService {
                        .followingList(followingList)
                        .build());
             }
-            return userDtoList;
+            return userReadDtoList;
         }
         catch(Exception e) {
             log.info("[UserService] userFindAllService Error : " + e.getMessage());
@@ -81,15 +82,16 @@ public class UserService {
 
      // 유저의 기본키로 유저 조회
     @Transactional
-    public UserDto userFineOneService(Long id) {
+    public UserReadDto userFineOneService(Long id) {
         try {
             FollowedList followedList = getFollowerIdService(id);
             FollowingList followingList = getFollowingIdService(id);
 
             UserEntity userEntity = userRepository.findById(id).get();
-            UserDto userDto = UserDto.builder()
+            UserReadDto userReadDto = UserReadDto.builder()
                     .id(userEntity.getId())
                     .userId(userEntity.getUserId())
+                    .email(userEntity.getEmail())
                     .nickname(userEntity.getNickname())
                     .gitAddr(userEntity.getGitAddr())
                     .profileImg(userEntity.getProfileImg())
@@ -101,7 +103,7 @@ public class UserService {
                     .followingList(followingList)
                     .build();
 
-            return userDto;
+            return userReadDto;
         } catch (Exception e) {
             log.info("[UserService] userFindOneService Error : " + e.getMessage());
             throw new SelectUserFailedException();
@@ -131,6 +133,7 @@ public class UserService {
             UserEntity insertUser = UserEntity.builder()
                     .userId(user.getUserId())
                     .nickname(user.getNickname())
+                    .email(user.getEmail())
                     .password(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())) // 비밀번호
                     .gitAddr("https://github.com") // default 깃 주소
                     .profileImg(BaseImgUrl)
@@ -142,7 +145,7 @@ public class UserService {
 
             userRepository.save(insertUser);
             try {
-                mailSender.sendJoinMail("Okky 회원 가입 완료 메일 !", user.getUserId()); // 회원가입 후 해당 이메일로 인증 메일보냄
+                mailSender.sendJoinMail("Okky 회원 가입 완료 메일 !", user.getUserId(), user.getEmail()); // 회원가입 후 해당 이메일로 인증 메일보냄
             } catch (Exception e) {
                 log.info("[UserService] emailSend Error : " + e.getMessage());
                 throw new EmailSendFailedException();
@@ -165,6 +168,7 @@ public class UserService {
             UserEntity updateUser = UserEntity.builder()
                     .id(originUser.getId()) // 변경 불가
                     .userId(originUser.getUserId()) // 변경 불가
+                    .email(originUser.getEmail()) // 변경 불가
                     .nickname(user.getNickname()) // 변경 가능
                     .password(originUser.getPassword()) // 변경 불가 ( 비밀번호 변경 api 따로 존재 )
                     .gitAddr(user.getGitAddr()) // 변경 가능

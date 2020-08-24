@@ -13,24 +13,15 @@ import javax.validation.constraints.Size;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserDto { // 클라이언트에 뿌려줄 값
+public class UserReadDto { // 클라이언트에 뿌려줄 값
 
-    @NotBlank(message="유저 pk id는 필수 입력값입니다.")
     private Long id; // 기본키(PK)로 지정
-
-    @NotBlank(message="아이디는 필수 입력값입니다.")
     private String userId;
-
-    @NotBlank(message="닉네임은 필수 입력값 입니다.")
-    @Size(min=2, max=8, message="닉네임을 2~8자 사이로 입력해주세요.")
+    private String email;
     private String nickname;
-
     private String gitAddr;
-
     private String profileImg;
-
     private int activityScore;
-
     private char authority; // 'Y', 'N'
 
     @Nullable
@@ -50,6 +41,7 @@ public class UserDto { // 클라이언트에 뿌려줄 값
     public String toString( ) {
         return "id : " + this.id + "\n"
                 + "user_id : " + this.userId + "\n"
+                + "email : " + this.email + "\n"
                 + "nickname : " + this.nickname + "\n"
                 + "git_addr : " + this.gitAddr + "\n"
                 + "profile_img : " + this.profileImg + "\n"
