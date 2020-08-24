@@ -32,13 +32,13 @@ public class CommentEntity extends BaseEntity {
     @Column(nullable = false)
     private String writer; // 글쓴이
 
-    @Column
+    @Column(columnDefinition = "bigint default 0")
     private Long viewCount; // 조회수
 
-    @Column
+    @Column(columnDefinition = "bigint default 0")
     private Long rowLike; // 좋아요
 
-    @Column
+    @Column(columnDefinition = "bigint default 0")
     private Long rowDisLike; // 싫어요
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -5,6 +5,10 @@ import com.simple.portal.biz.v1.board.entity.CommentEntity;
 import com.simple.portal.biz.v1.board.repository.BoardRepository;
 import com.simple.portal.biz.v1.board.service.BoardService;
 import com.simple.portal.biz.v1.board.service.CommentService;
+import com.simple.portal.biz.v1.note.entity.RecvNoteEntity;
+import com.simple.portal.biz.v1.note.entity.SendNoteEntity;
+import com.simple.portal.biz.v1.note.repository.RecvNoteRepository;
+import com.simple.portal.biz.v1.note.repository.SendNoteRepository;
 import com.simple.portal.common.storage.StorageProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +47,12 @@ public class PortalApplication implements ApplicationRunner {
     BoardRepository boardRepository;
 
     @Autowired
+    RecvNoteRepository recvNoteRepository;
+
+    @Autowired
+    SendNoteRepository sendNoteRepository;
+
+    @Autowired
     EntityManagerFactory emf;
 
     @Bean
@@ -68,8 +78,8 @@ public class PortalApplication implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
 
-
-//        for(int i=0; i<1000; i++) {
+        // 더미 데이터 생성: 게시글, 댓글, 쪽지
+//        for(int i=0; i<2000; i++) {
 //            BoardEntity boardEntity = new BoardEntity();
 //            CommentEntity commentEntity = new CommentEntity();
 //            jpaSave(boardEntity, commentEntity, i);
@@ -117,7 +127,29 @@ public class PortalApplication implements ApplicationRunner {
         commentEntity.setTitle("comment title:"+i);
         commentEntity.setContents("comment contents:"+i);
         commentEntity.setWriter("comment writer:"+i);
+        commentEntity.setRowLike(0L);
+        commentEntity.setRowDisLike(0L);
+        commentEntity.setViewCount(0L);
         commentService.writeComment(commentEntity);
+
+        RecvNoteEntity recvNoteEntity = new RecvNoteEntity();
+        recvNoteEntity.setTitle("recvNote title: " + i);
+        recvNoteEntity.setContents("recvNote content: " + i);
+        recvNoteEntity.setDelYn(false);
+        recvNoteEntity.setViewPoint(0);
+        recvNoteEntity.setRevId("recv:" + i);
+        recvNoteEntity.setSendId("send:" +i);
+        recvNoteRepository.save(recvNoteEntity);
+
+        SendNoteEntity sendNoteEntity = new SendNoteEntity();
+        sendNoteEntity.setTitle("recvNote title: " + i);
+        sendNoteEntity.setContents("recvNote content: " + i);
+        sendNoteEntity.setDelYn(false);
+        sendNoteEntity.setViewPoint(0);
+        sendNoteEntity.setRevId("recv:" + i);
+        sendNoteEntity.setSendId("send:" +i);
+        sendNoteRepository.save(sendNoteEntity);
+
     }
 
     public void save(BoardEntity boardEntity, CommentEntity commentEntity, int i) {

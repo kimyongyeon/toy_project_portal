@@ -84,7 +84,7 @@ spring:
   jpa:
 
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
       use-new-id-generator-mappings: true
     show-sql: true
     database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
@@ -101,3 +101,4 @@ logging:
     root: error
     #com.simple.portal: error
     com.simple.portal: info
+

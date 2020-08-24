@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -18,6 +19,7 @@ import javax.validation.constraints.NotNull;
 public class BoardReqWriteDTO {
     @NotNull(message = "Please enter id")
     @ApiModelProperty(value = "제목", required = true, example = "제목이에요.")
+    @Length(max = 255)
     private String title; // 제목
 
     @NotBlank(message="아이디는 필수 입력값입니다.")

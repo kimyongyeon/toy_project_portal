@@ -56,15 +56,17 @@ public class CommentAPI {
 
         BoardEntity boardEntity = new BoardEntity();
         boardEntity.setId(commentDTO.getBoardId());
-        commentService.writeComment(CommentEntity.builder()
+        CommentEntity commentEntity = commentService.writeComment(CommentEntity.builder()
 //                .id(commentDTO.getId())
                 .title(commentDTO.getContent())
                 .contents(commentDTO.getTitle())
                 .writer(commentDTO.getWriter())
                 .boardEntity(boardEntity)
+                .rowLike(0L)
+                .rowDisLike(0L)
+                .viewCount(0L)
                 .build());
-
-        apiResponse.setBody(BoardConst.BODY_BLANK);
+        apiResponse.setBody(commentEntity);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -104,7 +106,7 @@ public class CommentAPI {
         isBinding(bindingResult);
 
         commentService.setLikeAndDisLike(commentLikeDTO);
-        apiResponse.setBody(BoardConst.BODY_BLANK);
+        apiResponse.setBody(commentService.findById(commentLikeDTO.getId()));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
 
     }
