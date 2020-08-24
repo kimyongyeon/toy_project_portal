@@ -14,7 +14,7 @@ public class UserUpdateDto { // 유저 수정을 위한 dto
     @NotBlank(message="유저의 pk id는 필수 입력값입니다.")
     private Long id;
 
-    @NotBlank(message="유저의 아이디는 필수 입력값입니다.")
+    @NotBlank(message="유저 id는 필수 입력값입니다.")
     private String userId;
 
     @NotBlank(message="유저의 닉네임은 필수 입력값입니다.")

@@ -21,7 +21,7 @@ public class CustomMailSender {
     @Autowired
     private SpringTemplateEngine springTemplateEngine;
 
-    public void sendJoinMail(String title, String userId) throws MessagingException, IOException {
+    public void sendJoinMail(String title, String userId, String email) throws MessagingException, IOException {
 
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
@@ -29,7 +29,7 @@ public class CustomMailSender {
         // 메일 제목 설정
         helper.setSubject(title);
         //수신자 설정
-        helper.setTo(userId);
+        helper.setTo(email);
         //템플릿에 전달할 데이터 설정
         Context context = new Context();
         context.setVariable("user_id", userId);
@@ -41,7 +41,7 @@ public class CustomMailSender {
         javaMailSender.send(message);
     }
 
-    public void sendNewPwMail(String title, String userId, String newPassword) throws MessagingException {
+    public void sendNewPwMail(String title, String userEmail, String userId, String newPassword) throws MessagingException {
 
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
@@ -49,7 +49,7 @@ public class CustomMailSender {
         // 메일 제목 설정
         helper.setSubject(title);
         //수신자 설정
-        helper.setTo(userId);
+        helper.setTo(userEmail);
         //템플릿에 전달할 데이터 설정
         Context context = new Context();
         context.setVariable("user_id", userId);

@@ -69,7 +69,8 @@ public class OAuth2Controller {
         apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
         Map<String, String> obj = new HashMap<>();
         obj.put("userPkId", pk_id.toString());
-        obj.put("userId", (String)oauthMap.get("email"));
+        obj.put("userId", userId);
+        obj.put("email", (String)oauthMap.get("email"));
         obj.put("token", token);
         apiResponse.setBody(obj);  // user_id 기반 토큰 생성
         return new ResponseEntity(apiResponse, HttpStatus.OK);

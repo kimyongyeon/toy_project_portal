@@ -26,6 +26,9 @@ public class UserEntity {
     @Column(name="user_id", nullable=false, updatable = false, unique = true)
     private String userId;
 
+    @Column(nullable = false, updatable = false)
+    private String email;
+
     @Column(nullable = false)
     private String nickname;
 
@@ -51,9 +54,10 @@ public class UserEntity {
     private String updated;
 
     @Builder
-    public UserEntity(Long id, String userId, String nickname, String password, String gitAddr, String profileImg, int activityScore, char authority, String created, String updated) {
+    public UserEntity(Long id, String userId, String email, String nickname, String password, String gitAddr, String profileImg, int activityScore, char authority, String created, String updated) {
         this.id = id;
         this.userId = userId;
+        this.email = email;
         this.nickname = nickname;
         this.password = password;
         this.gitAddr = gitAddr;
@@ -68,6 +72,7 @@ public class UserEntity {
     public String toString( ) {
         return "id : " + this.id + "\n"
                 + "user_id : " + this.userId + "\n"
+                + "email : " + this.email + "\n"
                 + "nickname : " + this.nickname + "\n"
                 + "password : " + this.password + "\n"
                 + "git_addr : " + this.gitAddr + "\n"

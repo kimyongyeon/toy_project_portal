@@ -42,6 +42,7 @@ public class Oauth2Service {
             } else {
                 UserEntity insertUser = UserEntity.builder()
                         .userId(email + ":" + platform) // 이메일로 가입된 사람과 중복될 수 있으므로 뒤에 플랫폼 이름 붙여줌
+                        .email(email)
                         .nickname(nickname)
                         .password(platform) // 비밀번호 ( oauth의 경우 사용안하므로 platform이름으로 대체)
                         .gitAddr("https://github.com") // default 깃 주소
