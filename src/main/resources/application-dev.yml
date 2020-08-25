@@ -44,7 +44,7 @@ spring:
       max-request-size: 10MB
       
   redis:
-    host: 141.164.41.213
+    host: 141.164.53.200
     port: 6379
     password: 123qwe!@#$
     lettuce:
@@ -75,14 +75,13 @@ spring:
     default-encoding: UTF-8
 
   datasource:
-    url: ENC(YiWYSfhrbovnmj4KZgnk+/8I9/9k/vPJt6abqpOWVHT+LPlobxIeFom2Z1lzVwmiStbWQEPx2K3o4Oap9HMsc2JLSzY41jXhkD9OeANse9SR04F2qTn1RBq+VwGvNEF2)
+    url: jdbc:mysql://141.164.53.200:3306/okky_db?characterEncoding=UTF-8&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ENC(ptBSLcSbF1df/aINeR+/is4wMBMQtyiP)
     password: ENC(3XCwNNVyBH1PRmYmKVR0T1e57cn3SuDz)
     platform: mariadb
 
   jpa:
-
     hibernate:
       ddl-auto: update
       use-new-id-generator-mappings: true
