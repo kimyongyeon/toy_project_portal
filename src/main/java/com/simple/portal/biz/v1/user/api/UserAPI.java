@@ -214,7 +214,7 @@ public class UserAPI {
     // 비밀번호 찾기 -> 인자로 받는 메일주소로 새로운 비밀번호 발송하면서 해당 값으로 비밀번호 설정
     // 만약, 없는 유저일 경우? 클라에서 검증된 값을 넘기는지? 아니면 서버에서 디비조회 한번 더 해서 없는 유저인지 판단해야 되는지 ?
     // 유저 아이디만 입력받음 -> 해당 아이디의 이메일을 조회해서 그 이메일로 신규 비밀번호 전송
-    @PutMapping("/find/password")
+    @GetMapping("/find/password")
     public ResponseEntity<ApiResponse> findPassword(@RequestParam(value="user_id", required = false, defaultValue = "") String user_id) {
 
         log.info("[PUT] /user/find/passwrod/" + " user_id : " + user_id);
