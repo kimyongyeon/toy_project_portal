@@ -34,4 +34,6 @@ public class CommentDTO {
     private Long rowLike; // 좋아요
     private Long rowDisLike; // 싫어요
 
+    private Long key; // React Rendring Key
+
 }
