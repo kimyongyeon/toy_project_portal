@@ -98,7 +98,7 @@ public class CommonExceptionHandler {
     }
 
     //유저 관련 Exception 처리 ( 400 )
-    @ExceptionHandler({TokenVaildFailedException.class, ParamInvalidException.class, LoginFailedException.class})
+    @ExceptionHandler({TokenVaildFailedException.class, ParamInvalidException.class, LoginFailedException.class, UserNotFoundException.class})
     public ResponseEntity<ApiResponse> user400Exception(Exception e) {
         return new ResponseEntity<>(
                 ApiResponse

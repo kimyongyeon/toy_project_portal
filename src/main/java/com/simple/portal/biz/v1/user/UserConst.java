@@ -29,7 +29,7 @@ public class UserConst {
     public static final String SUCCESS_LOGIN="로그인에 성공하였습니다.";
     public static final String SUCCESS_GRANT_USER_AUTH="가입유저에 로그인 권한이 부여되었습니다.";
     public static final String SUCCESS_UPDATE_PASSWORD="비밀번호 변경에 성공하였습니다.";
-    public static final String SUCCESS_SEND_NEW_PASSWORD="새로운 비밀번호 전송에 성공하였습니다.";
+    public static final String SUCCESS_SEND_NEW_PASSWORD="가입한 이메일로 새로운 비밀번호 전송에 성공하였습니다.";
     public static final String SUCCESS_FOLLOW = "팔로우에 성공 하였습니다.";
     public static final String SUCCESS_UNFOLLOW = "언팔로우에 성공 하였습니다.";
     public static final String SUCCESS_SELECT_FOLLOWERS = "팔로워 조회에 성공하였습니다.";

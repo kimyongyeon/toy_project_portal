@@ -4,6 +4,7 @@ import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.dto.*;
 import com.simple.portal.biz.v1.user.exception.ParamInvalidException;
 import com.simple.portal.biz.v1.user.exception.UserAuthCheckFailedException;
+import com.simple.portal.biz.v1.user.exception.UserNotFoundException;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.common.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
@@ -36,6 +38,20 @@ public class UserAPI {
         this.userService = userService;
         this.apiResponse = apiResponse;
     }
+
+    // jwt 토큰 테스트
+    @GetMapping("/token")
+    public String token(HttpServletRequest httpServletRequest) {
+
+        log.info("token test!");
+
+        String userId = (String) httpServletRequest.getAttribute("userId");
+        String token = (String) httpServletRequest.getAttribute("token");
+        log.info("userId : " + userId);
+        log.info("token : " + token);
+
+        return "ok";
+    };
 
     //전체 유저 조회
     @GetMapping("")
@@ -148,6 +164,21 @@ public class UserAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
+    // 로그아웃 -> 토큰을 만료시킴 ( 토큰을 받아서 만료 ? )
+    // 토큰이 한번 만들어지면 바꿀수 없다.. 즉, 유저가 로그아웃해도 세션처럼 값을 지울수 없다는 뜻이다. ( = 로그아웃해도 토큰이 살아있다. expireTime까지 )
+    // 그래서 로그아웃한 토큰을 레디스에 넣어놓고 토큰 유효성 검사할때 체크해줘야 한다. - 레디스는 주기적으로 삭제 ?
+    @PostMapping("/logout")
+    public void logout(HttpServletRequest httpServletRequest) {
+
+        String userId = httpServletRequest.getParameter("userId");
+        String token = httpServletRequest.getParameter("token");
+
+        log.info("[POST] /user/logout");
+        log.info("userId : " + userId);
+        log.info("token : " + token);
+
+    };
+
     // 권한 업데이트
     @GetMapping("/auth")
     public ModelAndView auth_update(@RequestParam(value="userId") @NotNull String userId) {
@@ -182,15 +213,15 @@ public class UserAPI {
 
     // 비밀번호 찾기 -> 인자로 받는 메일주소로 새로운 비밀번호 발송하면서 해당 값으로 비밀번호 설정
     // 만약, 없는 유저일 경우? 클라에서 검증된 값을 넘기는지? 아니면 서버에서 디비조회 한번 더 해서 없는 유저인지 판단해야 되는지 ?
+    // 유저 아이디만 입력받음 -> 해당 아이디의 이메일을 조회해서 그 이메일로 신규 비밀번호 전송
     @PutMapping("/find/password")
-    public ResponseEntity<ApiResponse> findPassword(@RequestParam(value="id", required = false, defaultValue = "") Long id,
-                                                    @RequestParam(value="user_id", required = false, defaultValue = "") String user_id) {
+    public ResponseEntity<ApiResponse> findPassword(@RequestParam(value="user_id", required = false, defaultValue = "") String user_id) {
 
-        log.info("[PUT] /user/find/passwrod/" + " id : " + id + " user_id : " + user_id);
+        log.info("[PUT] /user/find/passwrod/" + " user_id : " + user_id);
 
-        if(id.equals("") || user_id.equals("")) throw new ParamInvalidException(UserConst.ERROR_PARAMS);
+        if(user_id.equals("")) throw new ParamInvalidException(UserConst.ERROR_PARAMS);
 
-        userService.findUserPasswordService(id, user_id);
+        userService.findUserPasswordService(user_id);
         apiResponse.setMsg(UserConst.SUCCESS_SEND_NEW_PASSWORD);
         apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
