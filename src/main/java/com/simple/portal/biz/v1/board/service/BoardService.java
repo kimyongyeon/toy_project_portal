@@ -204,7 +204,13 @@ public class BoardService implements BaseService {
                 .fetchResults();
 //        return new PageImpl(boards.getResults(), PageRequest.of(boardSearchDTO.getCurrentPage(), boardSearchDTO.getSize()
 //        , Sort.by("createdDate").descending()),boards.getTotal());
-        return new PageImpl(boards.getResults(), PageRequest.of(0, boardSearchDTO.getSize()
+
+        List list = boards.getResults().stream().map(b -> {
+            b.setKey(b.getId());
+            return b;
+        }).collect(Collectors.toList());
+
+        return new PageImpl(list, PageRequest.of(0, boardSearchDTO.getSize()
         , Sort.by("createdDate").descending()),boards.getTotal());
     }
 

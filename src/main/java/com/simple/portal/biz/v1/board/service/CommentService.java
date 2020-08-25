@@ -184,6 +184,7 @@ public class CommentService implements BaseService {
 
         return comments.getResults().stream().map(c -> {
                     c.setBoardId(boardId);
+                    c.setKey(c.getId());
                     return c;
                 })
                 .collect(Collectors.toList());
