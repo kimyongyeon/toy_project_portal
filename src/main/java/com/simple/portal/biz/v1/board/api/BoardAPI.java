@@ -43,6 +43,7 @@ public class BoardAPI {
     @ApiOperation(value="최근활동 글 조회")
     public ResponseEntity<ApiResponse> recentBoardList(@PathVariable String userId) {
         apiResponse.setBody(boardService.recentBoardList(userId));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -55,6 +56,7 @@ public class BoardAPI {
     @ApiOperation(value="내가 올린 글 조회")
     public ResponseEntity<ApiResponse> userBoardList(@PathVariable String userId) {
         apiResponse.setBody(boardService.userBoardList(userId));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -67,6 +69,7 @@ public class BoardAPI {
     @ApiOperation(value="내가 스크랩한 글 조회")
     public ResponseEntity<ApiResponse> query(@PathVariable String userId) {
         apiResponse.setBody(boardService.myScrap(userId));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -86,6 +89,7 @@ public class BoardAPI {
     })
     public ResponseEntity<ApiResponse> page(BoardSearchDTO boardSearchDTO) {
         apiResponse.setBody(boardService.pageList(boardSearchDTO));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -100,6 +104,7 @@ public class BoardAPI {
     })
     public ResponseEntity<ApiResponse> findOne(@PathVariable String id) {
         apiResponse.setBody(boardService.findById(Long.parseLong(id)));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -116,6 +121,7 @@ public class BoardAPI {
 
         Long id = boardService.insert(boardDTO);
         apiResponse.setBody(boardService.findById(id));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -132,6 +138,7 @@ public class BoardAPI {
 
         boardService.updateTitleOrContents(boardDTO);
         apiResponse.setBody(BoardConst.BODY_BLANK);
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -145,6 +152,7 @@ public class BoardAPI {
         isBinding(bindingResult);
         boardService.idDelete(boardIdDTO.getId());
         apiResponse.setBody(BoardConst.BODY_BLANK);
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -162,6 +170,7 @@ public class BoardAPI {
             boardService.idDelete(boardIdDTO.getId());
         }
         apiResponse.setBody(BoardConst.BODY_BLANK);
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -178,6 +187,7 @@ public class BoardAPI {
         isBinding(bindingResult);
         boardService.setLikeAndDisLike(boardLikeDTO);
         apiResponse.setBody(boardService.findByIdNoTran(boardLikeDTO.getId()));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -199,6 +209,7 @@ public class BoardAPI {
         isBinding(bindingResult);
 
         apiResponse.setBody(boardService.saveScrap(scrapDTO));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -215,6 +226,7 @@ public class BoardAPI {
 
         boardService.removeScrap(scrapDTO);
         apiResponse.setBody(BoardConst.BODY_BLANK);
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 

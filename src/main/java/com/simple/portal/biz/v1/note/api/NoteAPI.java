@@ -1,5 +1,6 @@
 package com.simple.portal.biz.v1.note.api;
 
+import com.simple.portal.biz.v1.board.BoardConst;
 import com.simple.portal.biz.v1.note.NoteConst;
 import com.simple.portal.biz.v1.note.dto.NoteDTO;
 import com.simple.portal.biz.v1.note.dto.NoteListDTO;
@@ -48,6 +49,7 @@ public class NoteAPI {
     })
     public ResponseEntity<ApiResponse> sendNote(NoteListDTO noteListDTO) {
         apiResponse.setBody(noteService.findAll(noteListDTO));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -65,6 +67,7 @@ public class NoteAPI {
     })
     public ResponseEntity<ApiResponse> receiveNote(NoteListDTO noteListDTO) {
         apiResponse.setBody(noteService.findAll(noteListDTO));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -81,6 +84,7 @@ public class NoteAPI {
     })
     public ResponseEntity<ApiResponse> noteDetail(@PathVariable Long id, @PathVariable String gb) {
         apiResponse.setBody(noteService.findDetail(id, gb));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -99,6 +103,7 @@ public class NoteAPI {
 
         Long id = noteService.save(noteDTO);
         apiResponse.setBody(noteService.findDetail(id, "S"));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -115,6 +120,7 @@ public class NoteAPI {
     public ResponseEntity<ApiResponse> delPost(@PathVariable Long id, @PathVariable String gb) {
         noteService.delete(id, gb);
         apiResponse.setBody(NoteConst.BODY_BLANK);
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -132,6 +138,7 @@ public class NoteAPI {
             noteService.delete(id, noteRemoveDTO.getGb());
         }
         apiResponse.setBody(NoteConst.BODY_BLANK);
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
