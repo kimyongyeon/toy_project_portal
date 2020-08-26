@@ -13,6 +13,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.simple.portal.biz.v1.user.exception.DeleteProfileImgFailedException;
 import com.simple.portal.biz.v1.user.exception.UploadProfileImgFailedException;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.io.IOException;
 
 @Service
 @NoArgsConstructor
+@Slf4j
 public class S3Service {
 
     private AmazonS3 s3Client;
@@ -60,10 +62,10 @@ public class S3Service {
                     .withCannedAcl(CannedAccessControlList.PublicRead));
             return s3Client.getUrl(bucket, fileName).toString();
         } catch (AmazonS3Exception e) {
-            e.printStackTrace();
+            log.info("[S3Service] AmazonS3Exception upload Error : " + e.getMessage());
             throw new UploadProfileImgFailedException();
         } catch (SdkClientException e) {
-            e.printStackTrace();
+            log.info("[S3Service] SdkClientException upload Error : " + e.getMessage());
             throw new UploadProfileImgFailedException();
         }
     }
@@ -72,10 +74,10 @@ public class S3Service {
         try {
             s3Client.deleteObject(bucket, objectName);
         } catch (AmazonS3Exception e) {
-            e.printStackTrace();
+            log.info("[S3Service] AmazonS3Exception delete Error : " + e.getMessage());
             throw new DeleteProfileImgFailedException();
         } catch (SdkClientException e) {
-            e.printStackTrace();
+            log.info("[S3Service] SdkClientException delete Error : " + e.getMessage());
             throw new DeleteProfileImgFailedException();
         }
     }
