@@ -1,13 +1,17 @@
 package com.simple.portal.biz.v1.user.service;
 
+import com.amazonaws.SdkClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.simple.portal.biz.v1.user.exception.DeleteProfileImgFailedException;
+import com.simple.portal.biz.v1.user.exception.UploadProfileImgFailedException;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,8 +55,28 @@ public class S3Service {
     public String upload(String userId, MultipartFile file) throws IOException {
         String fileName = userId + "-profile.jpg";
 
-        s3Client.putObject(new PutObjectRequest(bucket, fileName, file.getInputStream(), null)
-                .withCannedAcl(CannedAccessControlList.PublicRead));
-        return s3Client.getUrl(bucket, fileName).toString();
+        try {
+            s3Client.putObject(new PutObjectRequest(bucket, fileName, file.getInputStream(), null)
+                    .withCannedAcl(CannedAccessControlList.PublicRead));
+            return s3Client.getUrl(bucket, fileName).toString();
+        } catch (AmazonS3Exception e) {
+            e.printStackTrace();
+            throw new UploadProfileImgFailedException();
+        } catch (SdkClientException e) {
+            e.printStackTrace();
+            throw new UploadProfileImgFailedException();
+        }
+    }
+
+    public void deleteImg(String objectName) {
+        try {
+            s3Client.deleteObject(bucket, objectName);
+        } catch (AmazonS3Exception e) {
+            e.printStackTrace();
+            throw new DeleteProfileImgFailedException();
+        } catch (SdkClientException e) {
+            e.printStackTrace();
+            throw new DeleteProfileImgFailedException();
+        }
     }
 }
