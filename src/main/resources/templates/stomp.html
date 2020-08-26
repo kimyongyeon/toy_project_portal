@@ -16,6 +16,7 @@
     <div>
         <input type="text" id="chatInput" class="chat">&nbsp
         <button id="sendBtn">전송</button>
+        <button id="sendBtn2">전송</button>
     </div>
 
 
@@ -37,32 +38,44 @@
 
         var msg = $('#chatInput').val();
         console.log("mmmmmmmm>>"+msg);
+        socket.send('/socket/pub/comment/notread/khl1342',{},{} );
 
-        socket.send('/socket/pub/comment/notread',{},"recv01" );
+    });
+    // 메세지전송
+    $('#sendBtn2').on('click', function(e) {
+        e.preventDefault();
+        if(!isStomp && socket.readyState !== 1) return;
 
+        var msg = $('#chatInput').val();
+        console.log("mmmmmmmm>>"+msg);
+
+        //socket.send('/socket/pub/note/notread/khl1342',{},{});
+        socket.send('/socket/pub/board/comment/list/board writer:0',{},{});
     });
 
 
     // SockJS 설정
     function connect() {
-        socket = new SockJS('/ws-stomp'); //Websocket Handler
+        socket = new SockJS('http://localhost:8081/ws-stomp'); //Websocket Handler
         var client = Stomp.over(socket);
         isStomp = true;
         socket = client;
-
-        client.connect({},function () {
+        socket.heartbeat.incoming = 10;
+        socket.heartbeat.outcoming = 10;
+        client.connect({userId:"khl1342"},function () {
             console.log("Connected stompTest!");
 
-            //client.send('/TTT',{},"msg: Success");
+            //subscribe Format /socket/sub/comment/notread/{userId}
+            client.subscribe('/socket/sub/comment/notread/', function (event) {
 
-            client.subscribe('/socket/sub/comment/notread', function (event) {
-                console.log("notread>>>", event);
             });
 
-            client.subscribe('/socket/sub/board/comment/list', function (event) {
+            //subscribe Format /socket/sub/board/comment/list/{userId}
+            client.subscribe('/socket/sub/board/comment/list/', function (event) {
                 console.log("board/comment/list>>>", event);
             });
 
+            ////subscribe Format /socket/sub/user/follow/{userId}
             client.subscribe('/socket/sub/user/follow', function (event) {
                 console.log("follow>>>", event);
             });
