@@ -2,7 +2,12 @@ file:
   location: /tmp
 
 server:
-  port: 8081
+  port: 443
+
+  ssl:
+    key-store: classpath:keystore.p12
+    key-store-type: PKCS12
+    key-store-password: ENC(3XCwNNVyBH1PRmYmKVR0T1e57cn3SuDz)
 
 spring:
   security:
