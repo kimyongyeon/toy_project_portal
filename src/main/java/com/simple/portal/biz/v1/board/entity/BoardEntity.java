@@ -24,7 +24,7 @@ public class BoardEntity extends BaseEntity {
     @Column(name = "BOARD_ID")
     private Long id;
 
-    @Column(nullable = false, unique = false)
+    @Column(nullable = false, unique = false, length = 255)
     private String title; // 제목
 
     @Column(nullable = false, unique = false)

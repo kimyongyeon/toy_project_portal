@@ -23,6 +23,6 @@ public class OkkyConfiguration implements WebMvcConfigurer   {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000");
+                .allowedOrigins("http://localhost:3000","http://141.164.41.213:3000");
     }
 }

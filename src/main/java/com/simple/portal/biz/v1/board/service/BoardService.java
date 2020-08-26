@@ -1,25 +1,33 @@
 package com.simple.portal.biz.v1.board.service;
 
 import com.querydsl.core.QueryResults;
-import com.querydsl.core.types.*;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Path;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.ComparableExpressionBase;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.board.dto.*;
-import com.simple.portal.biz.v1.board.entity.BoardEntity;
-import com.simple.portal.biz.v1.board.entity.QBoardEntity;
-import com.simple.portal.biz.v1.board.entity.QCommentEntity;
+import com.simple.portal.biz.v1.board.entity.*;
 import com.simple.portal.biz.v1.board.exception.BoardDetailNotException;
 import com.simple.portal.biz.v1.board.exception.ItemGubunExecption;
+import com.simple.portal.biz.v1.board.repository.ActivityScoreRepository;
+import com.simple.portal.biz.v1.board.repository.AlarmHistRepository;
 import com.simple.portal.biz.v1.board.repository.BoardRepository;
+import com.simple.portal.biz.v1.board.repository.ScrapRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,20 +42,88 @@ public class BoardService implements BaseService {
     @Autowired
     JPAQueryFactory query;
 
+    @Autowired
+    ActivityScoreRepository activityScoreRepository;
+
+    @Autowired
+    ScrapRepository scrapRepository;
+
+    @Autowired
+    AlarmHistRepository alarmHistRepository;
+
+    public void removeScrap(ScrapDTO scrapDTO) {
+        scrapRepository.deleteById(scrapDTO.getId());
+    }
+
+    public ScrapEntity saveScrap(ScrapDTO scrapDTO) {
+        Optional<BoardEntity> byId = boardRepository.findById(scrapDTO.getBoardId());
+        if (byId.isEmpty()) {
+            throw new RuntimeException("게시글 키가 없는 내용 입니다.");
+        } else {
+            ScrapEntity scrapEntity1 = scrapRepository.findByUserIdAndBoardId(scrapDTO.getUserId(), scrapDTO.getBoardId());
+            if (scrapEntity1 == null) {
+                ScrapEntity scrapEntity = new ScrapEntity();
+                scrapEntity.setBoardId(scrapDTO.getBoardId());
+                scrapEntity.setUserId(scrapDTO.getUserId());
+                return scrapRepository.save(scrapEntity);
+            } else {
+                throw new RuntimeException("이미 등록한 스크랩 입니다.");
+            }
+        }
+    }
+
     @Override
     public void setLikeTransaction(Long id) {
         BoardEntity boardEntity = boardRepository.findById(id).get();
-        boardEntity.setRowLike(increase(1L)); // 좋아요 증가
-        boardEntity.setRowDisLike(decrease(1L)); // 싫어요 감소
-        boardRepository.save(boardEntity);
+        // 좋아요/싫어요 따로 집계
+        boardEntity.setRowLike(increase(boardEntity.getRowLike())); // 좋아요 증가
+//        boardEntity.setRowDisLike(decrease(boardEntity.getRowDisLike())); // 싫어요 감소
+        BoardEntity boardEntity1 = boardRepository.save(boardEntity);
+        if (boardEntity1 != null) {
+            // 점수저장
+            ActivityScoreEntity activityScoreEntity = new ActivityScoreEntity();
+            activityScoreEntity.setType(ActivityScoreEntity.ScoreType.EVENT);
+            activityScoreEntity.setUserId(boardEntity.getWriter());
+            activityScoreEntity.setScore(1L);
+            activityScoreRepository.save(activityScoreEntity);
+
+            // 알람 저장
+            Long boardId = id;
+            String userId = boardEntity.getWriter();
+            AlarmHistEntity alarmHistEntity = new AlarmHistEntity();
+            alarmHistEntity.setUserId(userId);
+            alarmHistEntity.setBoardId(boardId);
+            alarmHistEntity.setEventType(AlarmHistEntity.EventType.EVT_BL);
+            alarmHistRepository.save(alarmHistEntity);
+        }
     }
 
     @Override
     public void setDisLikeTransaction(Long id) {
         BoardEntity boardEntity = boardRepository.findById(id).get();
-        boardEntity.setRowLike(decrease(1L)); // 좋아요 감소
-        boardEntity.setRowDisLike(increase(1L)); // 싫어요 증가
-        boardRepository.save(boardEntity);
+        // 좋아요/싫어요 따로 집계
+//        boardEntity.setRowLike(decrease(boardEntity.getRowLike())); // 좋아요 감소
+        boardEntity.setRowDisLike(increase(boardEntity.getRowDisLike())); // 싫어요 증가
+        BoardEntity boardEntity1 = boardRepository.save(boardEntity);
+        if (boardEntity1 != null) {
+
+            // 점수 저장
+            ActivityScoreEntity activityScoreEntity = new ActivityScoreEntity();
+            activityScoreEntity.setType(ActivityScoreEntity.ScoreType.EVENT);
+            activityScoreEntity.setUserId(boardEntity.getWriter());
+            activityScoreEntity.setScore(1L);
+            activityScoreRepository.save(activityScoreEntity);
+
+            // 알람 저장
+            Long boardId = id;
+            String userId = boardEntity.getWriter();
+            AlarmHistEntity alarmHistEntity = new AlarmHistEntity();
+            alarmHistEntity.setUserId(userId);
+            alarmHistEntity.setBoardId(boardId);
+            alarmHistEntity.setEventType(AlarmHistEntity.EventType.EVT_BD);
+            alarmHistRepository.save(alarmHistEntity);
+
+        }
     }
 
     @Override
@@ -57,7 +133,14 @@ public class BoardService implements BaseService {
 
     @Override
     public Long decrease(Long currVal) {
-        return currVal - 1;
+        if (currVal < 0) {
+            return 0L;
+        } else if (currVal == 0) {
+            return 0L;
+        }   else {
+            return currVal - 1;
+        }
+
     }
 
     /**
@@ -68,10 +151,10 @@ public class BoardService implements BaseService {
     public void setLikeAndDisLike(BoardLikeDTO boardLikeDTO) {
 
         if (BoardComponent.isItemGbLike(boardLikeDTO.getItemGb())) { // 좋아요
-            setLikeTransaction(Long.parseLong(boardLikeDTO.getId()));
+            setLikeTransaction(boardLikeDTO.getId());
 
         } else if (BoardComponent.isItemGbDisLike(boardLikeDTO.getItemGb())){ // 싫어요
-            setDisLikeTransaction(Long.parseLong(boardLikeDTO.getId()));
+            setDisLikeTransaction(boardLikeDTO.getId());
 
         } else {
             throw new ItemGubunExecption();
@@ -119,7 +202,16 @@ public class BoardService implements BaseService {
                 .offset(offset)
                 .limit(boardSearchDTO.getSize())
                 .fetchResults();
-        return new PageImpl(boards.getResults(), PageRequest.of(boardSearchDTO.getCurrentPage(), boardSearchDTO.getSize()),boards.getTotal());
+//        return new PageImpl(boards.getResults(), PageRequest.of(boardSearchDTO.getCurrentPage(), boardSearchDTO.getSize()
+//        , Sort.by("createdDate").descending()),boards.getTotal());
+
+        List list = boards.getResults().stream().map(b -> {
+            b.setKey(b.getId());
+            return b;
+        }).collect(Collectors.toList());
+
+        return new PageImpl(list, PageRequest.of(0, boardSearchDTO.getSize()
+        , Sort.by("createdDate").descending()),boards.getTotal());
     }
 
     private BooleanExpression getContains(BoardSearchDTO boardSearchDTO, QBoardEntity qBoardEntity) {
@@ -157,22 +249,18 @@ public class BoardService implements BaseService {
     }
 
     public List<BoardDTO> myScrap(String userId) {
-
         QBoardEntity qBoardEntity = new QBoardEntity("b");
-
-        // 테이블 구조 그대로 목록을 뽑는다.
-        List<BoardEntity> boards = query
-                .select(qBoardEntity)
+        QScrapEntity qScrapEntity = new QScrapEntity("s");
+        List<BoardDTO> boards = query
+                .select(Projections.constructor(BoardDTO.class, qBoardEntity, qScrapEntity))
                 .from(qBoardEntity)
-                .where(
-                        qBoardEntity.title.contains("title")
-                        ,qBoardEntity.writer.contains(userId)
-                ) // 스크랩 유무?
-                .orderBy(qBoardEntity.title.desc())
+                .join(qScrapEntity).on(qScrapEntity.boardId.eq(qBoardEntity.id))
+                .where(qScrapEntity.userId.contains(userId))
+                .limit(10)
+                .orderBy(qBoardEntity.createdDate.desc())
                 .fetch();
-
         // 테이블 구조를 공개하지 않기 위해 DTO에 담는다.
-        return getBoardDTOS(boards.stream());
+        return boards;
     }
 
     private List<BoardDTO> getBoardDTOS(Stream<BoardEntity> stream) {
@@ -214,11 +302,31 @@ public class BoardService implements BaseService {
         return boards;
     }
 
-    public BoardDTO findById(Long id) {
+    public BoardDTO findByIdNoTran(Long id) {
+        BoardEntity boardEntity = boardRepository.findById(id).get();
+        BoardDTO boardDTO = new BoardDTO();
+        boardDTO.setId(boardEntity.getId());
+        boardDTO.setTitle(boardEntity.getTitle());
+        boardDTO.setContents(boardEntity.getContents());
+        boardDTO.setWriter(boardEntity.getWriter());
+        boardDTO.setCreatedDate(boardEntity.getCreatedDate());
+        boardDTO.setViewCount(boardEntity.getViewCount());
+        boardDTO.setRowLike(boardEntity.getRowLike());
+        boardDTO.setRowDisLike(boardEntity.getRowDisLike());
 
-        if (boardRepository.findById(id).isEmpty()) {
+        return boardDTO;
+    }
+
+    @Transactional
+    public BoardDTO findById(Long id) {
+        Optional<BoardEntity> boardEntity1 = boardRepository.findById(id);
+        if (boardEntity1.isEmpty()) {
             throw new BoardDetailNotException();
         }
+        String userId = boardEntity1.get().getWriter();
+        alarmHistRepository.deleteByUserIdAndEventType(userId, AlarmHistEntity.EventType.EVT_BC);
+        alarmHistRepository.deleteByUserIdAndEventType(userId, AlarmHistEntity.EventType.EVT_BL);
+        alarmHistRepository.deleteByUserIdAndEventType(userId, AlarmHistEntity.EventType.EVT_BD);
 
         BoardEntity boardEntity = boardRepository.findById(id).get();
         BoardDTO boardDTO = new BoardDTO();
@@ -236,6 +344,7 @@ public class BoardService implements BaseService {
 
     @Transactional
     public Long insert(BoardReqWriteDTO boardDTO) {
+
         BoardEntity boardEntity = boardRepository.save(BoardEntity.builder()
                 .title(boardDTO.getTitle())
                 .contents(boardDTO.getContents())
@@ -244,6 +353,16 @@ public class BoardService implements BaseService {
                 .rowDisLike(0L)
                 .writer(boardDTO.getWriter())
                 .build());
+
+        if (boardEntity != null) {
+            // 점수 저장
+            ActivityScoreEntity activityScoreEntity = new ActivityScoreEntity();
+            activityScoreEntity.setType(ActivityScoreEntity.ScoreType.BOARD);
+            activityScoreEntity.setUserId(boardDTO.getWriter());
+            activityScoreEntity.setScore(5L);
+            activityScoreRepository.save(activityScoreEntity);
+        }
+
         return boardEntity.getId();
     }
 

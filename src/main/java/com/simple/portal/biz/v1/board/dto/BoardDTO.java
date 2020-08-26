@@ -2,6 +2,7 @@ package com.simple.portal.biz.v1.board.dto;
 
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.entity.CommentEntity;
+import com.simple.portal.biz.v1.board.entity.ScrapEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,17 +32,20 @@ public class BoardDTO {
     private String itemGb = ""; // 아이템 구분 L:D
     private LocalDateTime createdDate; // 작성일자
     private Long commentCnt = 0L;
+    private Long key; // React Rendering
 
     // QueryDSL를 활용한 조인쿼리에서 사용함.
     public BoardDTO(String title, String writer) {
         this.title = title;
         this.writer = writer;
+        this.key = id;
     }
     public BoardDTO(Long id, String title, String contents, String writer) {
         this.id = id;
         this.title = title;
         this.contents = contents;
         this.writer = writer;
+        this.key = id;
     }
     public BoardDTO(Long id, String title, String contents, String writer, LocalDateTime createdDate) {
         this.id = id;
@@ -49,6 +53,7 @@ public class BoardDTO {
         this.contents = contents;
         this.writer = writer;
         this.createdDate = createdDate;
+        this.key = id;
     }
 
     public BoardDTO(BoardEntity boardEntity, CommentEntity commentEntity) {
@@ -60,6 +65,19 @@ public class BoardDTO {
         this.rowLike = boardEntity.getRowLike();
         this.rowDisLike = boardEntity.getRowDisLike();
         this.createdDate = boardEntity.getCreatedDate();
+        this.key = boardEntity.getId();
+    }
+
+    public BoardDTO(BoardEntity boardEntity, ScrapEntity scrapEntity) {
+        this.id = boardEntity.getId();
+        this.title = boardEntity.getTitle();
+        this.contents = boardEntity.getContents();
+        this.writer = boardEntity.getWriter();
+        this.viewCount = boardEntity.getViewCount();
+        this.rowLike = boardEntity.getRowLike();
+        this.rowDisLike = boardEntity.getRowDisLike();
+        this.createdDate = boardEntity.getCreatedDate();
+        this.key = boardEntity.getId();
     }
 
 }
