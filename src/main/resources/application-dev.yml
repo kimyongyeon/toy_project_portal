@@ -2,7 +2,7 @@ file:
   location: /tmp
 
 server:
-  port: 443
+  port: 8443
 
   ssl:
     key-store: classpath:keystore.p12
