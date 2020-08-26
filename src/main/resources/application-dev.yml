@@ -100,3 +100,16 @@ logging:
     root: error
     #com.simple.portal: error
     com.simple.portal: info
+
+# s3 설정
+cloud:
+  aws:
+    credentials:
+      accessKey: ENC(FGBw07GDjTI8V17aSK6sf+8y1nKxpzgNYlUOR7mNPjA=)
+      secretKey: ENC(c15fPgJ3CShuIlX4VdCElP3iLcGj6ihoV48VjmhbpE0Uyc2mZeeIwzmDzYkhz7HN15K5rZuY2Ew=)
+    s3:
+      bucket: portal-file
+    region:
+      static: whatever
+    stack:
+      auto: false

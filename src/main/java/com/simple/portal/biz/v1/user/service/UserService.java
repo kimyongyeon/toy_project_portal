@@ -1,5 +1,6 @@
 package com.simple.portal.biz.v1.user.service;
 
+import com.amazonaws.services.s3.model.MultipartUpload;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.simple.portal.biz.v1.user.ApiConst;
 import com.simple.portal.biz.v1.user.UserConst;
@@ -37,17 +38,24 @@ public class UserService {
     private JwtUtil jwtUtil;
     private RedisTemplate<String, String> redisTemplate;
     private JPAQueryFactory jpaQueryFactory;
+    private S3Service s3Service;
 
     @PersistenceContext
     private EntityManager entityManager; // native query를 위해 entityManger 추가
 
     @Autowired
-    public void UserController(UserRepository userRepository, CustomMailSender mailSender, JwtUtil jwtUtil, RedisTemplate redisTemplate, JPAQueryFactory jpaQueryFactory) {
+    public void UserController(UserRepository userRepository,
+                               CustomMailSender mailSender,
+                               JwtUtil jwtUtil,
+                               RedisTemplate redisTemplate,
+                               JPAQueryFactory jpaQueryFactory,
+                               S3Service s3Service) {
         this.userRepository = userRepository;
         this.mailSender = mailSender;
         this.jwtUtil = jwtUtil;
         this.redisTemplate = redisTemplate;
         this.jpaQueryFactory = jpaQueryFactory;
+        this.s3Service = s3Service;
     }
 
     public List<UserReadDto> userFindAllService( ) {
@@ -156,9 +164,7 @@ public class UserService {
 
     public void updateUserService(UserUpdateDto user, MultipartFile file) {
         try {
-            String imgDir = "/E:\\file_test\\" + user.getUserId() + "-profileImg.png";
-            file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
-
+            String imgPath = s3Service.upload(user.getUserId(), file);
             UserEntity originUser = userRepository.findById(user.getId()).get();
 
             // 빌더 패턴 적용
@@ -169,7 +175,7 @@ public class UserService {
                     .nickname(user.getNickname()) // 변경 가능
                     .password(originUser.getPassword()) // 변경 불가 ( 비밀번호 변경 api 따로 존재 )
                     .gitAddr(user.getGitAddr()) // 변경 가능
-                    .profileImg(imgDir) // 변경 가능
+                    .profileImg(imgPath) // 변경 가능
                     .activityScore(originUser.getActivityScore()) // 변경 불가
                     .authority(originUser.getAuthority()) // 변경 불가
                     .created(originUser.getCreated()) // 변경 불가

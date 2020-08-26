@@ -93,7 +93,9 @@ public class UserAPI {
 
     //유저 수정
     @PutMapping("")
-    public ResponseEntity<ApiResponse> userUpdate(@Valid @RequestBody UserUpdateDto userUpdateDto, MultipartFile file, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse> userUpdate(@ModelAttribute @Valid UserUpdateDto userUpdateDto,
+                                                  @RequestParam("file") MultipartFile file,
+                                                  BindingResult bindingResult) {
         log.info("[PUT] /user/ userUpdateApi" + "[RequestBody] " + userUpdateDto);
 
         // client가 요청 잘못했을때 (파라미터 ) - 400
@@ -188,9 +190,9 @@ public class UserAPI {
         Boolean res = userService.updateUserAuthService(userId);
 
         if(res) { // 권한 업데이트 성공
-           return new ModelAndView(ApiConst.grantAuthSuccessUrl);
+           return new ModelAndView("redirect:" + ApiConst.grantAuthSuccessUrl);
         } else { // 권한 업데이트 실패
-            return new ModelAndView(ApiConst.grantAuthFailUrl);
+            return new ModelAndView("redirect:" + ApiConst.grantAuthFailUrl);
         }
     }
 
