@@ -1,5 +1,6 @@
 package com.simple.portal.biz.v1.user.api;
 
+import com.simple.portal.biz.v1.user.ApiConst;
 import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.dto.*;
 import com.simple.portal.biz.v1.user.exception.ParamInvalidException;
@@ -187,9 +188,9 @@ public class UserAPI {
         Boolean res = userService.updateUserAuthService(userId);
 
         if(res) { // 권한 업데이트 성공
-           return new ModelAndView("/mail-redirect-success-page");
+           return new ModelAndView(ApiConst.grantAuthSuccessUrl);
         } else { // 권한 업데이트 실패
-            return new ModelAndView("/mail-redirect-fail-page");
+            return new ModelAndView(ApiConst.grantAuthFailUrl);
         }
     }
 
