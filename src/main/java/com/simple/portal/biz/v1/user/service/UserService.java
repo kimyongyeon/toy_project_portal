@@ -196,46 +196,37 @@ public class UserService {
             String imgDir = deleteUser.getProfileImg();
             String delFollowedKey = "user:followed:";
             String delFollowingKey = "user:following:";
-
             userRepository.deleteById(id);
-            File deleteFile = new File(imgDir);
-            if (deleteFile.exists()) { // 프로필 이미지 삭제
-                deleteFile.delete();
-            };
+
+            //프로필 이미지 삭제
+            s3Service.deleteImg(deleteUser.getUserId() + "profile.jpg");
 
             //나의 팔로워 및 팔로잉 정보 삭제.
             //내 꺼에서 followed, following 지우면서 각 유저의 것들도 지워줘야함.
             try {
                 SetOperations<String, String> setOperations = redisTemplate.opsForSet();
-
                 //내 팔로잉 조회
                 FollowingList followingList = getFollowingIdService(id);
-
                 //내 팔로워 조회
                 FollowedList followedList = getFollowerIdService(id);
-
                 // 내가 팔로잉한 유저들의 팔로워 정보에서 내 id 삭제
                 for(int i=0; i<followingList.getCnt(); i++) {
                     String followedKey = "user:followed:" + followingList.getFollowing_users().get(i).getId();
                     setOperations.remove(followedKey, String.valueOf(id));
                 }
-
                 //나를 팔로우한 유저들의 팔로잉 정보에서 내 id 삭제
                 for(int i=0; i<followedList.getCnt(); i++) {
                     String followingKey = "user:following:" + followedList.getFollowed_users().get(i).getId();
                     setOperations.remove(followingKey, String.valueOf(id));
                 }
-
                 //내 팔로잉/팔로우 정보 삭제
                 redisTemplate.delete(delFollowedKey + id);
                 redisTemplate.delete(delFollowingKey + id);
-
             } catch (Exception e) {
                 e.printStackTrace();
                 log.info("[UserService] unfollowService Error : " + e.getMessage());
                 throw new UnfollowFailedException();
             }
-
         } catch (Exception e) {
             log.info("[UserService] deleteUserService Error : " + e.getMessage());
             throw new DeleteUserFailedException();
