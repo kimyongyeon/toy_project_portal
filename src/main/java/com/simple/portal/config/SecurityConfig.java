@@ -1,6 +1,7 @@
 package com.simple.portal.config;
 
 import com.simple.portal.biz.v1.user.service.CustomOAuth2UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,6 +14,9 @@ import static com.simple.portal.biz.v1.user.security.SocialType.*;
 
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Value("${spring.profile.value}")
+    public String profiles;
 
     /**
      * hasIpAddress(ip) – 접근자의 IP주소가 매칭 하는지 확인합니다.
@@ -52,6 +56,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .exceptionHandling()
                 .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"));
+
+        if (profiles.equals("local")) {
+            http.headers().frameOptions().disable();
+        }
+
     }
 
     @Override

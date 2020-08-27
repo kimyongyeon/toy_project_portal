@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -40,6 +41,9 @@ public class NoteService {
 
     @Autowired
     AlarmHistRepository alarmHistRepository;
+
+    @Autowired
+    private SimpMessagingTemplate template;
 
     public Page<NoteDTO> findAll(NoteListDTO noteListDTO) {
 
@@ -207,10 +211,13 @@ public class NoteService {
         if (recvNoteEntity != null) {
             // 알람 등록
             AlarmHistEntity alarmHistEntity = new AlarmHistEntity();
-            alarmHistEntity.setUserId(noteDTO.getSendId());
+            String userId = noteDTO.getSendId();
+            alarmHistEntity.setUserId(userId);
             alarmHistEntity.setNoteId(recvNoteEntity.getId());
             alarmHistEntity.setEventType(AlarmHistEntity.EventType.EVT_NR);
             alarmHistRepository.save(alarmHistEntity);
+
+            this.template.convertAndSend("/socket/sub/note/" + userId, 1);
         }
 
         return sendNoteEntity.getId();

@@ -12,6 +12,7 @@ import com.simple.portal.biz.v1.note.repository.SendNoteRepository;
 import com.simple.portal.common.storage.StorageProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
@@ -55,6 +56,9 @@ public class PortalApplication implements ApplicationRunner {
     @Autowired
     EntityManagerFactory emf;
 
+    @Value("${spring.profile.value}")
+    public String profiles;
+
     @Bean
     @Profile({"default", "dev"})
     public ServerEndpointExporter serverEndpointExporter() {
@@ -78,12 +82,14 @@ public class PortalApplication implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
 
-        // 더미 데이터 생성: 게시글, 댓글, 쪽지
-//        for(int i=0; i<2000; i++) {
-//            BoardEntity boardEntity = new BoardEntity();
-//            CommentEntity commentEntity = new CommentEntity();
-//            jpaSave(boardEntity, commentEntity, i);
-//        }
+        if (profiles.equals("local")) {
+            // 더미 데이터 생성: 게시글, 댓글, 쪽지
+            for(int i=0; i<2000; i++) {
+                BoardEntity boardEntity = new BoardEntity();
+                CommentEntity commentEntity = new CommentEntity();
+                jpaSave(boardEntity, commentEntity, i);
+            }
+        }
 //
 //        EntityManager em = emf.createEntityManager();
 //        BoardEntity boardEntity = em.find(BoardEntity.class, 1L);

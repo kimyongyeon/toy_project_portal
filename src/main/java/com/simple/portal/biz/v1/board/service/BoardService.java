@@ -23,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -35,6 +36,9 @@ import static com.querydsl.core.types.ExpressionUtils.count;
 
 @Service
 public class BoardService implements BaseService {
+
+    @Autowired
+    private SimpMessagingTemplate template;
 
     @Autowired
     BoardRepository boardRepository;
@@ -95,6 +99,9 @@ public class BoardService implements BaseService {
             alarmHistEntity.setBoardId(boardId);
             alarmHistEntity.setEventType(AlarmHistEntity.EventType.EVT_BL);
             alarmHistRepository.save(alarmHistEntity);
+
+            this.template.convertAndSend("/socket/sub/board/" + userId, 1);
+
         }
     }
 
@@ -122,6 +129,8 @@ public class BoardService implements BaseService {
             alarmHistEntity.setBoardId(boardId);
             alarmHistEntity.setEventType(AlarmHistEntity.EventType.EVT_BD);
             alarmHistRepository.save(alarmHistEntity);
+
+            this.template.convertAndSend("/socket/sub/board/" + userId, 1);
 
         }
     }

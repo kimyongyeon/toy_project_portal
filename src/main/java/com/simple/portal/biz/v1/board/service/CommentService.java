@@ -16,6 +16,7 @@ import com.simple.portal.biz.v1.board.repository.AlarmHistRepository;
 import com.simple.portal.biz.v1.board.repository.BoardRepository;
 import com.simple.portal.biz.v1.board.repository.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +44,9 @@ public class CommentService implements BaseService {
 
     @Autowired
     BoardRepository boardRepository;
+
+    @Autowired
+    private SimpMessagingTemplate template;
 
     @Override
     public void setLikeTransaction(Long id) {
@@ -147,6 +151,8 @@ public class CommentService implements BaseService {
                 alarmHistEntity.setBoardId(boardId);
                 alarmHistEntity.setEventType(AlarmHistEntity.EventType.EVT_BC);
                 alarmHistRepository.save(alarmHistEntity);
+
+                this.template.convertAndSend("/socket/sub/board/" + userId, 1);
 
             } else {
                 throw new RuntimeException("존재 하지 않는 게시글 입니다.");
