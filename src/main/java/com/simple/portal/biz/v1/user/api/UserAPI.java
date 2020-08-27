@@ -190,9 +190,9 @@ public class UserAPI {
         Boolean res = userService.updateUserAuthService(userId);
 
         if(res) { // 권한 업데이트 성공
-           return new ModelAndView("redirect:" + ApiConst.grantAuthSuccessUrl);
+           return new ModelAndView("redirect:" + ApiConst.grantAuthSuccessUrl + "?userId="+userId);
         } else { // 권한 업데이트 실패
-            return new ModelAndView("redirect:" + ApiConst.grantAuthFailUrl);
+            return new ModelAndView("redirect:" + ApiConst.grantAuthFailUrl + "?userId="+userId);
         }
     }
 
