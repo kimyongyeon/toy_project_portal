@@ -9,5 +9,4 @@ public class CommonConst {
     public static final String BODY_BLANK = "";
     public static final String PROD_EXCEPTION_MSG = "서버 담당자에게 연락 바랍니다.";
     public static final String PROFILE_DEFAULT = "default";
-
 }

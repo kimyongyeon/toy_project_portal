@@ -9,6 +9,7 @@ import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.*;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
 import com.simple.portal.common.Interceptor.JwtUtil;
+import com.simple.portal.util.ActivityScoreConst;
 import com.simple.portal.util.ApiHelper;
 import com.simple.portal.util.CustomMailSender;
 import com.simple.portal.util.DateFormatUtil;
@@ -29,6 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+import static com.simple.portal.util.DateFormatUtil.makeNowTimeStamp;
 
 @Slf4j
 @Service
@@ -144,8 +147,8 @@ public class UserService {
                     .profileImg(ApiConst.baseImgUrl)
                     .activityScore(0) // 초기점수 0 점
                     .authority('N') // 초기 권한 N
-                    .created(DateFormatUtil.makeNowTimeStamp())
-                    .updated(DateFormatUtil.makeNowTimeStamp())
+                    .created(makeNowTimeStamp())
+                    .updated(makeNowTimeStamp())
                     .build();
 
             userRepository.save(insertUser);
@@ -162,6 +165,7 @@ public class UserService {
         }
     };
 
+    @Transactional
     public void updateUserService(UserUpdateDto user, MultipartFile file) {
         try {
             String imgPath = s3Service.upload(user.getUserId(), file);
@@ -179,7 +183,8 @@ public class UserService {
                     .activityScore(originUser.getActivityScore()) // 변경 불가
                     .authority(originUser.getAuthority()) // 변경 불가
                     .created(originUser.getCreated()) // 변경 불가
-                    .updated(DateFormatUtil.makeNowTimeStamp()) // 현재시간으로 변경
+                    .updated(makeNowTimeStamp()) // 현재시간으로 변경
+                    .lastLoginTime(originUser.getLastLoginTime()) // 변경 불가
                     .build();
 
             userRepository.save(updateUser);
@@ -249,13 +254,27 @@ public class UserService {
             else {
                 UserEntity user = userRepository.findByUserId(user_id);
                 String pwOrigin = user.getPassword();
-                if (BCrypt.checkpw(password, pwOrigin)) return jwtUtil.createToken(user.getUserId());
+                if (BCrypt.checkpw(password, pwOrigin)) {
+
+                    String lastLoginTime = user.getLastLoginTime();
+                    if(lastLoginTime == null) { // 가입 후 최초 로그인
+                        updateActivityScore(user_id, ActivityScoreConst.LOGIN_ACTIVITY_SCORE);
+                    } else { // 로그인의 경우 하루에 한번만 점수 업데이트 가능
+                        String LastLoginDate = user.getLastLoginTime().split(" ")[0]; // "lastLoginTime": "2020-08-29 17:53:56",
+                        String nowDate = makeNowTimeStamp().split(" ")[0];
+                        // 로그인의 경우 하루에 한번만 카운트 되도록 처리
+                        if(!LastLoginDate.equals(nowDate)) updateActivityScore(user_id, ActivityScoreConst.LOGIN_ACTIVITY_SCORE);
+                    }
+
+                    userRepository.updateLastLoginTime(user_id, makeNowTimeStamp()); // 최근 로그인 시간 update
+                    return jwtUtil.createToken(user.getUserId());
+                }
                 else throw new Exception(UserConst.INVALID_PASSWORD); // 비밀번호 오류
             }
         } catch (Exception e) {
             log.info("[UserService] userLoginService Error : " + e.getMessage());
             throw new LoginFailedException(e.getMessage());
-    }
+        }
     }
 
     // 유저 권한 부여
@@ -284,7 +303,7 @@ public class UserService {
     public void updateUserPasswordService(Long id, String newPassword) {
         try{
             UserEntity originUser = userRepository.findById(id).get();
-            originUser.setUpdated(DateFormatUtil.makeNowTimeStamp());   // 비밀번호 변경했을때 updateTime 갱신
+            originUser.setUpdated(makeNowTimeStamp());   // 비밀번호 변경했을때 updateTime 갱신
             originUser.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
             userRepository.save(originUser);
         } catch (Exception e) {
@@ -305,7 +324,6 @@ public class UserService {
         try {
             // 랜덤값으로 비밀번호 변경 후 -> 이메일 발송
             String randomValue = ApiHelper.getRandomString(); // 이 값을 메일로 전송
-
             String userEmail = userRepository.findByUserId(user_id).getEmail(); // 해당 id로 가입된 이메일 조회
             userRepository.updatePassword(user_id, BCrypt.hashpw(randomValue, BCrypt.gensalt()));
             try {
@@ -314,7 +332,6 @@ public class UserService {
                 log.info("[UserService] emailSend Error : " + e.getMessage());
                 throw new EmailSendFailedException();
             }
-            // 해당 값을 이메일로 발송
         } catch (Exception e) {
             log.info("[UserService] findUserPassword Error : " + e.getMessage());
             throw new FindPasswordFailedException();
@@ -436,6 +453,19 @@ public class UserService {
         } catch (Exception e) {
             log.info("[UserService] getFollowingIdService Error : " + e.getMessage());
             throw new SelectFollowingUsersFailedException();
+        }
+    }
+
+    // 활동점수 update
+    @Transactional
+    public void updateActivityScore(String userId, int score) {
+        try {
+            int myActiviyScore = userRepository.findByUserId(userId).getActivityScore();
+            myActiviyScore += score;
+            userRepository.updateActivityScore(userId, myActiviyScore);
+        } catch (Exception e) {
+            log.info("[UserService] updateScore Error : " + e.getMessage());
+            throw new UpdateActivityScoreFailedException();
         }
     }
 }

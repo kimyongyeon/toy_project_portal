@@ -53,8 +53,11 @@ public class UserEntity {
     @Column(nullable = true)
     private String updated;
 
+    @Column(name="last_login_time", nullable = true)
+    private String lastLoginTime;
+
     @Builder
-    public UserEntity(Long id, String userId, String email, String nickname, String password, String gitAddr, String profileImg, int activityScore, char authority, String created, String updated) {
+    public UserEntity(Long id, String userId, String email, String nickname, String password, String gitAddr, String profileImg, int activityScore, char authority, String created, String updated, String lastLoginTime) {
         this.id = id;
         this.userId = userId;
         this.email = email;
@@ -66,6 +69,7 @@ public class UserEntity {
         this.authority = authority;
         this.created = created;
         this.updated = updated;
+        this.lastLoginTime = lastLoginTime;
     }
 
     @Override
@@ -80,6 +84,7 @@ public class UserEntity {
                 + "activity_score : " + this.activityScore + "\n"
                 + "authority : " + this.authority + "\n"
                 + "created : " + this.created + "\n"
-                + "updated : " + this.updated + "\n";
+                + "updated : " + this.updated + "\n"
+                + "lastLoginTime : " + this.lastLoginTime + "\n";
     };
 }
