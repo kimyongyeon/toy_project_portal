@@ -18,6 +18,7 @@ import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,6 +43,7 @@ public class UserService {
     private RedisTemplate<String, String> redisTemplate;
     private JPAQueryFactory jpaQueryFactory;
     private S3Service s3Service;
+    private SimpMessagingTemplate simpleMessageTemplate;
 
     @PersistenceContext
     private EntityManager entityManager; // native query를 위해 entityManger 추가
@@ -52,13 +54,15 @@ public class UserService {
                                JwtUtil jwtUtil,
                                RedisTemplate redisTemplate,
                                JPAQueryFactory jpaQueryFactory,
-                               S3Service s3Service) {
+                               S3Service s3Service,
+                               SimpMessagingTemplate simpleMessageTemplate) {
         this.userRepository = userRepository;
         this.mailSender = mailSender;
         this.jwtUtil = jwtUtil;
         this.redisTemplate = redisTemplate;
         this.jpaQueryFactory = jpaQueryFactory;
         this.s3Service = s3Service;
+        this.simpleMessageTemplate = simpleMessageTemplate;
     }
 
     public List<UserReadDto> userFindAllService( ) {
@@ -347,6 +351,7 @@ public class UserService {
             String followingKey = "user:following:" + following_id;
             setOperations.add(followedKey, String.valueOf(following_id));
             setOperations.add(followingKey, String.valueOf(followed_id));
+            this.simpleMessageTemplate.convertAndSend("/socket/sub/user/follow" + followed_id, 1);
         } catch (Exception e) {
             log.info("[UserService] followService Error : " + e.getMessage());
             throw new FollowFailedException();
