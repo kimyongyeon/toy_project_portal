@@ -65,8 +65,8 @@ public class UserAPI {
     };
 
     //특정 유저 조회 -> 팔로잉, 팔로워 수도 같이 출력
-    @GetMapping("/{id}")
-    public ResponseEntity<?> userFindOne(@PathVariable @NotNull Long id) {
+    @GetMapping("/{pkId}")
+    public ResponseEntity<?> userFindOne(@PathVariable("pkId") @NotNull Long id) {
         log.info("[GET] /user/{id}" + id + "/userFindOne/");
 
         apiResponse.setMsg(UserConst.SUCCESS_SELECT_USER);
@@ -111,8 +111,8 @@ public class UserAPI {
     }
 
     //유저 삭제 - 회원 탈퇴 -> redis에 있는 팔로우 정보도 삭제
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse> userDelete(@PathVariable @NotNull Long id) {
+    @DeleteMapping("/{pkId}")
+    public ResponseEntity<ApiResponse> userDelete(@PathVariable("pkId") @NotNull Long id) {
         log.info("[DELETE] /user/ " + id + " /userDelete");
 
         userService.deleteUserService(id);
@@ -122,8 +122,8 @@ public class UserAPI {
     }
 
     // 아이디 중복 체크 ( 회원 가입 )
-    @GetMapping("/check/{id}")
-    public ResponseEntity<ApiResponse> userIdCheck(@PathVariable("id") String user_id) {
+    @GetMapping("/check/{userId}")
+    public ResponseEntity<ApiResponse> userIdCheck(@PathVariable("userId") String user_id) {
         log.info("[GET] /user/check/id " + user_id + " /userIdCheck");
 
         if(userService.idCheckService(user_id)) {
@@ -218,13 +218,13 @@ public class UserAPI {
     // 만약, 없는 유저일 경우? 클라에서 검증된 값을 넘기는지? 아니면 서버에서 디비조회 한번 더 해서 없는 유저인지 판단해야 되는지 ?
     // 유저 아이디만 입력받음 -> 해당 아이디의 이메일을 조회해서 그 이메일로 신규 비밀번호 전송
     @GetMapping("/find/password")
-    public ResponseEntity<ApiResponse> findPassword(@RequestParam(value="user_id", required = false, defaultValue = "") String user_id) {
+    public ResponseEntity<ApiResponse> findPassword(@RequestParam(value="userId", required = false, defaultValue = "") String userId) {
 
-        log.info("[PUT] /user/find/passwrod/" + " user_id : " + user_id);
+        log.info("[PUT] /user/find/passwrod/" + " user_id : " + userId);
 
-        if(user_id.equals("")) throw new ParamInvalidException(UserConst.ERROR_PARAMS);
+        if(userId.equals("")) throw new ParamInvalidException(UserConst.ERROR_PARAMS);
 
-        userService.findUserPasswordService(user_id);
+        userService.findUserPasswordService(userId);
         apiResponse.setMsg(UserConst.SUCCESS_SEND_NEW_PASSWORD);
         apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
