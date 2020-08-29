@@ -4,6 +4,7 @@ import com.simple.portal.biz.v1.user.ApiConst;
 import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.dto.*;
 import com.simple.portal.biz.v1.user.exception.ParamInvalidException;
+import com.simple.portal.biz.v1.user.exception.UpdateActivityScoreFailedException;
 import com.simple.portal.biz.v1.user.exception.UserAuthCheckFailedException;
 import com.simple.portal.biz.v1.user.exception.UserNotFoundException;
 import com.simple.portal.biz.v1.user.service.UserService;
@@ -94,7 +95,6 @@ public class UserAPI {
     //유저 수정
     @PutMapping("")
     public ResponseEntity<ApiResponse> userUpdate(@ModelAttribute @Valid UserUpdateDto userUpdateDto,
-                                                  @RequestParam("file") MultipartFile file,
                                                   BindingResult bindingResult) {
         log.info("[PUT] /user/ userUpdateApi" + "[RequestBody] " + userUpdateDto);
 
@@ -104,7 +104,7 @@ public class UserAPI {
             throw new ParamInvalidException(errMsg);
         }
 
-        userService.updateUserService(userUpdateDto, file);
+        userService.updateUserService(userUpdateDto);
         apiResponse.setMsg(UserConst.SUCCESS_UPDATE_USER);
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);

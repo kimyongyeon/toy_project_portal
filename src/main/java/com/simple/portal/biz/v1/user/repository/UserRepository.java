@@ -42,4 +42,12 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     @Transactional
     @Query(value="update user set last_login_time = :lastLoginTime where user_id = :userId", nativeQuery = true)
     void updateLastLoginTime(String userId, String lastLoginTime);
+
+    //프로필 이미지경로 업데이트
+    // 유저 가장 최근 로그인 시간 업데이트
+    @Modifying
+    @Transactional
+    @Query(value="update user set profile_img = :imgUrl where user_id = :userId", nativeQuery = true)
+    void updateProfileImg(String userId, String imgUrl);
+
 }

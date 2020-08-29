@@ -86,7 +86,8 @@ public class CommonExceptionHandler {
             UnfollowFailedException.class,
             SelectFollowerFailedException.class, SelectFollowingUsersFailedException.class,
             UploadProfileImgFailedException.class, DeleteProfileImgFailedException.class,
-            UpdateActivityScoreFailedException.class
+            UpdateActivityScoreFailedException.class,
+            UpdateProfileImgFailedException.class
     })
     public ResponseEntity<ApiResponse> user500Exception(Exception e) {
         return new ResponseEntity<>(

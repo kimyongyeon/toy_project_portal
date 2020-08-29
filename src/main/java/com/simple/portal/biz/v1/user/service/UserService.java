@@ -20,6 +20,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
@@ -170,9 +171,8 @@ public class UserService {
     };
 
     @Transactional
-    public void updateUserService(UserUpdateDto user, MultipartFile file) {
+    public void updateUserService(UserUpdateDto user) {
         try {
-            String imgPath = s3Service.upload(user.getUserId(), file);
             UserEntity originUser = userRepository.findById(user.getId()).get();
 
             // 빌더 패턴 적용
@@ -183,7 +183,7 @@ public class UserService {
                     .nickname(user.getNickname()) // 변경 가능
                     .password(originUser.getPassword()) // 변경 불가 ( 비밀번호 변경 api 따로 존재 )
                     .gitAddr(user.getGitAddr()) // 변경 가능
-                    .profileImg(imgPath) // 변경 가능
+                    .profileImg(originUser.getProfileImg()) // 변경 불가 -> 프로필 update api를 통해 변경 가능
                     .activityScore(originUser.getActivityScore()) // 변경 불가
                     .authority(originUser.getAuthority()) // 변경 불가
                     .created(originUser.getCreated()) // 변경 불가
