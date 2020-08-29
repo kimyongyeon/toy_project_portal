@@ -122,20 +122,26 @@ public class UserAPI {
     }
 
     // 아이디 중복 체크 ( 회원 가입 )
-    @GetMapping("/check/{userId}")
+    @GetMapping("/check/id/{userId}")
     public ResponseEntity<ApiResponse> userIdCheck(@PathVariable("userId") String user_id) {
         log.info("[GET] /user/check/id " + user_id + " /userIdCheck");
 
-        if(userService.idCheckService(user_id)) {
-            apiResponse.setMsg(UserConst.EXIST_USER);
-            apiResponse.setBody("");
-            return new ResponseEntity(apiResponse, HttpStatus.OK);
-        } else {
-            apiResponse.setMsg(UserConst.NO_USER);
-            apiResponse.setBody("");
-            return new ResponseEntity(apiResponse, HttpStatus.OK);
-        }
+        if(userService.idCheckService(user_id)) apiResponse.setMsg(UserConst.EXIST_USER);
+        else apiResponse.setMsg(UserConst.NO_USER);
+        apiResponse.setBody("");
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
     };
+
+    // 이메일 중복 체크 ( 회원가입 )
+    @GetMapping("/check/email/{email}")
+    public ResponseEntity<ApiResponse> emailCheck(@PathVariable("email") String email) {
+        log.info("[GET] /user/check/email " + email);
+
+        if(userService.emailCheckService(email)) apiResponse.setMsg(UserConst.EXIST_EMAIL);
+        else apiResponse.setMsg(UserConst.NO_EMAIL);
+        apiResponse.setBody("");
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
 
     // 로그인
     @PostMapping("/login")

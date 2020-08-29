@@ -12,6 +12,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     public Boolean existsUserByUserId(String userId); // 아이디 검사
     public Boolean findByPassword(String password); // 비밀번호 검사
     public UserEntity findByUserId(String userId);
+    public Boolean existsByEmail(String email); // 이메일 검사
 
     // 유저 권한 업데이트
     @Modifying

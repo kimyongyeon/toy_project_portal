@@ -251,6 +251,15 @@ public class UserService {
         }
     }
 
+    public Boolean emailCheckService(String email) {
+        try {
+            return userRepository.existsByEmail(email) == true ?  true : false;
+        } catch (Exception e) {
+            log.info("[UserService] emailCheckService Error : " + e.getMessage());
+            throw new EmailCheckFailedException();
+        }
+    }
+
     @Transactional
     public String userLoginService(String user_id, String password) { // 성공만 처리하고 나머지 exception 던짐
         try {
