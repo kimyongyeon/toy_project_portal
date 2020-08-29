@@ -117,14 +117,14 @@ public class PortalApplication implements ApplicationRunner {
 
     public void jpaSave(BoardEntity boardEntity, CommentEntity commentEntity, int i) {
 
-        long generatedLong = new Random().nextLong();
+        long generatedLong = (int)(Math.random() * 100000 +1);
         boardEntity.setTitle("board title:"+i);
         boardEntity.setContents("board contents:"+i);
         boardEntity.setWriter("board writer:"+i);
         boardEntity.setRowDisLike(generatedLong);
-        generatedLong = new Random().nextLong();
+        generatedLong =  (int)(Math.random() * 100000 +1);
         boardEntity.setRowLike(generatedLong);
-        generatedLong = new Random().nextLong();
+        generatedLong =  (int)(Math.random() * 100000 +1);
         boardEntity.setViewCount(generatedLong);
         boardEntity.addComment(commentEntity);
         boardRepository.save(boardEntity);
@@ -133,10 +133,26 @@ public class PortalApplication implements ApplicationRunner {
         commentEntity.setTitle("comment title:"+i);
         commentEntity.setContents("comment contents:"+i);
         commentEntity.setWriter("comment writer:"+i);
-        commentEntity.setRowLike(0L);
-        commentEntity.setRowDisLike(0L);
-        commentEntity.setViewCount(0L);
+        generatedLong = (int)(Math.random() * 100000 +1);
+        commentEntity.setRowLike(generatedLong);
+        generatedLong = (int)(Math.random() * 100000 +1);
+        commentEntity.setRowDisLike(generatedLong);
+        generatedLong = (int)(Math.random() * 100000 +1);
+        commentEntity.setViewCount(generatedLong);
         commentService.writeComment(commentEntity);
+//        generatedLong =  (int)(Math.random() * 3 +1);
+//        for (int j=0; j<generatedLong; j++) {
+//            commentEntity.setTitle("comment title:"+i);
+//            commentEntity.setContents("comment contents:"+i);
+//            commentEntity.setWriter("comment writer:"+i);
+//            generatedLong = (int)(Math.random() * 100000 +1);
+//            commentEntity.setRowLike(generatedLong);
+//            generatedLong = (int)(Math.random() * 100000 +1);
+//            commentEntity.setRowDisLike(generatedLong);
+//            generatedLong = (int)(Math.random() * 100000 +1);
+//            commentEntity.setViewCount(generatedLong);
+//            commentService.writeComment(commentEntity);
+//        }
 
         RecvNoteEntity recvNoteEntity = new RecvNoteEntity();
         recvNoteEntity.setTitle("recvNote title: " + i);
