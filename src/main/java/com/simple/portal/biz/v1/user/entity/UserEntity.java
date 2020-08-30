@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity // 테이블과 매핑됨
-@Table(name="user")
+@Table(name="user", indexes= {@Index(name="user_id_index", columnList = "user_id", unique = true)})
 @Getter
 @Setter
 @NoArgsConstructor

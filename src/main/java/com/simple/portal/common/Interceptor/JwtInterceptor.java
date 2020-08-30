@@ -23,6 +23,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         String jwtToken = request.getHeader("Authorization");
         String userId = jwtUtil.checkToken(jwtToken);
         request.setAttribute("userId", userId); // request에 userId를 세팅해서 컨트롤러에 넘김
+        request.setAttribute("token", jwtToken);
         return true;
     }
 

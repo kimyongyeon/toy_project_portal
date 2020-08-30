@@ -18,7 +18,9 @@ import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
@@ -42,6 +44,7 @@ public class UserService {
     private RedisTemplate<String, String> redisTemplate;
     private JPAQueryFactory jpaQueryFactory;
     private S3Service s3Service;
+    private SimpMessagingTemplate simpleMessageTemplate;
 
     @PersistenceContext
     private EntityManager entityManager; // native query를 위해 entityManger 추가
@@ -52,13 +55,15 @@ public class UserService {
                                JwtUtil jwtUtil,
                                RedisTemplate redisTemplate,
                                JPAQueryFactory jpaQueryFactory,
-                               S3Service s3Service) {
+                               S3Service s3Service,
+                               SimpMessagingTemplate simpleMessageTemplate) {
         this.userRepository = userRepository;
         this.mailSender = mailSender;
         this.jwtUtil = jwtUtil;
         this.redisTemplate = redisTemplate;
         this.jpaQueryFactory = jpaQueryFactory;
         this.s3Service = s3Service;
+        this.simpleMessageTemplate = simpleMessageTemplate;
     }
 
     public List<UserReadDto> userFindAllService( ) {
@@ -166,9 +171,8 @@ public class UserService {
     };
 
     @Transactional
-    public void updateUserService(UserUpdateDto user, MultipartFile file) {
+    public void updateUserService(UserUpdateDto user) {
         try {
-            String imgPath = s3Service.upload(user.getUserId(), file);
             UserEntity originUser = userRepository.findById(user.getId()).get();
 
             // 빌더 패턴 적용
@@ -179,7 +183,7 @@ public class UserService {
                     .nickname(user.getNickname()) // 변경 가능
                     .password(originUser.getPassword()) // 변경 불가 ( 비밀번호 변경 api 따로 존재 )
                     .gitAddr(user.getGitAddr()) // 변경 가능
-                    .profileImg(imgPath) // 변경 가능
+                    .profileImg(originUser.getProfileImg()) // 변경 불가 -> 프로필 update api를 통해 변경 가능
                     .activityScore(originUser.getActivityScore()) // 변경 불가
                     .authority(originUser.getAuthority()) // 변경 불가
                     .created(originUser.getCreated()) // 변경 불가
@@ -244,6 +248,15 @@ public class UserService {
         } catch (Exception e) {
             log.info("[UserService] idCheckService Error : " + e.getMessage());
             throw new IdCheckFailedException();
+        }
+    }
+
+    public Boolean emailCheckService(String email) {
+        try {
+            return userRepository.existsByEmail(email) == true ?  true : false;
+        } catch (Exception e) {
+            log.info("[UserService] emailCheckService Error : " + e.getMessage());
+            throw new EmailCheckFailedException();
         }
     }
 
@@ -347,6 +360,7 @@ public class UserService {
             String followingKey = "user:following:" + following_id;
             setOperations.add(followedKey, String.valueOf(following_id));
             setOperations.add(followingKey, String.valueOf(followed_id));
+            this.simpleMessageTemplate.convertAndSend("/socket/sub/user/follow" + followed_id, 1);
         } catch (Exception e) {
             log.info("[UserService] followService Error : " + e.getMessage());
             throw new FollowFailedException();
