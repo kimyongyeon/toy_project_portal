@@ -128,7 +128,7 @@ public class CommentService {
         return commentRepository.findById(id).get();
     }
 
-//    @Transactional
+    @Transactional
     public CommentEntity writeComment(CommentEntity commentEntity) {
 
         // 1. 댓글 저장

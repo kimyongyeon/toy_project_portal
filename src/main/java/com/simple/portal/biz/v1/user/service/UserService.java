@@ -471,7 +471,7 @@ public class UserService {
     }
 
     // 활동점수 update
-    @Transactional
+    @Transactional(dontRollbackOn = RuntimeException.class)
     public void updateActivityScore(String userId, int score) {
         try {
             int myActiviyScore = userRepository.findByUserId(userId).getActivityScore();
