@@ -1,5 +1,6 @@
 package com.simple.portal.biz.v1.user.service;
 
+import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.exception.UpdateProfileImgFailedException;
 import com.simple.portal.biz.v1.user.exception.UserNotFoundException;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
@@ -25,12 +26,13 @@ public class ProfileService {
     @Transactional
     public void updateProfileImgService(String userId, MultipartFile file) {
         try {
-            if(!userRepository.existsUserByUserId(userId)) throw new UserNotFoundException(); // 존재하지 않는 유저일 경우 exception 처리
+            if(!userRepository.existsUserByUserId(userId)) throw new Exception(UserConst.NO_USER); // 존재하지 않는 유저일 경우 exception 처리
             String imgPath = s3Service.upload(userId, file); // s3에 이미지 업로드
             userRepository.updateProfileImg(userId, imgPath); // 이미지 저장경로 디비에 저장
         } catch (Exception e) {
             log.error("[ProfileService] updateProfileImgService Error : " + e.getMessage());
-            throw new UpdateProfileImgFailedException();
+            if(e.getMessage().equals(UserConst.NO_USER)) throw new UserNotFoundException();
+            else throw new UpdateProfileImgFailedException();
         }
     }
 }
