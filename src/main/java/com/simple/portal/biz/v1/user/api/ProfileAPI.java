@@ -5,6 +5,7 @@ import com.amazonaws.auth.profile.internal.Profile;
 import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.service.ProfileService;
 import com.simple.portal.common.ApiResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -18,6 +19,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/api")
+@Slf4j
 public class ProfileAPI {
 
     private ApiResponse apiResponse;
@@ -32,6 +34,7 @@ public class ProfileAPI {
     public ResponseEntity<ApiResponse> updateProfileImg(@RequestParam("userId") String userId,
                                                         @RequestParam("file") MultipartFile file) {
 
+        log.info("[PUT] /v1/api/profile " +  userId);
         profileService.updateProfileImgService(userId, file);
         apiResponse.setMsg(UserConst.SUCCESS_UPDATE_PROFILE_IMG);
         apiResponse.setBody("");

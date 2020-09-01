@@ -29,7 +29,7 @@ public class ProfileService {
             String imgPath = s3Service.upload(userId, file); // s3에 이미지 업로드
             userRepository.updateProfileImg(userId, imgPath); // 이미지 저장경로 디비에 저장
         } catch (Exception e) {
-            log.info("[ProfileService] updateProfileImgService Error : " + e.getMessage());
+            log.error("[ProfileService] updateProfileImgService Error : " + e.getMessage());
             throw new UpdateProfileImgFailedException();
         }
     }

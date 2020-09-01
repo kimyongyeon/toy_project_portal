@@ -62,10 +62,10 @@ public class S3Service {
                     .withCannedAcl(CannedAccessControlList.PublicRead));
             return s3Client.getUrl(bucket, fileName).toString();
         } catch (AmazonS3Exception e) {
-            log.info("[S3Service] AmazonS3Exception upload Error : " + e.getMessage());
+            log.error("[S3Service] AmazonS3Exception upload Error : " + e.getMessage());
             throw new UploadProfileImgFailedException();
         } catch (SdkClientException e) {
-            log.info("[S3Service] SdkClientException upload Error : " + e.getMessage());
+            log.error("[S3Service] SdkClientException upload Error : " + e.getMessage());
             throw new UploadProfileImgFailedException();
         }
     }
@@ -74,10 +74,10 @@ public class S3Service {
         try {
             s3Client.deleteObject(bucket, objectName);
         } catch (AmazonS3Exception e) {
-            log.info("[S3Service] AmazonS3Exception delete Error : " + e.getMessage());
+            log.error("[S3Service] AmazonS3Exception delete Error : " + e.getMessage());
             throw new DeleteProfileImgFailedException();
         } catch (SdkClientException e) {
-            log.info("[S3Service] SdkClientException delete Error : " + e.getMessage());
+            log.error("[S3Service] SdkClientException delete Error : " + e.getMessage());
             throw new DeleteProfileImgFailedException();
         }
     }
