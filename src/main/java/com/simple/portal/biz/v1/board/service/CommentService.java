@@ -15,7 +15,11 @@ import com.simple.portal.biz.v1.board.repository.ActivityScoreRepository;
 import com.simple.portal.biz.v1.board.repository.AlarmHistRepository;
 import com.simple.portal.biz.v1.board.repository.BoardRepository;
 import com.simple.portal.biz.v1.board.repository.CommentRepository;
+import com.simple.portal.biz.v1.user.service.UserService;
+import com.simple.portal.util.ActivityScoreConst;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +31,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
-public class CommentService implements BaseService {
+@Slf4j
+public class CommentService {
 
     @Autowired
     CommentRepository commentRepository;
@@ -44,7 +49,12 @@ public class CommentService implements BaseService {
     @Autowired
     BoardRepository boardRepository;
 
-    @Override
+    @Autowired
+    private SimpMessagingTemplate template;
+
+    @Autowired
+    UserService userService;
+
     public void setLikeTransaction(Long id) {
         CommentEntity commentEntity = findByIdComment(id);
         commentEntity.setRowLike(increase(commentEntity.getRowLike())); // 좋아요 증가
@@ -52,7 +62,6 @@ public class CommentService implements BaseService {
         commentRepository.save(commentEntity);
     }
 
-    @Override
     public void setDisLikeTransaction(Long id) {
         CommentEntity commentEntity = findByIdComment(id);
 //        commentEntity.setRowLike(decrease(commentEntity.getRowLike())); // 좋아요 감소
@@ -60,12 +69,10 @@ public class CommentService implements BaseService {
         commentRepository.save(commentEntity);
     }
 
-    @Override
     public Long increase(Long curVal) {
         return curVal + 1;
     }
 
-    @Override
     public Long decrease(Long currVal) {
         if (currVal < 0) {
             return 0L;
@@ -132,9 +139,14 @@ public class CommentService implements BaseService {
             ActivityScoreEntity activityScoreEntity = new ActivityScoreEntity();
             activityScoreEntity.setType(ActivityScoreEntity.ScoreType.COMMENT);
             activityScoreEntity.setUserId(commentEntity1.getWriter());
-            activityScoreEntity.setScore(2L);
+            activityScoreEntity.setScore(Long.parseLong(ActivityScoreConst.COMMENT_ACTIVITY_SCORE+""));
             activityScoreRepository.save(activityScoreEntity);
-
+            // 총합
+            try {
+                userService.updateActivityScore(commentEntity1.getWriter(), ActivityScoreConst.COMMENT_ACTIVITY_SCORE);
+            } catch(Exception e) {
+                log.error(e.getClass().toString(), e);
+            }
             // 3. 댓글알람 저장 : 댓글을 달면 댓글에 해당하는 게시글 주인에게 알람 카운트를 올려준다.
             // 댓글알람 +1
             // 댓글을 쓰면 이 댓글의 게시글의 주인을 찾아서 알람을 추가 한다.
@@ -147,6 +159,8 @@ public class CommentService implements BaseService {
                 alarmHistEntity.setBoardId(boardId);
                 alarmHistEntity.setEventType(AlarmHistEntity.EventType.EVT_BC);
                 alarmHistRepository.save(alarmHistEntity);
+
+                this.template.convertAndSend("/socket/sub/board/" + userId, 1);
 
             } else {
                 throw new RuntimeException("존재 하지 않는 게시글 입니다.");

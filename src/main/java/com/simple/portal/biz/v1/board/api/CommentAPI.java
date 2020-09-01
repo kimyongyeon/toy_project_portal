@@ -38,6 +38,7 @@ public class CommentAPI {
     @ApiOperation(value = "댓글 조회")
     public ResponseEntity<ApiResponse> list(@PathVariable Long boardId) {
         apiResponse.setBody(commentService.listComment(boardId));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -67,6 +68,7 @@ public class CommentAPI {
                 .viewCount(0L)
                 .build());
         apiResponse.setBody(commentEntity);
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -89,6 +91,7 @@ public class CommentAPI {
                 .build());
 
         apiResponse.setBody(commentService.findById(id));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -107,6 +110,7 @@ public class CommentAPI {
 
         commentService.setLikeAndDisLike(commentLikeDTO);
         apiResponse.setBody(commentService.findById(commentLikeDTO.getId()));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
 
     }
@@ -119,6 +123,7 @@ public class CommentAPI {
 
         commentService.remove(commentRemoveDTO.getId());
         apiResponse.setBody(BoardConst.BODY_BLANK);
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
 
     }

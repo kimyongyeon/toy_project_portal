@@ -14,15 +14,16 @@ import com.simple.portal.biz.v1.board.dto.*;
 import com.simple.portal.biz.v1.board.entity.*;
 import com.simple.portal.biz.v1.board.exception.BoardDetailNotException;
 import com.simple.portal.biz.v1.board.exception.ItemGubunExecption;
-import com.simple.portal.biz.v1.board.repository.ActivityScoreRepository;
-import com.simple.portal.biz.v1.board.repository.AlarmHistRepository;
-import com.simple.portal.biz.v1.board.repository.BoardRepository;
-import com.simple.portal.biz.v1.board.repository.ScrapRepository;
+import com.simple.portal.biz.v1.board.repository.*;
+import com.simple.portal.biz.v1.user.service.UserService;
+import com.simple.portal.util.ActivityScoreConst;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -34,7 +35,11 @@ import java.util.stream.Stream;
 import static com.querydsl.core.types.ExpressionUtils.count;
 
 @Service
-public class BoardService implements BaseService {
+@Slf4j
+public class BoardService {
+
+    @Autowired
+    private SimpMessagingTemplate template;
 
     @Autowired
     BoardRepository boardRepository;
@@ -50,6 +55,12 @@ public class BoardService implements BaseService {
 
     @Autowired
     AlarmHistRepository alarmHistRepository;
+
+    @Autowired
+    UserService userService;
+
+    @Autowired
+    FeelRepository feelRepository;
 
     public void removeScrap(ScrapDTO scrapDTO) {
         scrapRepository.deleteById(scrapDTO.getId());
@@ -72,11 +83,28 @@ public class BoardService implements BaseService {
         }
     }
 
-    @Override
-    public void setLikeTransaction(Long id) {
+    public void setLikeTransaction(Long id, String userId) {
         BoardEntity boardEntity = boardRepository.findById(id).get();
+
+        Long boardId = id;
+        String feelLike = "L";
+        String feelState = feelLike;
+        FeelEntity feelEntity = feelRepository.findByUserIdAndBoardIdAndFeelState(userId, boardId, feelState);
+        if (feelEntity == null) {
+            // insert
+            FeelEntity feelEntity1 = new FeelEntity();
+            feelEntity1.setBoardId(id);
+            feelEntity1.setCount(1);
+            feelEntity1.setUserId(userId);
+            feelEntity.setFeelState(feelLike);
+            feelRepository.save(feelEntity1);
+        } else {
+            // delete
+            feelRepository.delete(feelEntity);
+        }
+        Long likeTotalSumCnt = feelRepository.selectTocalCount(feelLike, boardId);
         // 좋아요/싫어요 따로 집계
-        boardEntity.setRowLike(increase(boardEntity.getRowLike())); // 좋아요 증가
+        boardEntity.setRowLike(likeTotalSumCnt); // 좋아요 증가
 //        boardEntity.setRowDisLike(decrease(boardEntity.getRowDisLike())); // 싫어요 감소
         BoardEntity boardEntity1 = boardRepository.save(boardEntity);
         if (boardEntity1 != null) {
@@ -84,26 +112,51 @@ public class BoardService implements BaseService {
             ActivityScoreEntity activityScoreEntity = new ActivityScoreEntity();
             activityScoreEntity.setType(ActivityScoreEntity.ScoreType.EVENT);
             activityScoreEntity.setUserId(boardEntity.getWriter());
-            activityScoreEntity.setScore(1L);
+            activityScoreEntity.setScore(Long.parseLong(ActivityScoreConst.EVENT_ACTIVITY_SCORE+""));
             activityScoreRepository.save(activityScoreEntity);
-
+            // 총계
+            try {
+                userService.updateActivityScore(boardEntity.getWriter(), ActivityScoreConst.EVENT_ACTIVITY_SCORE);
+            } catch(Exception e) {
+                log.error(e.getClass().toString(), e);
+            }
             // 알람 저장
-            Long boardId = id;
-            String userId = boardEntity.getWriter();
+            boardId = id;
+            userId = boardEntity.getWriter();
             AlarmHistEntity alarmHistEntity = new AlarmHistEntity();
             alarmHistEntity.setUserId(userId);
             alarmHistEntity.setBoardId(boardId);
             alarmHistEntity.setEventType(AlarmHistEntity.EventType.EVT_BL);
             alarmHistRepository.save(alarmHistEntity);
+
+            this.template.convertAndSend("/socket/sub/board/" + userId, 1);
+
         }
     }
 
-    @Override
-    public void setDisLikeTransaction(Long id) {
+    public void setDisLikeTransaction(Long id, String userId) {
         BoardEntity boardEntity = boardRepository.findById(id).get();
+
+        Long boardId = id;
+        String feelDisLike = "D";
+        String feelState = feelDisLike;
+        FeelEntity feelEntity = feelRepository.findByUserIdAndBoardIdAndFeelState(userId, boardId, feelState);
+        if (feelEntity == null) {
+            // insert
+            FeelEntity feelEntity1 = new FeelEntity();
+            feelEntity1.setBoardId(id);
+            feelEntity1.setCount(1);
+            feelEntity1.setUserId(userId);
+            feelEntity.setFeelState(feelDisLike);
+            feelRepository.save(feelEntity1);
+        } else {
+            // delete
+            feelRepository.delete(feelEntity);
+        }
+        Long disLikeTotalSumCnt = feelRepository.selectTocalCount(feelDisLike, boardId);
         // 좋아요/싫어요 따로 집계
 //        boardEntity.setRowLike(decrease(boardEntity.getRowLike())); // 좋아요 감소
-        boardEntity.setRowDisLike(increase(boardEntity.getRowDisLike())); // 싫어요 증가
+        boardEntity.setRowDisLike(disLikeTotalSumCnt); // 싫어요 증가
         BoardEntity boardEntity1 = boardRepository.save(boardEntity);
         if (boardEntity1 != null) {
 
@@ -111,27 +164,32 @@ public class BoardService implements BaseService {
             ActivityScoreEntity activityScoreEntity = new ActivityScoreEntity();
             activityScoreEntity.setType(ActivityScoreEntity.ScoreType.EVENT);
             activityScoreEntity.setUserId(boardEntity.getWriter());
-            activityScoreEntity.setScore(1L);
+            activityScoreEntity.setScore(Long.parseLong(ActivityScoreConst.EVENT_ACTIVITY_SCORE+""));
             activityScoreRepository.save(activityScoreEntity);
-
+            // 총계
+            try {
+                userService.updateActivityScore(boardEntity.getWriter(), ActivityScoreConst.EVENT_ACTIVITY_SCORE);
+            } catch(Exception e) {
+                log.error(e.getClass().toString(), e);
+            }
             // 알람 저장
-            Long boardId = id;
-            String userId = boardEntity.getWriter();
+            boardId = id;
+            userId = boardEntity.getWriter();
             AlarmHistEntity alarmHistEntity = new AlarmHistEntity();
             alarmHistEntity.setUserId(userId);
             alarmHistEntity.setBoardId(boardId);
             alarmHistEntity.setEventType(AlarmHistEntity.EventType.EVT_BD);
             alarmHistRepository.save(alarmHistEntity);
 
+            this.template.convertAndSend("/socket/sub/board/" + userId, 1);
+
         }
     }
 
-    @Override
     public Long increase(Long curVal) {
         return curVal + 1;
     }
 
-    @Override
     public Long decrease(Long currVal) {
         if (currVal < 0) {
             return 0L;
@@ -151,10 +209,10 @@ public class BoardService implements BaseService {
     public void setLikeAndDisLike(BoardLikeDTO boardLikeDTO) {
 
         if (BoardComponent.isItemGbLike(boardLikeDTO.getItemGb())) { // 좋아요
-            setLikeTransaction(boardLikeDTO.getId());
+            setLikeTransaction(boardLikeDTO.getId(), boardLikeDTO.getClickUserId());
 
         } else if (BoardComponent.isItemGbDisLike(boardLikeDTO.getItemGb())){ // 싫어요
-            setDisLikeTransaction(boardLikeDTO.getId());
+            setDisLikeTransaction(boardLikeDTO.getId(), boardLikeDTO.getClickUserId());
 
         } else {
             throw new ItemGubunExecption();
@@ -342,7 +400,7 @@ public class BoardService implements BaseService {
         return boardDTO;
     }
 
-    @Transactional
+//    @Transactional
     public Long insert(BoardReqWriteDTO boardDTO) {
 
         BoardEntity boardEntity = boardRepository.save(BoardEntity.builder()
@@ -359,8 +417,15 @@ public class BoardService implements BaseService {
             ActivityScoreEntity activityScoreEntity = new ActivityScoreEntity();
             activityScoreEntity.setType(ActivityScoreEntity.ScoreType.BOARD);
             activityScoreEntity.setUserId(boardDTO.getWriter());
-            activityScoreEntity.setScore(5L);
+            activityScoreEntity.setScore(Long.parseLong(ActivityScoreConst.BOARD_ACTIVITY_SCORE+""));
             activityScoreRepository.save(activityScoreEntity);
+
+            try {
+                userService.updateActivityScore(boardEntity.getWriter(), ActivityScoreConst.BOARD_ACTIVITY_SCORE);
+            } catch(Exception e) {
+                log.error(e.getClass().toString(), e);
+            }
+
         }
 
         return boardEntity.getId();

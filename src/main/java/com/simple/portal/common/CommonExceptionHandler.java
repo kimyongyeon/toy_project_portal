@@ -84,7 +84,11 @@ public class CommonExceptionHandler {
             FindPasswordFailedException.class,
             FollowFailedException.class,
             UnfollowFailedException.class,
-            SelectFollowerFailedException.class, SelectFollowingUsersFailedException.class
+            SelectFollowerFailedException.class, SelectFollowingUsersFailedException.class,
+            UploadProfileImgFailedException.class, DeleteProfileImgFailedException.class,
+            UpdateActivityScoreFailedException.class,
+            UpdateProfileImgFailedException.class,
+            EmailCheckFailedException.class
     })
     public ResponseEntity<ApiResponse> user500Exception(Exception e) {
         return new ResponseEntity<>(

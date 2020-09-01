@@ -1,12 +1,15 @@
 package com.simple.portal.biz.v1.user.service;
 
+import com.amazonaws.services.s3.model.MultipartUpload;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.simple.portal.biz.v1.user.ApiConst;
 import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.dto.*;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.*;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
 import com.simple.portal.common.Interceptor.JwtUtil;
+import com.simple.portal.util.ActivityScoreConst;
 import com.simple.portal.util.ApiHelper;
 import com.simple.portal.util.CustomMailSender;
 import com.simple.portal.util.DateFormatUtil;
@@ -15,7 +18,9 @@ import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
@@ -28,6 +33,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static com.simple.portal.util.DateFormatUtil.makeNowTimeStamp;
+
 @Slf4j
 @Service
 public class UserService {
@@ -36,17 +43,27 @@ public class UserService {
     private JwtUtil jwtUtil;
     private RedisTemplate<String, String> redisTemplate;
     private JPAQueryFactory jpaQueryFactory;
+    private S3Service s3Service;
+    private SimpMessagingTemplate simpleMessageTemplate;
 
     @PersistenceContext
     private EntityManager entityManager; // native query를 위해 entityManger 추가
 
     @Autowired
-    public void UserController(UserRepository userRepository, CustomMailSender mailSender, JwtUtil jwtUtil, RedisTemplate redisTemplate, JPAQueryFactory jpaQueryFactory) {
+    public void UserController(UserRepository userRepository,
+                               CustomMailSender mailSender,
+                               JwtUtil jwtUtil,
+                               RedisTemplate redisTemplate,
+                               JPAQueryFactory jpaQueryFactory,
+                               S3Service s3Service,
+                               SimpMessagingTemplate simpleMessageTemplate) {
         this.userRepository = userRepository;
         this.mailSender = mailSender;
         this.jwtUtil = jwtUtil;
         this.redisTemplate = redisTemplate;
         this.jpaQueryFactory = jpaQueryFactory;
+        this.s3Service = s3Service;
+        this.simpleMessageTemplate = simpleMessageTemplate;
     }
 
     public List<UserReadDto> userFindAllService( ) {
@@ -125,11 +142,6 @@ public class UserService {
     @Transactional
     public void createUserService(UserCreateDto user) {
         try {
-            //String imgDir = "/E:\\file_test\\" + user.getUserId() + "-profileImg.png";
-            //file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
-
-            String BaseImgUrl = "https://lh3.googleusercontent.com/proxy/fOZw66Nm8F2zdZAF8Z30q1p05rFcKqPnXWYbg_5xc-uMbSScLJRmvOgx2qQPrlyLRtlxgnq56r6aB9rjWN8J6dvx23Nt3g10tH8JGr05K8eNkjAIB_JzKvBcMROK4FKCzptssl1F9M-JsWFbdi8wTKe5jj-L_BofTqIjxBmG";
-
             // 빌더 패턴 적용
             UserEntity insertUser = UserEntity.builder()
                     .userId(user.getUserId())
@@ -137,11 +149,11 @@ public class UserService {
                     .email(user.getEmail())
                     .password(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())) // 비밀번호
                     .gitAddr("https://github.com") // default 깃 주소
-                    .profileImg(BaseImgUrl)
+                    .profileImg(ApiConst.baseImgUrl)
                     .activityScore(0) // 초기점수 0 점
                     .authority('N') // 초기 권한 N
-                    .created(DateFormatUtil.makeNowTimeStamp())
-                    .updated(DateFormatUtil.makeNowTimeStamp())
+                    .created(makeNowTimeStamp())
+                    .updated(makeNowTimeStamp())
                     .build();
 
             userRepository.save(insertUser);
@@ -158,11 +170,9 @@ public class UserService {
         }
     };
 
-    public void updateUserService(UserUpdateDto user, MultipartFile file) {
+    @Transactional
+    public void updateUserService(UserUpdateDto user) {
         try {
-            String imgDir = "/E:\\file_test\\" + user.getUserId() + "-profileImg.png";
-            file.transferTo(new File(imgDir)); // 해당 경로에 파일 생성
-
             UserEntity originUser = userRepository.findById(user.getId()).get();
 
             // 빌더 패턴 적용
@@ -173,11 +183,12 @@ public class UserService {
                     .nickname(user.getNickname()) // 변경 가능
                     .password(originUser.getPassword()) // 변경 불가 ( 비밀번호 변경 api 따로 존재 )
                     .gitAddr(user.getGitAddr()) // 변경 가능
-                    .profileImg(imgDir) // 변경 가능
+                    .profileImg(originUser.getProfileImg()) // 변경 불가 -> 프로필 update api를 통해 변경 가능
                     .activityScore(originUser.getActivityScore()) // 변경 불가
                     .authority(originUser.getAuthority()) // 변경 불가
                     .created(originUser.getCreated()) // 변경 불가
-                    .updated(DateFormatUtil.makeNowTimeStamp()) // 현재시간으로 변경
+                    .updated(makeNowTimeStamp()) // 현재시간으로 변경
+                    .lastLoginTime(originUser.getLastLoginTime()) // 변경 불가
                     .build();
 
             userRepository.save(updateUser);
@@ -194,46 +205,37 @@ public class UserService {
             String imgDir = deleteUser.getProfileImg();
             String delFollowedKey = "user:followed:";
             String delFollowingKey = "user:following:";
-
             userRepository.deleteById(id);
-            File deleteFile = new File(imgDir);
-            if (deleteFile.exists()) { // 프로필 이미지 삭제
-                deleteFile.delete();
-            };
+
+            //프로필 이미지 삭제
+            s3Service.deleteImg(deleteUser.getUserId() + "profile.jpg");
 
             //나의 팔로워 및 팔로잉 정보 삭제.
             //내 꺼에서 followed, following 지우면서 각 유저의 것들도 지워줘야함.
             try {
                 SetOperations<String, String> setOperations = redisTemplate.opsForSet();
-
                 //내 팔로잉 조회
                 FollowingList followingList = getFollowingIdService(id);
-
                 //내 팔로워 조회
                 FollowedList followedList = getFollowerIdService(id);
-
                 // 내가 팔로잉한 유저들의 팔로워 정보에서 내 id 삭제
                 for(int i=0; i<followingList.getCnt(); i++) {
                     String followedKey = "user:followed:" + followingList.getFollowing_users().get(i).getId();
                     setOperations.remove(followedKey, String.valueOf(id));
                 }
-
                 //나를 팔로우한 유저들의 팔로잉 정보에서 내 id 삭제
                 for(int i=0; i<followedList.getCnt(); i++) {
                     String followingKey = "user:following:" + followedList.getFollowed_users().get(i).getId();
                     setOperations.remove(followingKey, String.valueOf(id));
                 }
-
                 //내 팔로잉/팔로우 정보 삭제
                 redisTemplate.delete(delFollowedKey + id);
                 redisTemplate.delete(delFollowingKey + id);
-
             } catch (Exception e) {
                 e.printStackTrace();
                 log.info("[UserService] unfollowService Error : " + e.getMessage());
                 throw new UnfollowFailedException();
             }
-
         } catch (Exception e) {
             log.info("[UserService] deleteUserService Error : " + e.getMessage());
             throw new DeleteUserFailedException();
@@ -249,6 +251,15 @@ public class UserService {
         }
     }
 
+    public Boolean emailCheckService(String email) {
+        try {
+            return userRepository.existsByEmail(email) == true ?  true : false;
+        } catch (Exception e) {
+            log.info("[UserService] emailCheckService Error : " + e.getMessage());
+            throw new EmailCheckFailedException();
+        }
+    }
+
     @Transactional
     public String userLoginService(String user_id, String password) { // 성공만 처리하고 나머지 exception 던짐
         try {
@@ -256,13 +267,27 @@ public class UserService {
             else {
                 UserEntity user = userRepository.findByUserId(user_id);
                 String pwOrigin = user.getPassword();
-                if (BCrypt.checkpw(password, pwOrigin)) return jwtUtil.createToken(user.getUserId());
+                if (BCrypt.checkpw(password, pwOrigin)) {
+
+                    String lastLoginTime = user.getLastLoginTime();
+                    if(lastLoginTime == null) { // 가입 후 최초 로그인
+                        updateActivityScore(user_id, ActivityScoreConst.LOGIN_ACTIVITY_SCORE);
+                    } else { // 로그인의 경우 하루에 한번만 점수 업데이트 가능
+                        String LastLoginDate = user.getLastLoginTime().split(" ")[0]; // "lastLoginTime": "2020-08-29 17:53:56",
+                        String nowDate = makeNowTimeStamp().split(" ")[0];
+                        // 로그인의 경우 하루에 한번만 카운트 되도록 처리
+                        if(!LastLoginDate.equals(nowDate)) updateActivityScore(user_id, ActivityScoreConst.LOGIN_ACTIVITY_SCORE);
+                    }
+
+                    userRepository.updateLastLoginTime(user_id, makeNowTimeStamp()); // 최근 로그인 시간 update
+                    return jwtUtil.createToken(user.getUserId());
+                }
                 else throw new Exception(UserConst.INVALID_PASSWORD); // 비밀번호 오류
             }
         } catch (Exception e) {
             log.info("[UserService] userLoginService Error : " + e.getMessage());
             throw new LoginFailedException(e.getMessage());
-    }
+        }
     }
 
     // 유저 권한 부여
@@ -291,7 +316,7 @@ public class UserService {
     public void updateUserPasswordService(Long id, String newPassword) {
         try{
             UserEntity originUser = userRepository.findById(id).get();
-            originUser.setUpdated(DateFormatUtil.makeNowTimeStamp());   // 비밀번호 변경했을때 updateTime 갱신
+            originUser.setUpdated(makeNowTimeStamp());   // 비밀번호 변경했을때 updateTime 갱신
             originUser.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
             userRepository.save(originUser);
         } catch (Exception e) {
@@ -312,7 +337,6 @@ public class UserService {
         try {
             // 랜덤값으로 비밀번호 변경 후 -> 이메일 발송
             String randomValue = ApiHelper.getRandomString(); // 이 값을 메일로 전송
-
             String userEmail = userRepository.findByUserId(user_id).getEmail(); // 해당 id로 가입된 이메일 조회
             userRepository.updatePassword(user_id, BCrypt.hashpw(randomValue, BCrypt.gensalt()));
             try {
@@ -321,7 +345,6 @@ public class UserService {
                 log.info("[UserService] emailSend Error : " + e.getMessage());
                 throw new EmailSendFailedException();
             }
-            // 해당 값을 이메일로 발송
         } catch (Exception e) {
             log.info("[UserService] findUserPassword Error : " + e.getMessage());
             throw new FindPasswordFailedException();
@@ -337,6 +360,7 @@ public class UserService {
             String followingKey = "user:following:" + following_id;
             setOperations.add(followedKey, String.valueOf(following_id));
             setOperations.add(followingKey, String.valueOf(followed_id));
+            this.simpleMessageTemplate.convertAndSend("/socket/sub/user/follow" + followed_id, 1);
         } catch (Exception e) {
             log.info("[UserService] followService Error : " + e.getMessage());
             throw new FollowFailedException();
@@ -443,6 +467,19 @@ public class UserService {
         } catch (Exception e) {
             log.info("[UserService] getFollowingIdService Error : " + e.getMessage());
             throw new SelectFollowingUsersFailedException();
+        }
+    }
+
+    // 활동점수 update
+    @Transactional(dontRollbackOn = RuntimeException.class)
+    public void updateActivityScore(String userId, int score) {
+        try {
+            int myActiviyScore = userRepository.findByUserId(userId).getActivityScore();
+            myActiviyScore += score;
+            userRepository.updateActivityScore(userId, myActiviyScore);
+        } catch (Exception e) {
+            log.info("[UserService] updateScore Error : " + e.getMessage());
+            throw new UpdateActivityScoreFailedException();
         }
     }
 }

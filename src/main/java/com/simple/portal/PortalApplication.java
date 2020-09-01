@@ -12,6 +12,7 @@ import com.simple.portal.biz.v1.note.repository.SendNoteRepository;
 import com.simple.portal.common.storage.StorageProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
@@ -55,6 +56,9 @@ public class PortalApplication implements ApplicationRunner {
     @Autowired
     EntityManagerFactory emf;
 
+    @Value("${spring.profile.value}")
+    public String profiles;
+
     @Bean
     @Profile({"default", "dev"})
     public ServerEndpointExporter serverEndpointExporter() {
@@ -78,12 +82,14 @@ public class PortalApplication implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
 
-        // 더미 데이터 생성: 게시글, 댓글, 쪽지
-//        for(int i=0; i<2000; i++) {
-//            BoardEntity boardEntity = new BoardEntity();
-//            CommentEntity commentEntity = new CommentEntity();
-//            jpaSave(boardEntity, commentEntity, i);
-//        }
+        if (profiles.equals("local")) {
+            // 더미 데이터 생성: 게시글, 댓글, 쪽지
+            for(int i=0; i<2000; i++) {
+                BoardEntity boardEntity = new BoardEntity();
+                CommentEntity commentEntity = new CommentEntity();
+                jpaSave(boardEntity, commentEntity, i);
+            }
+        }
 //
 //        EntityManager em = emf.createEntityManager();
 //        BoardEntity boardEntity = em.find(BoardEntity.class, 1L);
@@ -111,14 +117,14 @@ public class PortalApplication implements ApplicationRunner {
 
     public void jpaSave(BoardEntity boardEntity, CommentEntity commentEntity, int i) {
 
-        long generatedLong = new Random().nextLong();
+        long generatedLong = (int)(Math.random() * 100000 +1);
         boardEntity.setTitle("board title:"+i);
         boardEntity.setContents("board contents:"+i);
         boardEntity.setWriter("board writer:"+i);
         boardEntity.setRowDisLike(generatedLong);
-        generatedLong = new Random().nextLong();
+        generatedLong =  (int)(Math.random() * 100000 +1);
         boardEntity.setRowLike(generatedLong);
-        generatedLong = new Random().nextLong();
+        generatedLong =  (int)(Math.random() * 100000 +1);
         boardEntity.setViewCount(generatedLong);
         boardEntity.addComment(commentEntity);
         boardRepository.save(boardEntity);
@@ -127,10 +133,26 @@ public class PortalApplication implements ApplicationRunner {
         commentEntity.setTitle("comment title:"+i);
         commentEntity.setContents("comment contents:"+i);
         commentEntity.setWriter("comment writer:"+i);
-        commentEntity.setRowLike(0L);
-        commentEntity.setRowDisLike(0L);
-        commentEntity.setViewCount(0L);
+        generatedLong = (int)(Math.random() * 100000 +1);
+        commentEntity.setRowLike(generatedLong);
+        generatedLong = (int)(Math.random() * 100000 +1);
+        commentEntity.setRowDisLike(generatedLong);
+        generatedLong = (int)(Math.random() * 100000 +1);
+        commentEntity.setViewCount(generatedLong);
         commentService.writeComment(commentEntity);
+//        generatedLong =  (int)(Math.random() * 3 +1);
+//        for (int j=0; j<generatedLong; j++) {
+//            commentEntity.setTitle("comment title:"+i);
+//            commentEntity.setContents("comment contents:"+i);
+//            commentEntity.setWriter("comment writer:"+i);
+//            generatedLong = (int)(Math.random() * 100000 +1);
+//            commentEntity.setRowLike(generatedLong);
+//            generatedLong = (int)(Math.random() * 100000 +1);
+//            commentEntity.setRowDisLike(generatedLong);
+//            generatedLong = (int)(Math.random() * 100000 +1);
+//            commentEntity.setViewCount(generatedLong);
+//            commentService.writeComment(commentEntity);
+//        }
 
         RecvNoteEntity recvNoteEntity = new RecvNoteEntity();
         recvNoteEntity.setTitle("recvNote title: " + i);

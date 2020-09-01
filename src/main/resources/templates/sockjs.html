@@ -69,7 +69,7 @@
 
         stompClient.connect({}, function() {
 
-            stompClient.subscribe('/topic/connect', function(msg) {
+            stompClient.subscribe('/topic/connect/' , function(msg) {
                 console.log(`msg.body: ${msg.body}`);
 
             });

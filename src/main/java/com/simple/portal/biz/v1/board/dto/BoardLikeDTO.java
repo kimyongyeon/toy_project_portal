@@ -25,5 +25,9 @@ public class BoardLikeDTO {
     @ApiModelProperty(value = "아이템구분", required = true, example = "L:좋아요,D:싫어요")
     private String itemGb; // 아이템 구분 L:D
 
+    @NotBlank(message="클릭한 유저ID는 필수 입력값입니다.")
+    @ApiModelProperty(value = "아이템구분", required = true, example = "user01, user02")
+    private String clickUserId;
+
 
 }

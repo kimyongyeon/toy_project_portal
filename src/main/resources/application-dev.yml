@@ -2,7 +2,14 @@ file:
   location: /tmp
 
 server:
-  port: 8081
+  port: 8443
+
+  ssl:
+
+
+    key-store: classpath:keystore.p12
+    key-store-type: PKCS12
+    key-store-password: ENC(3XCwNNVyBH1PRmYmKVR0T1e57cn3SuDz)
 
 spring:
   security:
@@ -83,7 +90,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
       use-new-id-generator-mappings: true
     show-sql: true
     database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
@@ -101,3 +108,15 @@ logging:
     #com.simple.portal: error
     com.simple.portal: info
 
+# s3 설정
+cloud:
+  aws:
+    credentials:
+      accessKey: ENC(FGBw07GDjTI8V17aSK6sf+8y1nKxpzgNYlUOR7mNPjA=)
+      secretKey: ENC(c15fPgJ3CShuIlX4VdCElP3iLcGj6ihoV48VjmhbpE0Uyc2mZeeIwzmDzYkhz7HN15K5rZuY2Ew=)
+    s3:
+      bucket: portal-file
+    region:
+      static: whatever
+    stack:
+      auto: false
