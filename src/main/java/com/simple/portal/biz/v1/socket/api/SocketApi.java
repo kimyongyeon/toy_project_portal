@@ -59,9 +59,7 @@ public class SocketApi {
      */
     @MessageMapping("/comment/notread/{userId}")
     @SendTo("/socket/sub/comment/notread/{userId}")
-    public ResponseEntity<ApiResponse> notread(@DestinationVariable  String userId){
-        System.out.println(userId);
-        System.out.println(1234);
+    public ResponseEntity<ApiResponse> noteNotRead(@DestinationVariable  String userId){
         apiResponse.setBody(socketService.findNotReadNote(userId));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
 

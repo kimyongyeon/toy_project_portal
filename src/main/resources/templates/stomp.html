@@ -48,7 +48,7 @@
 
         var msg = $('#chatInput').val();
         console.log("mmmmmmmm>>"+msg);
-
+        //pub Format /socket/sub/comment/notread/{userId}
         //socket.send('/socket/pub/note/notread/khl1342',{},{});
         socket.send('/socket/pub/board/comment/list/board writer:0',{},{});
     });
