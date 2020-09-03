@@ -22,8 +22,8 @@ spring:
             client-secret: ENC(DiBIF3zRy1synu9+qwAfWSBQo+xWdi5cEAvcbNNyrS1oFI0A2CSEFw==)
             scope: profile, email
           facebook:
-            client-id: 483242102474956
-            client-secret: ENC(lBSEhAZujqs7DAPy2GGP/pGd9kOuKai5thdwiLRFInQI4tQCLMbVwob/NFmZ0kYo)
+            client-id: 623339641909955
+            client-secret: ENC(8ItpeyX9DVTov6SVTDTATOkYo7CDaXmuCc3pXsMC//84nz0EpWRgnviiruQ3imIJ)
           naver:
             client-id: GmzOlRvlSvYxqdF5PP7a
             client-secret: ENC(NLJ8Ufq1QoosfYZbJMWkDEwMViWAljSc)
