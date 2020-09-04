@@ -4,6 +4,7 @@ import com.simple.portal.biz.v1.user.exception.TokenCreateFailedException;
 import com.simple.portal.biz.v1.user.exception.TokenVaildFailedException;
 import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -14,7 +15,8 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    private String key = "okkyProject";
+    @Value("${jwt.token.key}")
+    private String key;
     private Date EXPIRE_TIME = new Date(System.currentTimeMillis() + (1000*60*30)); // 유효시간 30분
 
     public String createToken(String userId) {
