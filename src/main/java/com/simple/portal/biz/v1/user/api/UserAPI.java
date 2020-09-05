@@ -166,7 +166,6 @@ public class UserAPI {
 
         String id = loginDto.getUserId();
         String pw = loginDto.getPassword();
-        Long pk_id = userService.userFindPkService(id);
         log.info("[POST] /user/login " + "[ID] :  "  + id + "[PW] : " + pw + " /userLogin");
 
         String token = userService.userLoginService(id, pw);
