@@ -2,14 +2,11 @@ package com.simple.portal.biz.v1.socket.api;
 
 import com.simple.portal.biz.v1.note.service.NoteService;
 import com.simple.portal.biz.v1.socket.service.SocketService;
-import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.common.ApiResponse;
-import com.simple.portal.common.socket.SocketDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -74,7 +71,7 @@ public class SocketApi {
     @MessageMapping("/user/follow/{userId}")
     @SendTo("/socket/sub/user/follow/{userId}")
     public ResponseEntity<ApiResponse> getFollow(@DestinationVariable String UserId){
-        apiResponse.setBody(socketService);
+        apiResponse.setBody(socketService.findNotConfirmFollowing(UserId));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 }
