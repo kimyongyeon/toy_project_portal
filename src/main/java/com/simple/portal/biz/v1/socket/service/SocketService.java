@@ -1,18 +1,18 @@
 package com.simple.portal.biz.v1.socket.service;
 
+import com.querydsl.core.NonUniqueResultException;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.simple.portal.biz.v1.board.entity.*;
+import com.simple.portal.biz.v1.board.exception.ItemGubunExecption;
 import com.simple.portal.biz.v1.socket.dto.SocketCommentDTO;
 import com.simple.portal.biz.v1.socket.dto.SocketFollowDTO;
 import com.simple.portal.biz.v1.socket.dto.SocketNoteDTO;
-import com.simple.portal.biz.v1.socket.entity.QSocketAlarmEntity;
-import com.simple.portal.biz.v1.socket.entity.QSocketBoardEntity;
 import com.simple.portal.biz.v1.socket.entity.QSocketNoteEntitiy;
-import com.simple.portal.biz.v1.socket.entity.SocketAlarmEntity;
+import com.simple.portal.biz.v1.socket.exception.ReadNoteNotException;
 import com.simple.portal.biz.v1.socket.repository.SocketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -26,25 +26,35 @@ public class SocketService {
 
     public SocketNoteDTO findNotReadNote(String userId) {
         QSocketNoteEntitiy qSocketNoteEntitiy = new QSocketNoteEntitiy("n");
-        long viewCount = query.select(qSocketNoteEntitiy.viewPoint.count())
-                .from(qSocketNoteEntitiy)
-                .where(qSocketNoteEntitiy.rev_id.eq(userId)
-                       ,qSocketNoteEntitiy.viewPoint.eq(0))
-                .fetchOne();
+        long viewCount = 0;
+        try {
+            viewCount = query.select(qSocketNoteEntitiy.viewPoint.count())
+                    .from(qSocketNoteEntitiy)
+                    .where(qSocketNoteEntitiy.rev_id.eq(userId)
+                            ,qSocketNoteEntitiy.viewPoint.eq(0))
+                    .fetchOne();
+        } catch (NullPointerException e) {
+            throw new ReadNoteNotException();
+        }
+
         return SocketNoteDTO.builder()
                 .noteNotReadCount(viewCount)
                 .build();
     }
 
     public SocketCommentDTO findNotReadComment(String userId) {
-        QSocketBoardEntity qSocketBoardEntity = new QSocketBoardEntity("c");
-        List boardId = query.select(qSocketBoardEntity.id.as("boardId")
-                                    )
-                .from(qSocketBoardEntity)
+        QBoardEntity qBoardEntity = new QBoardEntity("b");
+        QCommentEntity qCommentEntity = new QCommentEntity("c");
+        QFeelEntity qFeelEntity = new QFeelEntity("f");
+        List boardId = query.select(qBoardEntity.id.as("boardId")
+        )
+                .from(qBoardEntity)
+                .join(qCommentEntity).on(qCommentEntity.boardEntity.eq(qBoardEntity))
+                .join(qFeelEntity).on(qFeelEntity.boardId.eq(qBoardEntity.id))
                 .where(
-                        qSocketBoardEntity.writer.contains(userId)
-                        ,qSocketBoardEntity.commentEntity.viewCount.eq(0L)
-                                .or(qSocketBoardEntity.feelEntity.count.eq(0))
+                        qBoardEntity.writer.eq(userId)
+                        ,qCommentEntity.viewCount.eq(0L)
+                                .or(qFeelEntity.count.eq(0))
                 )
                 .fetch();
         return SocketCommentDTO.builder()
@@ -53,15 +63,15 @@ public class SocketService {
                 .build();
     }
 
-   public SocketFollowDTO findNotConfirmFollowing (String userId) {
-       QSocketAlarmEntity qSocketAlarmEntity = new QSocketAlarmEntity("a");
-        List dtoList = query.select(qSocketAlarmEntity.userId)
-                .from(qSocketAlarmEntity)
-                .where(qSocketAlarmEntity.eventType.eq(SocketAlarmEntity.EventType.EVT_UL)
-                       ,qSocketAlarmEntity.userId.eq(userId))
+    public SocketFollowDTO findNotConfirmFollowing (String userId) {
+        QAlarmHistEntity qAlarmHistEntity = new QAlarmHistEntity("a");
+        List dtoList = query.select(qAlarmHistEntity.userId)
+                .from(qAlarmHistEntity)
+                .where(qAlarmHistEntity.eventType.eq(AlarmHistEntity.EventType.valueOf("EVT_UL"))
+                        ,qAlarmHistEntity.userId.eq(userId))
                 .fetch();
         return SocketFollowDTO.builder()
-                .userId(dtoList)
+                .followList(dtoList)
                 .newFollowingCount(dtoList.size())
                 .build();
     }
