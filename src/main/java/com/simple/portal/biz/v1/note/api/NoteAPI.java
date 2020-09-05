@@ -108,6 +108,27 @@ public class NoteAPI {
     }
 
     /**
+     * 단체 쪽지쓰기
+     * @param noteDTOs
+     * @return
+     */
+    @PostMapping("/writes")
+    @ApiOperation(value="단체 쪽지 쓰기")
+    public ResponseEntity<ApiResponse> newPosts(@Valid @RequestBody List<NoteSaveDTO> noteDTOs, BindingResult bindingResult) {
+
+        if (bindingResult.hasErrors()) {
+            throw new InputRequiredException();
+        }
+
+        for (NoteSaveDTO noteDTO: noteDTOs) {
+            Long id = noteService.save(noteDTO);
+            apiResponse.setBody(noteService.findDetail(id, "S"));
+        }
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    /**
      * 쪽지삭제
      * @return
      */

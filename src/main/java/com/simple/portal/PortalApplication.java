@@ -1,5 +1,6 @@
 package com.simple.portal;
 
+import com.simple.portal.biz.v1.board.entity.BOARD_TYPE;
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.entity.CommentEntity;
 import com.simple.portal.biz.v1.board.repository.BoardRepository;
@@ -117,6 +118,9 @@ public class PortalApplication implements ApplicationRunner {
 
     public void jpaSave(BoardEntity boardEntity, CommentEntity commentEntity, int i) {
 
+        BOARD_TYPE board_type[] = {BOARD_TYPE.FREE, BOARD_TYPE.JOB_OFFER, BOARD_TYPE.JOB_SEARCH, BOARD_TYPE.NOTICE
+        ,BOARD_TYPE.QNA, BOARD_TYPE.SECRET};
+
         long generatedLong = (int)(Math.random() * 100000 +1);
         boardEntity.setTitle("board title:"+i);
         boardEntity.setContents("board contents:"+i);
@@ -127,6 +131,8 @@ public class PortalApplication implements ApplicationRunner {
         generatedLong =  (int)(Math.random() * 100000 +1);
         boardEntity.setViewCount(generatedLong);
         boardEntity.addComment(commentEntity);
+        int randomType =  (int)(Math.random() * 5 +1);
+        boardEntity.setBoard_type(board_type[randomType]);
         boardRepository.save(boardEntity);
 
 //        commentEntity.setBoardEntity(boardEntity);

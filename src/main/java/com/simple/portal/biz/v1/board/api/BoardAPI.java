@@ -67,8 +67,8 @@ public class BoardAPI {
      */
     @GetMapping("/scrap/{userId}")
     @ApiOperation(value="내가 스크랩한 글 조회")
-    public ResponseEntity<ApiResponse> query(@PathVariable String userId) {
-        apiResponse.setBody(boardService.myScrap(userId));
+    public ResponseEntity<ApiResponse> query(@PathVariable String userId, PageDTO pageDTO) {
+        apiResponse.setBody(boardService.myScrap(userId, pageDTO));
         apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }

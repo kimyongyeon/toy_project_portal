@@ -15,16 +15,14 @@ import com.simple.portal.biz.v1.board.entity.*;
 import com.simple.portal.biz.v1.board.exception.BoardDetailNotException;
 import com.simple.portal.biz.v1.board.exception.ItemGubunExecption;
 import com.simple.portal.biz.v1.board.repository.*;
+import com.simple.portal.biz.v1.user.entity.QUserEntity;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.util.ActivityScoreConst;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -371,19 +369,24 @@ public class BoardService {
      * @param userId
      * @return
      */
-    public List<BoardDTO> myScrap(String userId) {
+    public Page<BoardDTO> myScrap(String userId, PageDTO pageDTO) {
         QBoardEntity qBoardEntity = new QBoardEntity("b");
         QScrapEntity qScrapEntity = new QScrapEntity("s");
+        QUserEntity qUserEntity = new QUserEntity(("u"));
+        int offset = (pageDTO.getCurrentPage() - 1) * pageDTO.getSize();
         List<BoardDTO> boards = query
-                .select(Projections.constructor(BoardDTO.class, qBoardEntity, qScrapEntity))
+                .select(Projections.constructor(BoardDTO.class, qBoardEntity, qScrapEntity, qUserEntity))
                 .from(qBoardEntity)
                 .join(qScrapEntity).on(qScrapEntity.boardId.eq(qBoardEntity.id))
+                .join(qUserEntity).on(qUserEntity.userId.eq(qBoardEntity.writer))
                 .where(qScrapEntity.userId.contains(userId))
-                .limit(10)
+                .offset(offset)
+                .limit(pageDTO.getSize())
                 .orderBy(qBoardEntity.createdDate.desc())
                 .fetch();
         // 테이블 구조를 공개하지 않기 위해 DTO에 담는다.
-        return boards;
+        return new PageImpl(boards, PageRequest.of(0, pageDTO.getSize()
+                , Sort.by("createdDate").descending()),boards.size());
     }
 
     /**

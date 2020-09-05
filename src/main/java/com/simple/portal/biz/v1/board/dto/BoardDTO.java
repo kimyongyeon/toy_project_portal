@@ -4,6 +4,7 @@ import com.simple.portal.biz.v1.board.entity.BOARD_TYPE;
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.entity.CommentEntity;
 import com.simple.portal.biz.v1.board.entity.ScrapEntity;
+import com.simple.portal.biz.v1.user.entity.UserEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,6 +36,7 @@ public class BoardDTO {
     private Long commentCnt = 0L;
     private Long key; // React Rendering
     private BOARD_TYPE board_type;
+    private String profileImg;
 
     // QueryDSL를 활용한 조인쿼리에서 사용함.
     public BoardDTO(String title, String writer) {
@@ -70,7 +72,7 @@ public class BoardDTO {
         this.key = boardEntity.getId();
     }
 
-    public BoardDTO(BoardEntity boardEntity, ScrapEntity scrapEntity) {
+    public BoardDTO(BoardEntity boardEntity, ScrapEntity scrapEntity, UserEntity userEntity) {
         this.id = boardEntity.getId();
         this.title = boardEntity.getTitle();
         this.contents = boardEntity.getContents();
@@ -79,6 +81,7 @@ public class BoardDTO {
         this.rowLike = boardEntity.getRowLike();
         this.rowDisLike = boardEntity.getRowDisLike();
         this.createdDate = boardEntity.getCreatedDate();
+        this.profileImg = userEntity.getProfileImg();
         this.key = boardEntity.getId();
     }
 
