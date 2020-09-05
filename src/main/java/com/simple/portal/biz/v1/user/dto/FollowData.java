@@ -10,6 +10,5 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FollowData { // 팔로우/팔로잉 유저들 출력할때 pk와 닉네임 같이 출력
-    private Long id;
-    private String nickname;
+    private String userId;
 }

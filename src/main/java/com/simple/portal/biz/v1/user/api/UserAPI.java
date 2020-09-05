@@ -9,6 +9,7 @@ import com.simple.portal.biz.v1.user.exception.UserAuthCheckFailedException;
 import com.simple.portal.biz.v1.user.exception.UserNotFoundException;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.common.ApiResponse;
+import com.simple.portal.common.Interceptor.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,18 +35,28 @@ public class UserAPI {
 
     private UserService userService;
     private ApiResponse apiResponse;
+    private JwtUtil jwtUtil;
 
     @Autowired
-    public void UserController(UserService userService, ApiResponse apiResponse) {
+    public void UserController(UserService userService, ApiResponse apiResponse, JwtUtil jwtUtil) {
         this.userService = userService;
         this.apiResponse = apiResponse;
+        this.jwtUtil = jwtUtil;
+    }
+
+
+    @GetMapping("/getToken")
+    public void getToken( ) {
+        String token = jwtUtil.createToken("xowns1234");
+        log.info("token : " + token);
     }
 
     // jwt 토큰 테스트
     @GetMapping("/token")
-    public String token(HttpServletRequest httpServletRequest) {
+    public String token(HttpServletRequest httpServletRequest, @RequestParam("name") String name) {
 
         log.info("token test!");
+        log.info("name : " + name);
 
         String userId = (String) httpServletRequest.getAttribute("userId");
         String token = (String) httpServletRequest.getAttribute("token");
@@ -66,12 +77,12 @@ public class UserAPI {
     };
 
     //특정 유저 조회 -> 팔로잉, 팔로워 수도 같이 출력
-    @GetMapping("/{pkId}")
-    public ResponseEntity<?> userFindOne(@PathVariable("pkId") @NotNull Long id) {
-        log.info("[GET] /user/{id}" + id + "/userFindOne/");
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> userFindOne(@PathVariable("userId") @NotNull String userId) {
+        log.info("[GET] /user/{id}" + userId + "/userFindOne/");
 
         apiResponse.setMsg(UserConst.SUCCESS_SELECT_USER);
-        apiResponse.setBody(userService.userFineOneService(id));
+        apiResponse.setBody(userService.userFineOneService(userId));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
@@ -111,11 +122,11 @@ public class UserAPI {
     }
 
     //유저 삭제 - 회원 탈퇴 -> redis에 있는 팔로우 정보도 삭제
-    @DeleteMapping("/{pkId}")
-    public ResponseEntity<ApiResponse> userDelete(@PathVariable("pkId") @NotNull Long id) {
-        log.info("[DELETE] /user/ " + id + " /userDelete");
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<ApiResponse> userDelete(@PathVariable("userId") @NotNull String userId) {
+        log.info("[DELETE] /user/ " + userId + " /userDelete");
 
-        userService.deleteUserService(id);
+        userService.deleteUserService(userId);
         apiResponse.setMsg(UserConst.SUCCESS_DELETE_USER);
         apiResponse.setBody("");
         return new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -153,7 +164,7 @@ public class UserAPI {
             throw new ParamInvalidException(errMsg);
         }
 
-        String id = loginDto.getId();
+        String id = loginDto.getUserId();
         String pw = loginDto.getPassword();
         Long pk_id = userService.userFindPkService(id);
         log.info("[POST] /user/login " + "[ID] :  "  + id + "[PW] : " + pw + " /userLogin");
@@ -166,7 +177,6 @@ public class UserAPI {
 
         apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
         Map<String, String> obj = new HashMap<>();
-        obj.put("userPkId", pk_id.toString());
         obj.put("userId", id);// 로그인 return값에 userId 추가
         obj.put("Role", String.valueOf(auth)); // 'Y' 일반 회원, 'A' 관리자 -> 관리자는 API로 설정 못하고 수동으로 가능
         obj.put("token", token);
@@ -208,14 +218,14 @@ public class UserAPI {
     @PutMapping("/password")
     public ResponseEntity<ApiResponse> updatePassword(@Valid @RequestBody PasswordDto passwordDto, BindingResult bindingResult) {
 
-        log.info("[PUT] /user/passwrod/" + " id : " + passwordDto.getId());
+        log.info("[PUT] /user/passwrod/" + " id : " + passwordDto.getUserId());
 
         if(bindingResult.hasErrors()) {
             String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
             throw new ParamInvalidException(errMsg);
         }
 
-        userService.updateUserPasswordService(passwordDto.getId(), passwordDto.getNewPassword());
+        userService.updateUserPasswordService(passwordDto.getUserId(), passwordDto.getNewPassword());
         apiResponse.setMsg(UserConst.SUCCESS_UPDATE_PASSWORD);
         apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
@@ -257,7 +267,7 @@ public class UserAPI {
     }
 
     // 팔로우 끊기 ( 언팔로우 하기 )
-    @DeleteMapping("/unfollow")
+    @PutMapping("/unfollow")
     public ResponseEntity<ApiResponse> un_follow(@Valid @RequestBody FollowDto followDto, BindingResult bindingResult) {
 
         log.info("[PUT] /user/unfollow" + " followDto : " + followDto.toString());
@@ -275,7 +285,7 @@ public class UserAPI {
 
     // 나를 팔로우 하는 유저들 조회
     @GetMapping("/follower")
-    public ResponseEntity<ApiResponse> get_follower(@RequestParam(value="followed_id", required = false, defaultValue = "") Long followed_id) {
+    public ResponseEntity<ApiResponse> get_follower(@RequestParam(value="followed_id", required = false, defaultValue = "") String followed_id) {
 
         log.info("[Get] /user/follower" + " followed_id : " + followed_id);
         if(followed_id.equals("")) throw new ParamInvalidException(UserConst.ERROR_PARAMS);
@@ -290,7 +300,7 @@ public class UserAPI {
 
     // 내가 팔로잉 하는 유저들 조회
     @GetMapping("/following")
-    public ResponseEntity<ApiResponse> get_following(@RequestParam(value="following_id", required = false, defaultValue = "") Long following_id) {
+    public ResponseEntity<ApiResponse> get_following(@RequestParam(value="following_id", required = false, defaultValue = "") String following_id) {
         log.info("[GET] /user/following" + " following_id : " + following_id);
         if(following_id.equals("")) throw new ParamInvalidException(UserConst.ERROR_PARAMS);
         FollowingList following_list = userService.getFollowingIdService(following_id);
