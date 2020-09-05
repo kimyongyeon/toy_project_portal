@@ -2,6 +2,7 @@ package com.simple.portal.biz.v1.user.dto;
 
 import lombok.*;
 
+import javax.persistence.Column;
 import javax.validation.constraints.NotBlank;
 
 @Getter
@@ -17,7 +18,7 @@ public class UserCreateDto { // 회원 가입을 위한 dto
     @NotBlank(message="이메일은 필수 입력값입니다.")
     private String email;
 
-    @NotBlank(message="닉네임은 필수 입력값입니다.")
+    @Column(nullable = true)
     private String nickname;
 
     @NotBlank(message="비밀번호는 필수 입력값입니다.")

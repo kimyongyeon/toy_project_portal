@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -26,6 +27,7 @@ import java.util.Map;
 
 @Controller
 @Slf4j
+@CrossOrigin
 public class OAuth2Controller {
 
     private UserRepository userRepository;
@@ -68,9 +70,8 @@ public class OAuth2Controller {
 
         apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
         Map<String, String> obj = new HashMap<>();
-        obj.put("userPkId", pk_id.toString());
         obj.put("userId", userId);
-        obj.put("email", (String)oauthMap.get("email"));
+        obj.put("Role", "Y"); // 일반 유저
         obj.put("token", token);
         apiResponse.setBody(obj);  // user_id 기반 토큰 생성
         return new ResponseEntity(apiResponse, HttpStatus.OK);
