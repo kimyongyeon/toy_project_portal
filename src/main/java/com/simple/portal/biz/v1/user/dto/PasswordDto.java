@@ -14,7 +14,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 public class PasswordDto {
     @NotNull(message="아이디는 필수값 입니다.")
-    private Long id; // 유저 테이블의 PK -> Wrapper type의 경우는 NotNull을 써야됨
+    private String userId;
     @NotBlank(message="비밀번호는 필수값 입니다.")
     private String newPassword;
 }

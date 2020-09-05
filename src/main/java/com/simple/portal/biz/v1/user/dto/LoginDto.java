@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 public class LoginDto {
     @NotBlank(message="아이디는 필수값 입니다.")
-    private String id;
+    private String userId;
     @NotBlank(message="비밀번호는 필수값 입니다.")
     private String password;
 }

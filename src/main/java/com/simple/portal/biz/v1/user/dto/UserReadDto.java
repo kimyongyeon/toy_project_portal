@@ -3,6 +3,7 @@ package com.simple.portal.biz.v1.user.dto;
 import com.sun.istack.Nullable;
 import lombok.*;
 
+import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -18,7 +19,10 @@ public class UserReadDto { // 클라이언트에 뿌려줄 값
     private Long id; // 기본키(PK)로 지정
     private String userId;
     private String email;
+
+    @Column(nullable = true)
     private String nickname;
+
     private String gitAddr;
     private String profileImg;
     private int activityScore;
