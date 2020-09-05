@@ -85,13 +85,31 @@ public class BoardAPI {
             @ApiImplicitParam(name = "sort", value = "정렬[date(최신순)/like(좋아요)/viewCount(조회수)/commentCnt(댓글순)]", required = true, dataType = "string", paramType = "query", defaultValue = "like"),
             @ApiImplicitParam(name = "currentPage", value = "페이지번호, default: 1", required = true, dataType = "string", paramType = "query", defaultValue = "1"),
             @ApiImplicitParam(name = "size", value = "한페이지당 20개씩 출력, default: 20", required = true, dataType = "string", paramType = "query", defaultValue = "20"),
-
+            @ApiImplicitParam(name = "boardType", value = "FREE, NOTICE, QNA, JOB_OFFER, JOB_SEARCH, SECRET", required = true, dataType = "string", paramType = "query", defaultValue = "FREE"),
     })
     public ResponseEntity<ApiResponse> page(BoardSearchDTO boardSearchDTO) {
         apiResponse.setBody(boardService.pageList(boardSearchDTO));
         apiResponse.setMsg(BoardConst.SUCCESS_MSG);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
+
+    @GetMapping("/main")
+    @ApiOperation(value="공지사항")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "boardType", value = "FREE, NOTICE, QNA, JOB_OFFER, JOB_SEARCH, SECRET", required = true, dataType = "string", paramType = "query", defaultValue = "FREE"),
+    })
+    public ResponseEntity<ApiResponse> main(BoardSearchDTO boardSearchDTO) {
+        boardSearchDTO.setCurrentPage(1);
+        boardSearchDTO.setSize(5);
+        boardSearchDTO.setSort("date"); // 최신순
+        boardSearchDTO.setKeyword("");
+        boardSearchDTO.setGb("title");
+        apiResponse.setBody(boardService.pageList(boardSearchDTO));
+        apiResponse.setMsg(BoardConst.SUCCESS_MSG);
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+
 
     /**
      * 게시글 상세

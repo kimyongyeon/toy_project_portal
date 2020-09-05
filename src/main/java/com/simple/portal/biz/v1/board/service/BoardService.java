@@ -237,6 +237,22 @@ public class BoardService {
          * order by comment_cnt desc
          */
 
+        BOARD_TYPE board_type = BOARD_TYPE.FREE;
+        // FREE, NOTICE, QNA, JOB_OFFER, JOB_SEARCH, SECRET
+        if (boardSearchDTO.getBoardType().equals("FREE")) {
+            board_type = BOARD_TYPE.FREE;
+        } else if (boardSearchDTO.getBoardType().equals("NOTICE")) {
+            board_type = BOARD_TYPE.NOTICE;
+        } else if (boardSearchDTO.getBoardType().equals("QNA")) {
+            board_type = BOARD_TYPE.QNA;
+        } else if (boardSearchDTO.getBoardType().equals("JOB_OFFER")) {
+            board_type = BOARD_TYPE.JOB_OFFER;
+        } else if (boardSearchDTO.getBoardType().equals("JOB_SEARCH")) {
+            board_type = BOARD_TYPE.JOB_SEARCH;
+        } else if (boardSearchDTO.getBoardType().equals("SECRET")) {
+            board_type = BOARD_TYPE.SECRET;
+        }
+
         // boardSearchDTO.getTitle(), PageRequest.of(boardSearchDTO.getPage(), boardSearchDTO.getSize()))
         QBoardEntity qBoardEntity = new QBoardEntity("b");
         QCommentEntity qCommentEntity = new QCommentEntity("c");
@@ -253,6 +269,7 @@ public class BoardService {
                         qBoardEntity.rowDisLike,
                         qBoardEntity.viewCount,
                         qBoardEntity.createdDate,
+                        qBoardEntity.board_type,
                         ExpressionUtils.as(
                                 JPAExpressions.select(count(qCommentEntity.id))
                                         .from(qCommentEntity)
@@ -260,7 +277,8 @@ public class BoardService {
                                 "commentCnt")
                         ))
                 .from(qBoardEntity)
-                .where(getContains(boardSearchDTO, qBoardEntity)) // 검색 조건
+                .where(getContains(boardSearchDTO, qBoardEntity)
+                        , qBoardEntity.board_type.eq(board_type)) // 검색조건: 게시판 타입 추가
                 .orderBy(getDesc(qBoardEntity, boardSearchDTO.getSort())) // 정렬
                 .offset(offset)
                 .limit(boardSearchDTO.getSize())
@@ -270,6 +288,7 @@ public class BoardService {
 
         List list = boards.getResults().stream().map(b -> {
             b.setKey(b.getId());
+            b.setBoard_type(b.getBoard_type());
             return b;
         }).collect(Collectors.toList());
 
@@ -421,6 +440,7 @@ public class BoardService {
         boardDTO.setViewCount(boardEntity.getViewCount());
         boardDTO.setRowLike(boardEntity.getRowLike());
         boardDTO.setRowDisLike(boardEntity.getRowDisLike());
+        boardDTO.setBoard_type(boardEntity.getBoard_type());
 
         return boardDTO;
     }
@@ -428,12 +448,29 @@ public class BoardService {
 //    @Transactional
     public Long insert(BoardReqWriteDTO boardDTO) {
 
+        BOARD_TYPE board_type = BOARD_TYPE.FREE;
+        // FREE, NOTICE, QNA, JOB_OFFER, JOB_SEARCH, SECRET
+        if (boardDTO.getBoard_type().equals("FREE")) {
+            board_type = BOARD_TYPE.FREE;
+        } else if (boardDTO.getBoard_type().equals("NOTICE")) {
+            board_type = BOARD_TYPE.NOTICE;
+        } else if (boardDTO.getBoard_type().equals("QNA")) {
+            board_type = BOARD_TYPE.QNA;
+        } else if (boardDTO.getBoard_type().equals("JOB_OFFER")) {
+            board_type = BOARD_TYPE.JOB_OFFER;
+        } else if (boardDTO.getBoard_type().equals("JOB_SEARCH")) {
+            board_type = BOARD_TYPE.JOB_SEARCH;
+        } else if (boardDTO.getBoard_type().equals("SECRET")) {
+            board_type = BOARD_TYPE.SECRET;
+        }
+
         BoardEntity boardEntity = boardRepository.save(BoardEntity.builder()
                 .title(boardDTO.getTitle())
                 .contents(boardDTO.getContents())
                 .viewCount(0L)
                 .rowLike(0L)
                 .rowDisLike(0L)
+                .board_type(board_type) // 게시판 타입 추가
                 .writer(boardDTO.getWriter())
                 .build());
 

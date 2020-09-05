@@ -1,5 +1,6 @@
 package com.simple.portal.biz.v1.board.dto;
 
+import com.simple.portal.biz.v1.board.entity.BOARD_TYPE;
 import com.simple.portal.biz.v1.board.entity.BoardEntity;
 import com.simple.portal.biz.v1.board.entity.CommentEntity;
 import com.simple.portal.biz.v1.board.entity.ScrapEntity;
@@ -33,6 +34,7 @@ public class BoardDTO {
     private LocalDateTime createdDate; // 작성일자
     private Long commentCnt = 0L;
     private Long key; // React Rendering
+    private BOARD_TYPE board_type;
 
     // QueryDSL를 활용한 조인쿼리에서 사용함.
     public BoardDTO(String title, String writer) {

@@ -44,6 +44,10 @@ public class BoardEntity extends BaseEntity {
     @Column
     private Long rowDisLike; // 싫어요
 
+    @Column
+    @Enumerated(EnumType.STRING)
+    private BOARD_TYPE board_type; // 게시판 타입
+
     // cascade = CascadeType.ALL: 삭제시 자식까지...
     @Transient // 테이블 필드로 만들고 싶지 않을때 사용, 해당 어노테이션이 빠지면 java.lang.StackOverflowError: null
     @OneToMany(mappedBy = "boardEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)

@@ -84,7 +84,7 @@ public class PortalApplication implements ApplicationRunner {
 
         if (profiles.equals("local")) {
             // 더미 데이터 생성: 게시글, 댓글, 쪽지
-            for(int i=0; i<2000; i++) {
+            for(int i=0; i<10; i++) {
                 BoardEntity boardEntity = new BoardEntity();
                 CommentEntity commentEntity = new CommentEntity();
                 jpaSave(boardEntity, commentEntity, i);
