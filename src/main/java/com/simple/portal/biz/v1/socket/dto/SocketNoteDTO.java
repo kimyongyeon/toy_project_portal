@@ -1,12 +1,12 @@
 package com.simple.portal.biz.v1.socket.dto;
 
+import com.simple.portal.biz.v1.board.dto.BasePageDTO;
 import lombok.*;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@ToString
-public class SocketDTO {
+public class SocketNoteDTO {
     private long noteNotReadCount;
 }

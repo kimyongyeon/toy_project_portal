@@ -1,6 +1,7 @@
 package com.simple.portal.biz.v1.socket.entity;
 
-import com.simple.portal.biz.v1.board.entity.BoardEntity;
+import com.simple.portal.biz.v1.board.entity.CommentEntity;
+import com.simple.portal.biz.v1.board.entity.FeelEntity;
 import com.simple.portal.common.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,8 +15,8 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Data
 @Builder
-@Table(name="TB_COMMENT")
-public class SocketCommentEntity extends BaseEntity {
+@Table(name="TB_BOARD")
+public class SocketBoardEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,7 +36,11 @@ public class SocketCommentEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "BOARD_ID")
-    BoardEntity boardEntity;
+    FeelEntity feelEntity;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "BOARD_ID")
+    CommentEntity commentEntity;
 
 
 }

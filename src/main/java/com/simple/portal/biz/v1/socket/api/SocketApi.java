@@ -40,14 +40,13 @@ public class SocketApi {
     }
 
     /**
-     * 안읽은 쪽지갯수 - 구독한 전체 Socket 다( 전체 쪽지일 경우 사용)
+     * 안읽은 쪽지갯수 - 구독한 전체 Socket 다(전체 쪽지일 경우 사용)
      * @param userId
      * @return
      */
     @MessageMapping("/comment/notread")
     @SendTo("/socket/sub/comment/notread")
     public ResponseEntity<ApiResponse> allNotRead(@RequestParam String userId){
-
         apiResponse.setBody(socketService.findNotReadNote(userId));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
@@ -59,7 +58,7 @@ public class SocketApi {
      */
     @MessageMapping("/comment/notread/{userId}")
     @SendTo("/socket/sub/comment/notread/{userId}")
-    public ResponseEntity<ApiResponse> noteNotRead(@DestinationVariable  String userId){
+    public ResponseEntity<ApiResponse> noteNotRead(@DestinationVariable String userId){
         apiResponse.setBody(socketService.findNotReadNote(userId));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
 
@@ -68,13 +67,13 @@ public class SocketApi {
     @MessageMapping("/board/comment/list/{userId}")
     @SendTo("/socket/sub/board/comment/list/{userId}")
     public ResponseEntity<ApiResponse> boardCommentList(@DestinationVariable String userId){
-        apiResponse.setBody(socketService.findNotReadComment(userId));
+        apiResponse.setBody(socketService.findNotConfirmFollowing(userId));
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    @MessageMapping("/user/follow")
-    @SendTo("/socket/sub/user/follow")
-    public ResponseEntity<ApiResponse> getFollow(String UserId){
+    @MessageMapping("/user/follow/{userId}")
+    @SendTo("/socket/sub/user/follow/{userId}")
+    public ResponseEntity<ApiResponse> getFollow(@DestinationVariable String UserId){
         apiResponse.setBody(socketService);
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
