@@ -35,11 +35,11 @@ public class SocketBoardEntity extends BaseEntity {
     private Long rowDisLike; // 싫어요
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "BOARD_ID")
+    @JoinColumn(name = "BOARD_ID",insertable = false,updatable = false)
     FeelEntity feelEntity;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "BOARD_ID")
+    @JoinColumn(name = "BOARD_ID",insertable = false,updatable = false)
     CommentEntity commentEntity;
 
 

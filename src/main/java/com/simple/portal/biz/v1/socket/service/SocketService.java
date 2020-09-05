@@ -55,10 +55,10 @@ public class SocketService {
 
    public SocketFollowDTO findNotConfirmFollowing (String userId) {
        QSocketAlarmEntity qSocketAlarmEntity = new QSocketAlarmEntity("a");
-        List dtoList = query.select(qSocketAlarmEntity.user_id)
+        List dtoList = query.select(qSocketAlarmEntity.userId)
                 .from(qSocketAlarmEntity)
                 .where(qSocketAlarmEntity.eventType.eq(SocketAlarmEntity.EventType.EVT_UL)
-                       ,qSocketAlarmEntity.user_id.eq(userId))
+                       ,qSocketAlarmEntity.userId.eq(userId))
                 .fetch();
         return SocketFollowDTO.builder()
                 .userId(dtoList)

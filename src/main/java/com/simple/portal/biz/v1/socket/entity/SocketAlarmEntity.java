@@ -24,13 +24,13 @@ public class SocketAlarmEntity {
     private long id;
 
     @Column
-    private long board_id;
+    private long boardId;
     @Column
-    private long login_id;
+    private long loginId;
     @Column
-    private String user_id;
+    private String userId;
     @Column
-    private long note_id;
+    private long noteId;
 
     @Enumerated(EnumType.STRING)
     private SocketAlarmEntity.EventType eventType;
