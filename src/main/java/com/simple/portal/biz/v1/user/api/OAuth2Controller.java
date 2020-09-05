@@ -66,7 +66,6 @@ public class OAuth2Controller {
         String email = (String) oauthMap.get("email");
         String platform = (String) oauthMap.get("platform");
         String userId = email + ":" + platform;
-        Long pk_id = userService.userFindPkService(userId);
 
         apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
         Map<String, String> obj = new HashMap<>();

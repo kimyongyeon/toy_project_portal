@@ -93,7 +93,6 @@ public class UserService {
         }
     }
 
-     // 유저의 기본키로 유저 조회
     @Transactional
     public UserReadDto userFineOneService(String userId) {
         if(!userRepository.existsUserByUserId(userId)) throw new UserNotFoundException(); // 아이디 존재 안함.
@@ -125,6 +124,7 @@ public class UserService {
         }
     }
 
+    /*
     public Long userFindPkService(String userId) {
         try {
             UserEntity userEntity = userRepository.findByUserId(userId);
@@ -134,6 +134,7 @@ public class UserService {
             throw new SelectUserPkFailedException();
         }
     }
+*/
 
     @Transactional
     public void createUserService(UserCreateDto user) {
@@ -352,6 +353,7 @@ public class UserService {
     // 팔로우하기
     @Transactional
     public void followService(String following_id, String followed_id) {
+        if(!userRepository.existsUserByUserId(following_id) || !userRepository.existsUserByUserId(followed_id)) throw new UserNotFoundException(); // 아이디 존재 안함.
         try {
             SetOperations<String, String> setOperations = redisTemplate.opsForSet();
             String followedKey = "user:followed:" + followed_id;
@@ -368,6 +370,7 @@ public class UserService {
     // 언팔로우하기
     @Transactional
     public void unfollowService(String following_id, String followed_id) {
+        if(!userRepository.existsUserByUserId(following_id) || !userRepository.existsUserByUserId(followed_id)) throw new UserNotFoundException(); // 아이디 존재 안함.
         try {
             SetOperations<String, String> setOperations = redisTemplate.opsForSet();
             String followingKey = "user:following:" + following_id;
@@ -390,13 +393,26 @@ public class UserService {
             List<String> follower_id_list = new ArrayList<>();
             List<FollowData> followed_result_list = new ArrayList<>();
 
-            // String -> Long
              for(String follower : followers) {
                  follower_id_list.add(follower);
-             };
+             }
 
-            for(int i=0; i<follower_id_list.size(); i++){
-                followed_result_list.add(new FollowData(follower_id_list.get(i)));
+             // userId로 profileImg 조회
+            String sql = "Select profileImg from UserEntity where userId=";
+            boolean flag = false;
+            for(int i=0; i<follower_id_list.size(); i++) {
+                flag = true;
+                sql += "'" + follower_id_list.get(i) + "'";
+                if(i != follower_id_list.size() -1) sql += " OR userId=";
+            }
+
+            //팔로워가 1명 이상인 경우 ( 팔로워가 존재하는 경우 )
+            if(flag) {
+                Query query = entityManager.createQuery(sql);
+                List<String> follower_profile_list = query.getResultList();
+                for(int i=0; i<follower_profile_list.size(); i++) {
+                    followed_result_list.add(new FollowData(follower_id_list.get(i), follower_profile_list.get(i)));
+                }
             }
 
             FollowedList followedDto = FollowedList.builder()
@@ -424,8 +440,23 @@ public class UserService {
                 following_id_list.add(follower);;
             };
 
-            for(int i=0; i<following_id_list.size(); i++){
-                following_result_list.add(new FollowData(following_id_list.get(i)));
+            // userId로 profileImg 조회
+            String sql = "Select profileImg from UserEntity where userId=";
+            boolean flag = false;
+            for(int i=0; i<following_id_list.size(); i++) {
+                flag = true;
+                sql += "'" + following_id_list.get(i) + "'";
+                if(i != following_id_list.size() -1) sql += " OR userId=";
+            }
+
+            log.info("Sql : " + sql);
+            //팔로워가 1명 이상인 경우 ( 팔로워가 존재하는 경우 )
+            if(flag) {
+                Query query = entityManager.createQuery(sql);
+                List<String> follower_profile_list = query.getResultList();
+                for(int i=0; i<follower_profile_list.size(); i++) {
+                    following_result_list.add(new FollowData(following_id_list.get(i), follower_profile_list.get(i)));
+                }
             }
 
             FollowingList followingDto = FollowingList.builder()
