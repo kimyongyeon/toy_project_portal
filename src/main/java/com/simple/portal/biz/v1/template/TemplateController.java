@@ -17,4 +17,8 @@ public class TemplateController {
     public String sockjs() {
         return "sockjs";
     }
+    @GetMapping("/stomp")
+    public String stomp() {
+        return "stomp";
+    }
 }
