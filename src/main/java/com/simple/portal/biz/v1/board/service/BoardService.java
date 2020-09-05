@@ -15,6 +15,8 @@ import com.simple.portal.biz.v1.board.entity.*;
 import com.simple.portal.biz.v1.board.exception.BoardDetailNotException;
 import com.simple.portal.biz.v1.board.exception.ItemGubunExecption;
 import com.simple.portal.biz.v1.board.repository.*;
+import com.simple.portal.biz.v1.user.entity.UserEntity;
+import com.simple.portal.biz.v1.user.repository.UserRepository;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.util.ActivityScoreConst;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +63,9 @@ public class BoardService {
 
     @Autowired
     FeelRepository feelRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     public void removeScrap(ScrapDTO scrapDTO) {
         scrapRepository.deleteById(scrapDTO.getId());
@@ -306,21 +311,6 @@ public class BoardService {
         }
     }
 
-    public List<BoardDTO> myScrap(String userId) {
-        QBoardEntity qBoardEntity = new QBoardEntity("b");
-        QScrapEntity qScrapEntity = new QScrapEntity("s");
-        List<BoardDTO> boards = query
-                .select(Projections.constructor(BoardDTO.class, qBoardEntity, qScrapEntity))
-                .from(qBoardEntity)
-                .join(qScrapEntity).on(qScrapEntity.boardId.eq(qBoardEntity.id))
-                .where(qScrapEntity.userId.contains(userId))
-                .limit(10)
-                .orderBy(qBoardEntity.createdDate.desc())
-                .fetch();
-        // 테이블 구조를 공개하지 않기 위해 DTO에 담는다.
-        return boards;
-    }
-
     private List<BoardDTO> getBoardDTOS(Stream<BoardEntity> stream) {
         List<BoardDTO> list = stream.map(b -> {
             BoardDTO boardDTO = new BoardDTO();
@@ -337,17 +327,51 @@ public class BoardService {
         return list;
     }
 
+    /**
+     * 내가 올린글
+     * @param userId
+     * @return
+     */
     public List<BoardDTO> userBoardList(String userId) {
+
+        UserEntity userEntity = userRepository.findByUserId(userId); // 프로필 이미지를 주라고 하는데???
+
         QBoardEntity qBoardEntity = new QBoardEntity("b");
         List<BoardEntity> boards = query
                 .select(qBoardEntity)
                 .from(qBoardEntity)
                 .where(qBoardEntity.writer.contains(userId))
                 .orderBy(qBoardEntity.title.desc())
+                .limit(10)
                 .fetch();
         return getBoardDTOS(boards.stream());
     }
 
+    /**
+     * 내가 스크랩한 글
+     * @param userId
+     * @return
+     */
+    public List<BoardDTO> myScrap(String userId) {
+        QBoardEntity qBoardEntity = new QBoardEntity("b");
+        QScrapEntity qScrapEntity = new QScrapEntity("s");
+        List<BoardDTO> boards = query
+                .select(Projections.constructor(BoardDTO.class, qBoardEntity, qScrapEntity))
+                .from(qBoardEntity)
+                .join(qScrapEntity).on(qScrapEntity.boardId.eq(qBoardEntity.id))
+                .where(qScrapEntity.userId.contains(userId))
+                .limit(10)
+                .orderBy(qBoardEntity.createdDate.desc())
+                .fetch();
+        // 테이블 구조를 공개하지 않기 위해 DTO에 담는다.
+        return boards;
+    }
+
+    /**
+     * 최근활동
+     * @param userId
+     * @return
+     */
     public List<BoardDTO> recentBoardList(String userId) {
         QBoardEntity qBoardEntity = new QBoardEntity("b");
         QCommentEntity qCommentEntity = new QCommentEntity("c");
@@ -356,6 +380,7 @@ public class BoardService {
                 .from(qBoardEntity)
                 .join(qCommentEntity).on(qCommentEntity.boardEntity.eq(qBoardEntity))
                 .where(qBoardEntity.writer.contains(userId))
+                .limit(10)
                 .fetch();
         return boards;
     }

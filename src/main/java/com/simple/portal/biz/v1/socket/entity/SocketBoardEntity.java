@@ -15,7 +15,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Data
 @Builder
-@Table(name="TB_BOARD")
+//@Table(name="TB_BOARD")
 public class SocketBoardEntity extends BaseEntity {
 
     @Id
@@ -34,13 +34,13 @@ public class SocketBoardEntity extends BaseEntity {
     @Column(columnDefinition = "bigint default 0")
     private Long rowDisLike; // 싫어요
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "BOARD_ID")
-    FeelEntity feelEntity;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "BOARD_ID")
+//    FeelEntity feelEntity;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "BOARD_ID")
-    CommentEntity commentEntity;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "BOARD_ID")
+//    CommentEntity commentEntity;
 
 
 }
