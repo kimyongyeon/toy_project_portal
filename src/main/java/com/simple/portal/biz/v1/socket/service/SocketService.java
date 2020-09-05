@@ -1,8 +1,6 @@
 package com.simple.portal.biz.v1.socket.service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.simple.portal.biz.v1.socket.dto.SocketNoteDTO;
-import com.simple.portal.biz.v1.socket.entity.QSocketNoteEntitiy;
 import com.simple.portal.biz.v1.socket.repository.SocketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,17 +14,17 @@ public class SocketService {
     @Autowired
     JPAQueryFactory query;
 
-    public SocketNoteDTO findNotReadNote(String userId) {
-        QSocketNoteEntitiy qSocketNoteEntitiy = new QSocketNoteEntitiy("n");
-        long viewCount = query.select(qSocketNoteEntitiy.viewPoint.count())
-                .from(qSocketNoteEntitiy)
-                .where(qSocketNoteEntitiy.rev_id.eq(userId)
-                       ,qSocketNoteEntitiy.viewPoint.eq(0))
-                .fetchOne();
-        return SocketNoteDTO.builder()
-                .noteNotReadCount(viewCount)
-                .build();
-    }
+//    public SocketNoteDTO findNotReadNote(String userId) {
+//        QSocketNoteEntitiy qSocketNoteEntitiy = new QSocketNoteEntitiy("n");
+//        long viewCount = query.select(qSocketNoteEntitiy.viewPoint.count())
+//                .from(qSocketNoteEntitiy)
+//                .where(qSocketNoteEntitiy.rev_id.eq(userId)
+//                       ,qSocketNoteEntitiy.viewPoint.eq(0))
+//                .fetchOne();
+//        return SocketNoteDTO.builder()
+//                .noteNotReadCount(viewCount)
+//                .build();
+//    }
 
 //    public SocketCommentDTO findNotReadComment(String userId) {
 //        QSocketBoardEntity qSocketBoardEntity = new QSocketBoardEntity("c");
