@@ -1,19 +1,11 @@
 package com.simple.portal.biz.v1.socket.service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.simple.portal.biz.v1.socket.dto.SocketCommentDTO;
-import com.simple.portal.biz.v1.socket.dto.SocketFollowDTO;
 import com.simple.portal.biz.v1.socket.dto.SocketNoteDTO;
-import com.simple.portal.biz.v1.socket.entity.QSocketAlarmEntity;
-import com.simple.portal.biz.v1.socket.entity.QSocketBoardEntity;
 import com.simple.portal.biz.v1.socket.entity.QSocketNoteEntitiy;
-import com.simple.portal.biz.v1.socket.entity.SocketAlarmEntity;
 import com.simple.portal.biz.v1.socket.repository.SocketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class SocketService {
@@ -36,35 +28,35 @@ public class SocketService {
                 .build();
     }
 
-    public SocketCommentDTO findNotReadComment(String userId) {
-        QSocketBoardEntity qSocketBoardEntity = new QSocketBoardEntity("c");
-        List boardId = query.select(qSocketBoardEntity.id.as("boardId")
-                                    )
-                .from(qSocketBoardEntity)
-                .where(
-                        qSocketBoardEntity.writer.contains(userId)
-                        ,qSocketBoardEntity.commentEntity.viewCount.eq(0L)
-                                .or(qSocketBoardEntity.feelEntity.count.eq(0))
-                )
-                .fetch();
-        return SocketCommentDTO.builder()
-                .boardId(boardId)
-                .commentCnt(boardId.size())
-                .build();
-    }
+//    public SocketCommentDTO findNotReadComment(String userId) {
+//        QSocketBoardEntity qSocketBoardEntity = new QSocketBoardEntity("c");
+//        List boardId = query.select(qSocketBoardEntity.id.as("boardId")
+//                                    )
+//                .from(qSocketBoardEntity)
+//                .where(
+//                        qSocketBoardEntity.writer.contains(userId)
+//                        ,qSocketBoardEntity.commentEntity.viewCount.eq(0L)
+//                                .or(qSocketBoardEntity.feelEntity.count.eq(0))
+//                )
+//                .fetch();
+//        return SocketCommentDTO.builder()
+//                .boardId(boardId)
+//                .commentCnt(boardId.size())
+//                .build();
+//    }
 
-   public SocketFollowDTO findNotConfirmFollowing (String userId) {
-       QSocketAlarmEntity qSocketAlarmEntity = new QSocketAlarmEntity("a");
-        List dtoList = query.select(qSocketAlarmEntity.user_id)
-                .from(qSocketAlarmEntity)
-                .where(qSocketAlarmEntity.eventType.eq(SocketAlarmEntity.EventType.EVT_UL)
-                       ,qSocketAlarmEntity.user_id.eq(userId))
-                .fetch();
-        return SocketFollowDTO.builder()
-                .userId(dtoList)
-                .newFollowingCount(dtoList.size())
-                .build();
-    }
+//   public SocketFollowDTO findNotConfirmFollowing (String userId) {
+//       QSocketAlarmEntity qSocketAlarmEntity = new QSocketAlarmEntity("a");
+//        List dtoList = query.select(qSocketAlarmEntity.user_id)
+//                .from(qSocketAlarmEntity)
+//                .where(qSocketAlarmEntity.eventType.eq(SocketAlarmEntity.EventType.EVT_UL)
+//                       ,qSocketAlarmEntity.user_id.eq(userId))
+//                .fetch();
+//        return SocketFollowDTO.builder()
+//                .userId(dtoList)
+//                .newFollowingCount(dtoList.size())
+//                .build();
+//    }
 /*
     public SocketCommentDTO findNotReadCommentDetail(String userId) {
         QSocketBoardEntity BoardEntity = new QSocketBoardEntity("c");

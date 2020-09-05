@@ -2,14 +2,11 @@ package com.simple.portal.biz.v1.socket.api;
 
 import com.simple.portal.biz.v1.note.service.NoteService;
 import com.simple.portal.biz.v1.socket.service.SocketService;
-import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.common.ApiResponse;
-import com.simple.portal.common.socket.SocketDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -64,12 +61,12 @@ public class SocketApi {
 
     }
 
-    @MessageMapping("/board/comment/list/{userId}")
-    @SendTo("/socket/sub/board/comment/list/{userId}")
-    public ResponseEntity<ApiResponse> boardCommentList(@DestinationVariable String userId){
-        apiResponse.setBody(socketService.findNotConfirmFollowing(userId));
-        return new ResponseEntity(apiResponse, HttpStatus.OK);
-    }
+//    @MessageMapping("/board/comment/list/{userId}")
+//    @SendTo("/socket/sub/board/comment/list/{userId}")
+//    public ResponseEntity<ApiResponse> boardCommentList(@DestinationVariable String userId){
+//        apiResponse.setBody(socketService.findNotConfirmFollowing(userId));
+//        return new ResponseEntity(apiResponse, HttpStatus.OK);
+//    }
 
     @MessageMapping("/user/follow/{userId}")
     @SendTo("/socket/sub/user/follow/{userId}")
