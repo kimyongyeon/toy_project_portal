@@ -11,7 +11,7 @@ import javax.persistence.*;
 @Entity
 @Builder
 @ToString
-@Table(name = "TB_ALARM_HIST")
+@Table(name = "TB_ALARM_HIST_2")
 public class SocketAlarmEntity {
     public static enum EventType {
         // 쪽지, 댓글, 좋아요, 싫어요, 최초1회 로그인
