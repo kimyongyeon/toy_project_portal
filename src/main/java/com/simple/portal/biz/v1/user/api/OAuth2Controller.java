@@ -11,16 +11,17 @@ import com.simple.portal.common.ApiResponse;
 import com.simple.portal.common.Interceptor.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.client.RestTemplate;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -57,7 +58,8 @@ public class OAuth2Controller {
 
     // oauth 인증이 완료되고 해당 유저를 db에 저장하고 jwt 토큰을 만들어서 클라이언트로 전송
     @ResponseBody
-    @GetMapping({"/loginSuccess", "/hello"})
+    @GetMapping({"/loginSuccess"})
+
     @Transactional
     public ResponseEntity<ApiResponse> loginSuccess(OAuth2AuthenticationToken authentication) {
 
