@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -43,9 +42,6 @@ public class UserAPI {
     private UserService userService;
     private ApiResponse apiResponse;
     private JwtUtil jwtUtil;
-
-    @Autowired
-    private RestTemplate template;
 
     @Autowired
     public void UserController(UserService userService, ApiResponse apiResponse, JwtUtil jwtUtil) {
