@@ -1,5 +1,6 @@
 package com.simple.portal.biz.v1.user.api;
 
+import com.amazonaws.Response;
 import com.simple.portal.biz.v1.user.ApiConst;
 import com.simple.portal.biz.v1.user.UserConst;
 import com.simple.portal.biz.v1.user.dto.*;
@@ -13,16 +14,22 @@ import com.simple.portal.common.Interceptor.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriComponents;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,12 +37,15 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/v1/api/user")
-@CrossOrigin
+@CrossOrigin("*")
 public class UserAPI {
 
     private UserService userService;
     private ApiResponse apiResponse;
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private RestTemplate template;
 
     @Autowired
     public void UserController(UserService userService, ApiResponse apiResponse, JwtUtil jwtUtil) {
@@ -44,10 +54,9 @@ public class UserAPI {
         this.jwtUtil = jwtUtil;
     }
 
-
     @GetMapping("/getToken")
     public void getToken( ) {
-        String token = jwtUtil.createToken("xowns1234");
+        String token = jwtUtil.createToken("xowns1234", 'N');
         log.info("token : " + token);
     }
 
