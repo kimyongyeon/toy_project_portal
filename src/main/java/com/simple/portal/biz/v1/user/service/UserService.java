@@ -266,6 +266,7 @@ public class UserService {
             else {
                 UserEntity user = userRepository.findByUserId(user_id);
                 String pwOrigin = user.getPassword();
+                char userRole = user.getAuthority();
                 if (BCrypt.checkpw(password, pwOrigin)) {
 
                     String lastLoginTime = user.getLastLoginTime();
@@ -279,7 +280,7 @@ public class UserService {
                     }
 
                     userRepository.updateLastLoginTime(user_id, makeNowTimeStamp()); // 최근 로그인 시간 update
-                    return jwtUtil.createToken(user.getUserId());
+                    return jwtUtil.createToken(user.getUserId(), userRole);
                 }
                 else throw new Exception(UserConst.INVALID_PASSWORD); // 비밀번호 오류
             }
@@ -449,7 +450,6 @@ public class UserService {
                 if(i != following_id_list.size() -1) sql += " OR userId=";
             }
 
-            log.info("Sql : " + sql);
             //팔로워가 1명 이상인 경우 ( 팔로워가 존재하는 경우 )
             if(flag) {
                 Query query = entityManager.createQuery(sql);

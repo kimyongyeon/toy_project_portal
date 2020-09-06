@@ -19,14 +19,17 @@ public class JwtUtil {
     private String key;
     private Date EXPIRE_TIME = new Date(System.currentTimeMillis() + (1000*60*30)); // 유효시간 30분
 
-    public String createToken(String userId) {
+    public String createToken(String userId, char role) {
 
         Map<String, Object> headers = new HashMap<>();
         headers.put("typ", "JWT");
         headers.put("alg", "HS256");
 
         Map<String, Object> payloads = new HashMap<>();
+        payloads.put("sub", "okky-server"); // 발행자
         payloads.put("userId", userId);
+        payloads.put("Role", role);
+
 
         String jwt = null;
         try {
