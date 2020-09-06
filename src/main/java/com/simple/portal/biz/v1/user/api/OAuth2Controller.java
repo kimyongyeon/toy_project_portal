@@ -2,6 +2,7 @@ package com.simple.portal.biz.v1.user.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.simple.portal.biz.v1.user.UserConst;
+import com.simple.portal.biz.v1.user.dto.LoginTokenDto;
 import com.simple.portal.biz.v1.user.dto.OAuthDto;
 import com.simple.portal.biz.v1.user.exception.UserAuthCheckFailedException;
 import com.simple.portal.biz.v1.user.repository.UserRepository;
@@ -17,7 +18,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.client.RestTemplate;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
@@ -64,7 +64,7 @@ public class OAuth2Controller {
     public ResponseEntity<ApiResponse> loginSuccess(OAuth2AuthenticationToken authentication) {
 
         Map<String, Object> oauthMap = authentication.getPrincipal().getAttributes();
-        String token = oauth2Service.OauthUserLoginService(oauthMap);
+        LoginTokenDto loginTokenDto = oauth2Service.OauthUserLoginService(oauthMap);
         String email = (String) oauthMap.get("email");
         String platform = (String) oauthMap.get("platform");
         String userId = email + ":" + platform;
@@ -73,7 +73,8 @@ public class OAuth2Controller {
         Map<String, String> obj = new HashMap<>();
         obj.put("userId", userId);
         obj.put("Role", "Y"); // 일반 유저
-        obj.put("token", token);
+        obj.put("access-token", loginTokenDto.getAccessToken());
+        obj.put("refresh-token", loginTokenDto.getRefreshToken());
         apiResponse.setBody(obj);  // user_id 기반 토큰 생성
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }

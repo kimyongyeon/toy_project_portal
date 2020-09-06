@@ -52,7 +52,7 @@ public class UserAPI {
 
     @GetMapping("/getToken")
     public void getToken( ) {
-        String token = jwtUtil.createToken("xowns1234", 'N');
+        String token = jwtUtil.createAccessToken("xowns1234", 'N');
         log.info("token : " + token);
     }
 
@@ -168,12 +168,11 @@ public class UserAPI {
             String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
             throw new ParamInvalidException(errMsg);
         }
-
         String id = loginDto.getUserId();
         String pw = loginDto.getPassword();
         log.info("[POST] /user/login " + "[ID] :  "  + id + "[PW] : " + pw + " /userLogin");
 
-        String token = userService.userLoginService(id, pw);
+        LoginTokenDto loginTokenDto = userService.userLoginService(id, pw);
 
         // authority 조회 후 'Y'일때만 로그인 성공 로직 작성
         char auth = userService.userAuthCheckServie(id);
@@ -183,24 +182,29 @@ public class UserAPI {
         Map<String, String> obj = new HashMap<>();
         obj.put("userId", id);// 로그인 return값에 userId 추가
         obj.put("Role", String.valueOf(auth)); // 'Y' 일반 회원, 'A' 관리자 -> 관리자는 API로 설정 못하고 수동으로 가능
-        obj.put("token", token);
+        obj.put("access-token", loginTokenDto.getAccessToken());
+        obj.put("refresh-token", loginTokenDto.getRefreshToken());
         apiResponse.setBody(obj);  // user_id 기반 토큰 생성
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    // 로그아웃 -> 토큰을 만료시킴 ( 토큰을 받아서 만료 ? )
+    // 로그아웃 -> 토큰을 만료시킴
     // 토큰이 한번 만들어지면 바꿀수 없다.. 즉, 유저가 로그아웃해도 세션처럼 값을 지울수 없다는 뜻이다. ( = 로그아웃해도 토큰이 살아있다. expireTime까지 )
-    // 그래서 로그아웃한 토큰을 레디스에 넣어놓고 토큰 유효성 검사할때 체크해줘야 한다. - 레디스는 주기적으로 삭제 ?
+    // 해당 유저의 refresh token을 레디스에서 삭제하고 access token을 blackList에 등록한다.
     @PostMapping("/logout")
-    public void logout(HttpServletRequest httpServletRequest) {
+    public ResponseEntity<ApiResponse> logout(@Valid @RequestBody LogoutDto logoutDto, BindingResult bindingResult) {
 
-        String userId = httpServletRequest.getParameter("userId");
-        String token = httpServletRequest.getParameter("token");
+        log.info("[POST] /user/logout " + logoutDto.toString());
 
-        log.info("[POST] /user/logout");
-        log.info("userId : " + userId);
-        log.info("token : " + token);
+        if(bindingResult.hasErrors()) {
+            String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
+            throw new ParamInvalidException(errMsg);
+        }
 
+        userService.userLogoutService(logoutDto);
+        apiResponse.setMsg(UserConst.SUCCESS_LOGOUT);
+        apiResponse.setBody("");
+        return  new ResponseEntity(apiResponse, HttpStatus.OK);
     };
 
     // 권한 업데이트

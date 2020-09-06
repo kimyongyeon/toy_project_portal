@@ -16,8 +16,10 @@ import com.simple.portal.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import javax.persistence.EntityManager;
@@ -27,6 +29,7 @@ import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static com.simple.portal.util.DateFormatUtil.makeNowTimeStamp;
 
@@ -260,7 +263,7 @@ public class UserService {
     }
 
     @Transactional
-    public String userLoginService(String user_id, String password) { // 성공만 처리하고 나머지 exception 던짐
+    public LoginTokenDto userLoginService(String user_id, String password) { // 성공만 처리하고 나머지 exception 던짐
         try {
             if(!userRepository.existsUserByUserId(user_id)) throw new Exception(UserConst.NO_USER); // 아이디 존재 안함.
             else {
@@ -280,13 +283,37 @@ public class UserService {
                     }
 
                     userRepository.updateLastLoginTime(user_id, makeNowTimeStamp()); // 최근 로그인 시간 update
-                    return jwtUtil.createToken(user.getUserId(), userRole);
+
+                    // 로그인시 Access Token, Refresh Token 모두 발급.
+                    String accessToken = jwtUtil.createAccessToken(user.getUserId(), userRole);
+                    String refrehToken = jwtUtil.createRefreshToken(user.getUserId());
+                    return new LoginTokenDto(accessToken, refrehToken);
                 }
                 else throw new Exception(UserConst.INVALID_PASSWORD); // 비밀번호 오류
             }
         } catch (Exception e) {
             log.error("[UserService] userLoginService Error : " + e.getMessage());
             throw new LoginFailedException(e.getMessage());
+        }
+    }
+
+    // 로그아웃
+    public void userLogoutService(LogoutDto logoutDto) {
+        try {
+            // redis에서 refresh Token를 삭제 ( refresh:userId )
+            String refreshTokenKey = "refresh:"+logoutDto.getUserId();
+            redisTemplate.delete(refreshTokenKey);
+
+            // blackList에 access Token을 넣음
+            ListOperations<String, String> blackList = redisTemplate.opsForList();
+            String tokenBlackListKey = "blackList:"+logoutDto.getUserId();
+
+            blackList.rightPush(tokenBlackListKey, logoutDto.getAccessToken());
+            redisTemplate.expire(tokenBlackListKey, 60*10 , TimeUnit.SECONDS); // 해당 토큰의 유효시간 끝나면 redis에서 삭제.
+
+        } catch (Exception e) {
+            log.error("[UserService] userLogoutService Error : " + e.getMessage());
+            throw new LogoutFailedException();
         }
     }
 
