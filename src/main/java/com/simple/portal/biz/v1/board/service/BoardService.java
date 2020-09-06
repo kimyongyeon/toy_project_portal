@@ -237,17 +237,17 @@ public class BoardService {
 
         BOARD_TYPE board_type = BOARD_TYPE.FREE;
         // FREE, NOTICE, QNA, JOB_OFFER, JOB_SEARCH, SECRET
-        if (boardSearchDTO.getBoardType().equals("FREE")) {
+        if (boardSearchDTO.getBoardType().toUpperCase().equals("FREE")) {
             board_type = BOARD_TYPE.FREE;
-        } else if (boardSearchDTO.getBoardType().equals("NOTICE")) {
+        } else if (boardSearchDTO.getBoardType().toUpperCase().equals("NOTICE")) {
             board_type = BOARD_TYPE.NOTICE;
-        } else if (boardSearchDTO.getBoardType().equals("QNA")) {
+        } else if (boardSearchDTO.getBoardType().toUpperCase().equals("QNA")) {
             board_type = BOARD_TYPE.QNA;
-        } else if (boardSearchDTO.getBoardType().equals("JOB_OFFER")) {
+        } else if (boardSearchDTO.getBoardType().toUpperCase().equals("JOB_OFFER")) {
             board_type = BOARD_TYPE.JOB_OFFER;
-        } else if (boardSearchDTO.getBoardType().equals("JOB_SEARCH")) {
+        } else if (boardSearchDTO.getBoardType().toUpperCase().equals("JOB_SEARCH")) {
             board_type = BOARD_TYPE.JOB_SEARCH;
-        } else if (boardSearchDTO.getBoardType().equals("SECRET")) {
+        } else if (boardSearchDTO.getBoardType().toUpperCase().equals("SECRET")) {
             board_type = BOARD_TYPE.SECRET;
         }
 
@@ -455,15 +455,15 @@ public class BoardService {
         // FREE, NOTICE, QNA, JOB_OFFER, JOB_SEARCH, SECRET
         if (boardDTO.getBoard_type().equals("FREE")) {
             board_type = BOARD_TYPE.FREE;
-        } else if (boardDTO.getBoard_type().equals("NOTICE")) {
+        } else if (boardDTO.getBoard_type().toUpperCase().equals("NOTICE")) {
             board_type = BOARD_TYPE.NOTICE;
-        } else if (boardDTO.getBoard_type().equals("QNA")) {
+        } else if (boardDTO.getBoard_type().toUpperCase().equals("QNA")) {
             board_type = BOARD_TYPE.QNA;
-        } else if (boardDTO.getBoard_type().equals("JOB_OFFER")) {
+        } else if (boardDTO.getBoard_type().toUpperCase().equals("JOB_OFFER")) {
             board_type = BOARD_TYPE.JOB_OFFER;
-        } else if (boardDTO.getBoard_type().equals("JOB_SEARCH")) {
+        } else if (boardDTO.getBoard_type().toUpperCase().equals("JOB_SEARCH")) {
             board_type = BOARD_TYPE.JOB_SEARCH;
-        } else if (boardDTO.getBoard_type().equals("SECRET")) {
+        } else if (boardDTO.getBoard_type().toUpperCase().equals("SECRET")) {
             board_type = BOARD_TYPE.SECRET;
         }
 
