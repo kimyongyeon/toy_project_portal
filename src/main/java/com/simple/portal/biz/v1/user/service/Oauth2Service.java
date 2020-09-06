@@ -43,13 +43,15 @@ public class Oauth2Service {
 
             Boolean isExist = userRepository.existsUserByUserId(email+":"+platform);
             if(isExist) {  // 기존에 insert 된 경우
-                String lastLoginTime = userRepository.findByUserId(userId).getLastLoginTime();
+                UserEntity user = userRepository.findByUserId(userId);
+                char userRole = user.getAuthority();
+                String lastLoginTime = user.getLastLoginTime();
                 String LastLoginDate = lastLoginTime.split(" ")[0]; // "lastLoginTime": "2020-08-29 17:53:56",
                 String nowDate = makeNowTimeStamp().split(" ")[0];
                 // 로그인의 경우 하루에 한번만 카운트 되도록 처리
                 if(!LastLoginDate.equals(nowDate)) userService.updateActivityScore(userId, ActivityScoreConst.LOGIN_ACTIVITY_SCORE);
                 userRepository.updateLastLoginTime(userId, makeNowTimeStamp()); // 최근 로그인 시간 update
-                return jwtUtil.createToken(userId);
+                return jwtUtil.createToken(userId, userRole);
             } else { // Oauth의 경우 최초 로그인일때 가입과 동시에 로그인이 된다.
                 UserEntity insertUser = UserEntity.builder()
                         .userId(userId)
@@ -67,7 +69,7 @@ public class Oauth2Service {
 
                 userRepository.save(insertUser);
                 userService.updateActivityScore(userId, ActivityScoreConst.LOGIN_ACTIVITY_SCORE);
-                return jwtUtil.createToken(insertUser.getUserId());
+                return jwtUtil.createToken(insertUser.getUserId(), insertUser.getAuthority());
             }
             // 기존에 유저가 있으면 등록안하고 없으면 등록 ( select -> insert )
         } catch (Exception e) {
