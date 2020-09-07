@@ -53,7 +53,7 @@ public class JwtUtil {
         payloads.put("iss", "KimCoding");
         payloads.put("sub", "okky-project-jwt-key"); // 발행자
         payloads.put("userId", userId);
-        payloads.put("Role", role);
+        payloads.put("Role", String.valueOf(role));
         payloads.put("tokenType", "Access-Token");
 
         String jwt = null;
@@ -100,7 +100,6 @@ public class JwtUtil {
             refreshTokenList.set(refreshTokenKey, jwt);
 
             Long remainTime = getRemainTime(EXPIRE_TIME);
-            log.info("남은 시간 : " + remainTime);
             redisTemplate.expire(refreshTokenKey, remainTime, TimeUnit.SECONDS); // 해당 토큰의 유효시간 끝나면 redis에서 삭제.
 
             return jwt;
@@ -110,7 +109,7 @@ public class JwtUtil {
         }
     }
 
-    public AccressTokenDto checkAccessToken(String jwtTokenString) throws InterruptedException {
+    public AccressTokenDto checkAccessToken(String jwtTokenString) {
         try {
             Claims claims = Jwts.parser()
                     .setSigningKey(key.getBytes())
@@ -119,23 +118,23 @@ public class JwtUtil {
 
             Date expiration = claims.getExpiration();
             Long remainTime = getRemainTime(expiration);
-            log.info("남은 시간 : " + remainTime);
+            log.info("남은 시간 : " + remainTime + "초");
 
             String userId = claims.get("userId", String.class);
-            char role = claims.get("Role", Character.class);
+            String strRole = claims.get("Role", String.class);
+            char role = strRole.charAt(0);
+
             Boolean isExpired = false;
 
             return new AccressTokenDto(userId, role, isExpired, remainTime);
         } catch (ExpiredJwtException exception){
             log.info("[JwtUtil] exception : 토큰 만료 ");
             String userId = exception.getClaims().get("userId", String.class);
-            char role = exception.getClaims().get("Role", Character.class);
+            String strRole = exception.getClaims().get("Role", String.class);
+            char role = strRole.charAt(0);
             Boolean isExpired = true;
-            Date expiration = exception.getClaims().getExpiration();
-            Long remainTime = getRemainTime(expiration);
 
-            log.info("남은 시간 : " + remainTime);
-
+            Long remainTime = 1000*60*30*4L;
             return new AccressTokenDto(userId, role, isExpired, remainTime);
         } catch (JwtException exception) {
             log.info("[JwtUtil] exception : 토큰 변조 ");
@@ -172,11 +171,6 @@ public class JwtUtil {
             throw new TokenVaildFailedException();
         }
     }
-
-    // refresh token redis에서 제거
-
-    // blackList에 accessToken 추가
-
 
     public Long getRemainTime(Date expiration) {
         Long timeNow = new Date(System.currentTimeMillis()).getTime();

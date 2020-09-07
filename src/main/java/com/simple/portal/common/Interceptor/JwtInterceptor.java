@@ -34,21 +34,20 @@ public class JwtInterceptor implements HandlerInterceptor {
         ValueOperations<String, String> refreshTokenList = redisTemplate.opsForValue();
         ListOperations<String, String> blackList = redisTemplate.opsForList();
 
-        String jwtToken = request.getHeader("Authorization");
+        String jwtAccessToken = request.getHeader("Authorization");
         String jwtRefreshToken = request.getHeader("RefreshToken");
 
         // Token 만료 및 변조 검사 -> 변조됬으면 재로그인 요청, 만료 됬으면 refreshToken 확인해서 재발급 여부 판단.
-        AccressTokenDto tokenDto = jwtUtil.checkAccessToken(jwtToken); // 토큰 재발급을 위해서 userId, role, isExpired..등 값이 필요함.
+        AccressTokenDto tokenDto = jwtUtil.checkAccessToken(jwtAccessToken); // 토큰 재발급을 위해서 userId, role, isExpired..등 값이 필요함. ( 유효하거나, 만료된 토큰 )
         String userId = tokenDto.getUserId();
         char role = tokenDto.getRole();
         Boolean isExpired = tokenDto.getExpired();
-        long tokenExpiredRemainTime = tokenDto.getTokenExpiredRemainTime();
 
         String tokenRefreshyKey = "refresh:"+userId;
         String tokenBlackListKey = "blackList:"+userId;
 
         // Token blackList 검사
-        jwtUtil.checkBlackList(userId, jwtToken);
+        jwtUtil.checkBlackList(userId, jwtAccessToken);
 
         /**
          *  토큰 만료됬으면 재발급
@@ -61,7 +60,9 @@ public class JwtInterceptor implements HandlerInterceptor {
         // Access Token이 만료된 경우 -> Refresh Token을 이용해 Accress Token 재발급
         if (isExpired) {
 
-            // 유저가 입력한 토큰의 만료, 변조 확인
+            log.info("========= 토큰 expired !!====== 재발급 필요 !!!");
+
+            // 유저가 입력한 Refresh Token의 만료, 변조 확인
             jwtUtil.checkRefreshToken(jwtRefreshToken);
             String orifinRefreshToken = refreshTokenList.get(tokenRefreshyKey);
 
@@ -72,11 +73,11 @@ public class JwtInterceptor implements HandlerInterceptor {
             }
 
             //Accress Token 재발급 ( 기존 토큰과 재발급된 토큰은 만료시간을 제외한 모든 값이 같다.)
-            jwtUtil.createAccessToken(userId, role); // -> 이 값 클라로 뿌려줘야함
+            String newAccessToken = jwtUtil.createAccessToken(userId, role); // -> 이 값 클라로 뿌려줘야함
+            log.info("newAccessToken : " + newAccessToken);
 
             // 만료된 Access Token은 black list에 등록 ( list 자료형으로 관리 )
-            blackList.rightPush(tokenBlackListKey, jwtToken);
-            redisTemplate.expire(tokenBlackListKey, tokenExpiredRemainTime, TimeUnit.SECONDS); // 해당 토큰의 유효시간 끝나면 redis에서 삭제.
+            blackList.rightPush(tokenBlackListKey, jwtAccessToken);
 
             // 클라에게 refresh Token을 어떻게 뿌려줘야되나....
         }

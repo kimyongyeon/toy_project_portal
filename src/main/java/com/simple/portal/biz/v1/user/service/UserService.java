@@ -297,19 +297,16 @@ public class UserService {
         }
     }
 
-    // 로그아웃
-    public void userLogoutService(LogoutDto logoutDto) {
+    // 로그아웃 ( 로그아웃을 하면 해당 유저로 부터 생성된 모든 token release )
+    public void userLogoutService(String userId) {
         try {
-            // redis에서 refresh Token를 삭제 ( refresh:userId )
-            String refreshTokenKey = "refresh:"+logoutDto.getUserId();
+            // refreshToken release
+            String refreshTokenKey = "refresh:"+userId;
             redisTemplate.delete(refreshTokenKey);
 
-            // blackList에 access Token을 넣음
-            ListOperations<String, String> blackList = redisTemplate.opsForList();
-            String tokenBlackListKey = "blackList:"+logoutDto.getUserId();
-
-            blackList.rightPush(tokenBlackListKey, logoutDto.getAccessToken());
-            redisTemplate.expire(tokenBlackListKey, 60*10 , TimeUnit.SECONDS); // 해당 토큰의 유효시간 끝나면 redis에서 삭제.
+            // blackList release
+            String tokenBlackListKey = "blackList:"+userId;
+            redisTemplate.delete(tokenBlackListKey);
 
         } catch (Exception e) {
             log.error("[UserService] userLogoutService Error : " + e.getMessage());

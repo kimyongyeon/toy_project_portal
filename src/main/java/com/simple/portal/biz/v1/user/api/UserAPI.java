@@ -11,6 +11,7 @@ import com.simple.portal.biz.v1.user.exception.UserNotFoundException;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.common.ApiResponse;
 import com.simple.portal.common.Interceptor.JwtUtil;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -191,17 +192,12 @@ public class UserAPI {
     // 로그아웃 -> 토큰을 만료시킴
     // 토큰이 한번 만들어지면 바꿀수 없다.. 즉, 유저가 로그아웃해도 세션처럼 값을 지울수 없다는 뜻이다. ( = 로그아웃해도 토큰이 살아있다. expireTime까지 )
     // 해당 유저의 refresh token을 레디스에서 삭제하고 access token을 blackList에 등록한다.
-    @PostMapping("/logout")
-    public ResponseEntity<ApiResponse> logout(@Valid @RequestBody LogoutDto logoutDto, BindingResult bindingResult) {
+    @GetMapping("/logout")
+    public ResponseEntity<ApiResponse> logout(@RequestParam("userId") String userId) {
 
-        log.info("[POST] /user/logout " + logoutDto.toString());
+        log.info("[POST] /user/logout " + userId);
 
-        if(bindingResult.hasErrors()) {
-            String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
-            throw new ParamInvalidException(errMsg);
-        }
-
-        userService.userLogoutService(logoutDto);
+        userService.userLogoutService(userId);
         apiResponse.setMsg(UserConst.SUCCESS_LOGOUT);
         apiResponse.setBody("");
         return  new ResponseEntity(apiResponse, HttpStatus.OK);
