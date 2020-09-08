@@ -15,6 +15,7 @@ import com.simple.portal.biz.v1.board.repository.ActivityScoreRepository;
 import com.simple.portal.biz.v1.board.repository.AlarmHistRepository;
 import com.simple.portal.biz.v1.board.repository.BoardRepository;
 import com.simple.portal.biz.v1.board.repository.CommentRepository;
+import com.simple.portal.biz.v1.user.entity.QUserEntity;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.util.ActivityScoreConst;
 import lombok.extern.slf4j.Slf4j;
@@ -182,6 +183,7 @@ public class CommentService {
     public List listComment(Long boardId) {
 
         QCommentEntity qCommentEntity = new QCommentEntity("c");
+        QUserEntity qUserEntity = new QUserEntity(("u"));
         QueryResults<CommentDTO> comments = query
                 .select(Projections.bean(CommentDTO.class,
                         qCommentEntity.id,
@@ -190,8 +192,12 @@ public class CommentService {
                         qCommentEntity.contents,
                         qCommentEntity.rowDisLike,
                         qCommentEntity.rowLike,
-                        qCommentEntity.viewCount, qCommentEntity.createdDate))
+                        qCommentEntity.viewCount,
+                        qCommentEntity.createdDate,
+                        qUserEntity.profileImg
+                        ))
                 .from(qCommentEntity)
+                .join(qUserEntity).on(qUserEntity.userId.eq(qCommentEntity.writer))
                 .where(qCommentEntity.boardEntity.id.eq(boardId))
                 .limit(10)
                 .fetchResults();

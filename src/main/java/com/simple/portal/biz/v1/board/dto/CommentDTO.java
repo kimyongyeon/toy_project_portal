@@ -29,6 +29,7 @@ public class CommentDTO {
     @NotNull(message="아이템 구분은 필수 입력값입니다.")
     private String itemGb; // 아이템 구분 L:D
     private LocalDateTime createdDate;
+    private String profileImg;
 
     private Long viewCount; // 조회수
     private Long rowLike; // 좋아요
