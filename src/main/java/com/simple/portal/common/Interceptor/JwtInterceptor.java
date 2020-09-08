@@ -4,6 +4,7 @@ import com.simple.portal.biz.v1.user.dto.AccressTokenDto;
 import com.simple.portal.biz.v1.user.exception.TokenVaildFailedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -24,15 +25,16 @@ public class JwtInterceptor implements HandlerInterceptor {
     private JwtUtil jwtUtil;
 
     @Autowired
-    private RedisTemplate<String, String> redisTemplate;
+    @Qualifier("redisTemplate_token")
+    private RedisTemplate<String, String> redisTemplate_token;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
         log.info("=========preHandler");
 
-        ValueOperations<String, String> refreshTokenList = redisTemplate.opsForValue();
-        ListOperations<String, String> blackList = redisTemplate.opsForList();
+        ValueOperations<String, String> refreshTokenList = redisTemplate_token.opsForValue();
+        ListOperations<String, String> blackList = redisTemplate_token.opsForList();
 
         String jwtAccessToken = request.getHeader("Authorization");
         String jwtRefreshToken = request.getHeader("RefreshToken");
@@ -59,9 +61,6 @@ public class JwtInterceptor implements HandlerInterceptor {
 
         // Access Token이 만료된 경우 -> Refresh Token을 이용해 Accress Token 재발급
         if (isExpired) {
-
-            log.info("========= 토큰 expired !!====== 재발급 필요 !!!");
-
             // 유저가 입력한 Refresh Token의 만료, 변조 확인
             jwtUtil.checkRefreshToken(jwtRefreshToken);
             String orifinRefreshToken = refreshTokenList.get(tokenRefreshyKey);

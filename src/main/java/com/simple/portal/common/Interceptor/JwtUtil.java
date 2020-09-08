@@ -6,6 +6,7 @@ import com.simple.portal.biz.v1.user.exception.TokenVaildFailedException;
 import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -18,6 +19,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Header
+ *   typ : 토큰 타입을 지정 ex) JWT
+ *   alg : 알고리즘 방식을 지정하며, 서명과 토큰 검증에 사용
+ */
+/**
+ * Payload
+ *   iss : 토큰 발급자 ( issuer )
+ *   sub : 토큰 제목  ( subject )
+ *   aud : 토큰 대상자 ( audience )
+ *   exp : 토큰 만료 시간 ex) 1480849147370
+ *   nbf : 토큰 활설 날짜
+ *   iat : 토큰 발급시간
+ */
+
 @Slf4j
 @Component
 public class JwtUtil {
@@ -26,29 +42,17 @@ public class JwtUtil {
     private String key;
 
     @Autowired
-    private RedisTemplate<String, String> redisTemplate;
+    @Qualifier("redisTemplate_token")
+    private RedisTemplate<String, String> redisTemplate_token;
 
     public String createAccessToken(String userId, char role) {
 
         Date EXPIRE_TIME = new Date(System.currentTimeMillis() + (1000*60*1)); // Access Token은 유효시간 10분
-        /**
-         * Header
-         *   typ : 토큰 타입을 지정 ex) JWT
-         *   alg : 알고리즘 방식을 지정하며, 서명과 토큰 검증에 사용
-         */
+
         Map<String, Object> headers = new HashMap<>();
         headers.put("typ", "JWT");
         headers.put("alg", "HS256");
 
-        /**
-         * Payload
-         *   iss : 토큰 발급자 ( issuer )
-         *   sub : 토큰 제목  ( subject )
-         *   aud : 토큰 대상자 ( audience )
-         *   exp : 토큰 만료 시간 ex) 1480849147370
-         *   nbf : 토큰 활설 날짜
-         *   iat : 토큰 발급시간
-         */
         Map<String, Object> payloads = new HashMap<>();
         payloads.put("iss", "KimCoding");
         payloads.put("sub", "okky-project-jwt-key"); // 발행자
@@ -95,12 +99,12 @@ public class JwtUtil {
                     .compact();
 
             // refresh Token은 redis에 넣어줌 ( refresh:userId )
-            ValueOperations<String, String> refreshTokenList = redisTemplate.opsForValue();
+            ValueOperations<String, String> refreshTokenList = redisTemplate_token.opsForValue();
             String refreshTokenKey = "refresh:"+userId;
             refreshTokenList.set(refreshTokenKey, jwt);
 
             Long remainTime = getRemainTime(EXPIRE_TIME);
-            redisTemplate.expire(refreshTokenKey, remainTime, TimeUnit.SECONDS); // 해당 토큰의 유효시간 끝나면 redis에서 삭제.
+            redisTemplate_token.expire(refreshTokenKey, remainTime, TimeUnit.SECONDS); // 해당 토큰의 유효시간 끝나면 redis에서 삭제.
 
             return jwt;
         } catch (Exception e) {
@@ -118,7 +122,6 @@ public class JwtUtil {
 
             Date expiration = claims.getExpiration();
             Long remainTime = getRemainTime(expiration);
-            log.info("남은 시간 : " + remainTime + "초");
 
             String userId = claims.get("userId", String.class);
             String strRole = claims.get("Role", String.class);
@@ -126,7 +129,7 @@ public class JwtUtil {
 
             Boolean isExpired = false;
 
-            return new AccressTokenDto(userId, role, isExpired, remainTime);
+            return new AccressTokenDto(userId, role, isExpired);
         } catch (ExpiredJwtException exception){
             log.info("[JwtUtil] exception : 토큰 만료 ");
             String userId = exception.getClaims().get("userId", String.class);
@@ -135,7 +138,7 @@ public class JwtUtil {
             Boolean isExpired = true;
 
             Long remainTime = 1000*60*30*4L;
-            return new AccressTokenDto(userId, role, isExpired, remainTime);
+            return new AccressTokenDto(userId, role, isExpired);
         } catch (JwtException exception) {
             log.info("[JwtUtil] exception : 토큰 변조 ");
             throw new TokenVaildFailedException();
@@ -159,7 +162,7 @@ public class JwtUtil {
     }
 
     public void checkBlackList(String userId, String accessToken) {
-        ListOperations<String, String> blackList = redisTemplate.opsForList();
+        ListOperations<String, String> blackList = redisTemplate_token.opsForList();
         String tokenBlackListKey = "blackList:"+userId;
         try {
             List<String> inRedisBlackList = blackList.range(tokenBlackListKey, 0, -1);

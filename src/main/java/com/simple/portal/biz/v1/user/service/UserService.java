@@ -16,6 +16,7 @@ import com.simple.portal.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
@@ -39,10 +40,17 @@ public class UserService {
     private UserRepository userRepository;
     private CustomMailSender mailSender;
     private JwtUtil jwtUtil;
-    private RedisTemplate<String, String> redisTemplate;
     private JPAQueryFactory jpaQueryFactory;
     private S3Service s3Service;
     private SimpMessagingTemplate simpleMessageTemplate;
+
+    @Autowired
+    @Qualifier("redisTemplate_follower")
+    private RedisTemplate<String, String> redisTemplate_follower;
+
+    @Autowired
+    @Qualifier("redisTemplate_token")
+    private RedisTemplate<String, String> redisTemplate_token;
 
     @PersistenceContext
     private EntityManager entityManager; // native query를 위해 entityManger 추가
@@ -51,14 +59,12 @@ public class UserService {
     public void UserController(UserRepository userRepository,
                                CustomMailSender mailSender,
                                JwtUtil jwtUtil,
-                               RedisTemplate redisTemplate,
                                JPAQueryFactory jpaQueryFactory,
                                S3Service s3Service,
                                SimpMessagingTemplate simpleMessageTemplate) {
         this.userRepository = userRepository;
         this.mailSender = mailSender;
         this.jwtUtil = jwtUtil;
-        this.redisTemplate = redisTemplate;
         this.jpaQueryFactory = jpaQueryFactory;
         this.s3Service = s3Service;
         this.simpleMessageTemplate = simpleMessageTemplate;
@@ -215,7 +221,7 @@ public class UserService {
             //나의 팔로워 및 팔로잉 정보 삭제.
             //내 꺼에서 followed, following 지우면서 각 유저의 것들도 지워줘야함.
             try {
-                SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+                SetOperations<String, String> setOperations = redisTemplate_follower.opsForSet();
                 //내 팔로잉 조회
                 FollowingList followingList = getFollowingIdService(userId);
                 //내 팔로워 조회
@@ -231,8 +237,8 @@ public class UserService {
                     setOperations.remove(followingKey,userId);
                 }
                 //내 팔로잉/팔로우 정보 삭제
-                redisTemplate.delete(delFollowedKey + userId);
-                redisTemplate.delete(delFollowingKey + userId);
+                redisTemplate_follower.delete(delFollowedKey + userId);
+                redisTemplate_follower.delete(delFollowingKey + userId);
             } catch (Exception e) {
                 e.printStackTrace();
                 log.error("[UserService] unfollowService Error : " + e.getMessage());
@@ -302,11 +308,11 @@ public class UserService {
         try {
             // refreshToken release
             String refreshTokenKey = "refresh:"+userId;
-            redisTemplate.delete(refreshTokenKey);
+            redisTemplate_token.delete(refreshTokenKey);
 
             // blackList release
             String tokenBlackListKey = "blackList:"+userId;
-            redisTemplate.delete(tokenBlackListKey);
+            redisTemplate_token.delete(tokenBlackListKey);
 
         } catch (Exception e) {
             log.error("[UserService] userLogoutService Error : " + e.getMessage());
@@ -380,7 +386,7 @@ public class UserService {
     public void followService(String following_id, String followed_id) {
         if(!userRepository.existsUserByUserId(following_id) || !userRepository.existsUserByUserId(followed_id)) throw new UserNotFoundException(); // 아이디 존재 안함.
         try {
-            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+            SetOperations<String, String> setOperations = redisTemplate_follower.opsForSet();
             String followedKey = "user:followed:" + followed_id;
             String followingKey = "user:following:" + following_id;
             setOperations.add(followedKey, following_id);
@@ -397,7 +403,7 @@ public class UserService {
     public void unfollowService(String following_id, String followed_id) {
         if(!userRepository.existsUserByUserId(following_id) || !userRepository.existsUserByUserId(followed_id)) throw new UserNotFoundException(); // 아이디 존재 안함.
         try {
-            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+            SetOperations<String, String> setOperations = redisTemplate_follower.opsForSet();
             String followingKey = "user:following:" + following_id;
             String followedKey = "user:followed:" + followed_id;
             setOperations.remove(followingKey, followed_id);
@@ -412,7 +418,7 @@ public class UserService {
     // 내 팔로워 조회 ( ID )
     public FollowedList getFollowerIdService(String followed_id) {
         try {
-            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+            SetOperations<String, String> setOperations = redisTemplate_follower.opsForSet();
             String followerKey = "user:followed:" + followed_id;
             Set<String> followers = setOperations.members(followerKey);
             List<String> follower_id_list = new ArrayList<>();
@@ -455,7 +461,7 @@ public class UserService {
     // 내가 팔로잉하는 유저 조회 ( Id )
     public FollowingList getFollowingIdService(String following_id) {
         try {
-            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+            SetOperations<String, String> setOperations = redisTemplate_follower.opsForSet();
             String followingKey = "user:following:" + following_id;
             Set<String> following_users = setOperations.members(followingKey);
             List<String> following_id_list = new ArrayList<>();
