@@ -27,6 +27,7 @@ public class UserReadDto { // 클라이언트에 뿌려줄 값
     private String profileImg;
     private int activityScore;
     private char authority; // 'Y', 'N'
+    private String platform;
 
     @Nullable
     private String created;
@@ -51,6 +52,7 @@ public class UserReadDto { // 클라이언트에 뿌려줄 값
                 + "profile_img : " + this.profileImg + "\n"
                 + "activity_score : " + this.activityScore + "\n"
                 + "authority : " + this.authority + "\n"
+                + "platform : " + this.platform + "\n"
                 + "created : " + this.created + "\n"
                 + "updated : " + this.updated + "\n";
     };

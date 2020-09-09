@@ -30,6 +30,7 @@ import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.simple.portal.util.DateFormatUtil.makeNowTimeStamp;
@@ -87,6 +88,7 @@ public class UserService {
                        .gitAddr(userEntityList.get(i).getGitAddr())
                        .profileImg(userEntityList.get(i).getProfileImg())
                        .activityScore(userEntityList.get(i).getActivityScore())
+                       .platform(userEntityList.get(i).getPlatform())
                        .authority(userEntityList.get(i).getAuthority())
                        .created(userEntityList.get(i).getCreated())
                        .updated(userEntityList.get(i).getUpdated())
@@ -120,6 +122,7 @@ public class UserService {
                     .profileImg(userEntity.getProfileImg())
                     .activityScore(userEntity.getActivityScore())
                     .authority(userEntity.getAuthority())
+                    .platform(userEntity.getPlatform())
                     .created(userEntity.getCreated())
                     .updated(userEntity.getUpdated())
                     .followedList(followedList)
@@ -156,6 +159,7 @@ public class UserService {
                     .password(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())) // 비밀번호
                     .gitAddr("https://github.com") // default 깃 주소
                     .profileImg(ApiConst.baseImgUrl)
+                    .platform("normal") // 이메일 인증 유저는 "normal"
                     .activityScore(0) // 초기점수 0 점
                     .authority('N') // 초기 권한 N
                     .created(makeNowTimeStamp())
@@ -192,6 +196,7 @@ public class UserService {
                     .password(originUser.getPassword()) // 변경 불가 ( 비밀번호 변경 api 따로 존재 )
                     .gitAddr(user.getGitAddr()) // 변경 가능
                     .profileImg(originUser.getProfileImg()) // 변경 불가 -> 프로필 update api를 통해 변경 가능
+                    .platform(originUser.getPlatform()) // 변경 불가
                     .activityScore(originUser.getActivityScore()) // 변경 불가
                     .authority(originUser.getAuthority()) // 변경 불가
                     .created(originUser.getCreated()) // 변경 불가
@@ -210,7 +215,6 @@ public class UserService {
     public void deleteUserService(String userId) {
         try {
             UserEntity deleteUser = userRepository.findByUserId(userId);
-            String imgDir = deleteUser.getProfileImg();
             String delFollowedKey = "user:followed:";
             String delFollowingKey = "user:following:";
             userRepository.deleteById(deleteUser.getId());
@@ -265,6 +269,62 @@ public class UserService {
         } catch (Exception e) {
             log.error("[UserService] emailCheckService Error : " + e.getMessage());
             throw new EmailCheckFailedException();
+        }
+    }
+
+    @Transactional
+    public LoginTokenOauthDto oauthUserLoginService(OAuthDto oAuthDto) {
+        try {
+            String platform = oAuthDto.getPlatform();
+            String email = oAuthDto.getEmail();
+            String nickname = oAuthDto.getNickname();
+            String profileImg = oAuthDto.getProfileImg();
+
+            // email과 platform을 key로 조회 ( email + platform은 unique 함 )
+            UserEntity oauthUser = userRepository.findByEmailAndPlatform(email, platform);
+
+            if(oauthUser != null) {  // 기존에 insert 된 경우
+                String userId = oauthUser.getUserId();
+                char userRole = oauthUser.getAuthority();
+                String lastLoginTime = oauthUser.getLastLoginTime();
+                String LastLoginDate = lastLoginTime.split(" ")[0]; // "lastLoginTime": "2020-08-29 17:53:56",
+                String nowDate = makeNowTimeStamp().split(" ")[0];
+                // 로그인의 경우 하루에 한번만 카운트 되도록 처리
+                if(!LastLoginDate.equals(nowDate)) updateActivityScore(userId, ActivityScoreConst.LOGIN_ACTIVITY_SCORE);
+                userRepository.updateLastLoginTime(userId, makeNowTimeStamp()); // 최근 로그인 시간 update
+
+                // 로그인시 Access Token, Refresh Token 모두 발급.
+                String accessToken = jwtUtil.createAccessToken(userId, userRole);
+                String refrehToken = jwtUtil.createRefreshToken(userId);
+                return new LoginTokenOauthDto(accessToken, refrehToken, userRole, userId);
+
+            } else { // Oauth의 경우 최초 로그인일때 가입과 동시에 로그인이 된다. -> uuid로 아이디 생성
+                String userId  = platform + ":" + UUID.randomUUID();  // platform:uuid로 기본 아이디 생성 -> oauth 유저의 경우 아이디 변경 가능
+                UserEntity insertUser = UserEntity.builder()
+                        .userId(userId)
+                        .email(email)
+                        .nickname(nickname)
+                        .password(platform) // 비밀번호 ( oauth의 경우 사용안하므로 platform이름으로 대체)
+                        .gitAddr("https://github.com") // default 깃 주소
+                        .profileImg(profileImg)
+                        .activityScore(0) // 초기점수 0 점
+                        .authority('Y') // oauth 유저는 바로 로그인 가능하므로 'Y'
+                        .platform(platform)
+                        .created(makeNowTimeStamp())
+                        .updated(makeNowTimeStamp())
+                        .lastLoginTime(makeNowTimeStamp())
+                        .build();
+
+                userRepository.save(insertUser);
+                updateActivityScore(userId, ActivityScoreConst.LOGIN_ACTIVITY_SCORE);
+                // 로그인시 Access Token, Refresh Token 모두 발급.
+                String accessToken = jwtUtil.createAccessToken(insertUser.getUserId(), insertUser.getAuthority());
+                String refrehToken = jwtUtil.createRefreshToken(insertUser.getUserId());
+                return new LoginTokenOauthDto(accessToken, refrehToken, insertUser.getAuthority(), insertUser.getUserId());
+            }
+        } catch (Exception e) {
+            log.error("[UserService] createOauthUserService Error : " + e.getMessage());
+            throw new CreateUserFailedException();
         }
     }
 

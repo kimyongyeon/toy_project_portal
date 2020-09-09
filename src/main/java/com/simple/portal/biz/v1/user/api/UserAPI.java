@@ -92,8 +92,7 @@ public class UserAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    // 유저 등록 ( 회원 가입 ) -> 회원가입시 이미지를 받을건지는 추후 결정 필요
-    // -> 아이디 중복 체크 로직 필요
+    // 유저 등록 ( 회원 가입 ) - 이메일로 가입하는 유저
     @PostMapping("")
     public ResponseEntity<ApiResponse> userCreate(@Valid @RequestBody UserCreateDto userCreateDto, BindingResult bindingResult) {
         log.info("[POST] /user/ userCreateAPI" + "[RequestBody] " + userCreateDto.toString());
@@ -183,8 +182,34 @@ public class UserAPI {
         Map<String, String> obj = new HashMap<>();
         obj.put("userId", id);// 로그인 return값에 userId 추가
         obj.put("Role", String.valueOf(auth)); // 'Y' 일반 회원, 'A' 관리자 -> 관리자는 API로 설정 못하고 수동으로 가능
+        obj.put("platform", "normal"); // 일반 로그일 경우 "normal"
         obj.put("access-token", loginTokenDto.getAccessToken());
         obj.put("refresh-token", loginTokenDto.getRefreshToken());
+        apiResponse.setBody(obj);  // user_id 기반 토큰 생성
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    // oauth 로그인 ( 최초에만 write 해준다. )
+    @PostMapping("/oauth")
+    public ResponseEntity<ApiResponse> oauthUserLogin(@Valid @RequestBody OAuthDto oAuthDto,
+                                                       BindingResult bindingResult) {
+
+        log.info("[Post] /user/oauth oauthUserLogin" + oAuthDto.toString());
+
+        // client가 요청 잘못했을때 (파라미터 ) - 400
+        if(bindingResult.hasErrors()) {
+            String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
+            throw new ParamInvalidException(errMsg);
+        }
+
+        // 기존에 했는지 구분
+        LoginTokenOauthDto loginTokenOauthDto = userService.oauthUserLoginService(oAuthDto);
+        apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
+        Map<String, String> obj = new HashMap<>();
+        obj.put("userId", loginTokenOauthDto.getUserId());// 로그인 return값에 userId 추가
+        obj.put("Role", String.valueOf(loginTokenOauthDto.getAuth())); // 'Y' 일반 회원, 'A' 관리자 -> 관리자는 API로 설정 못하고 수동으로 가능
+        obj.put("access-token", loginTokenOauthDto.getAccessToken());
+        obj.put("refresh-token", loginTokenOauthDto.getRefreshToken());
         apiResponse.setBody(obj);  // user_id 기반 토큰 생성
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
