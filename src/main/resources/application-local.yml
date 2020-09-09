@@ -4,10 +4,10 @@ file:
 server:
   port: 8443
 
-#  ssl:
-#    key-store: classpath:keystore.p12
-#    key-store-type: PKCS12
-#    key-store-password: ENC(3XCwNNVyBH1PRmYmKVR0T1e57cn3SuDz)
+ # ssl:
+ #   key-store: classpath:keystore.p12
+ #   key-store-type: PKCS12
+ #   key-store-password: ENC(3XCwNNVyBH1PRmYmKVR0T1e57cn3SuDz)
 
 spring:
   security:
@@ -51,6 +51,16 @@ spring:
   redis:
     host: 141.164.53.200
     port: 6379
+    password: 123qwe!@#$
+    lettuce:
+      pool:
+        max-active: 30  # 최대 가용 connection 갯수
+        max-idle: 10 # pool에 미리 가지고 있을 connection 최대 갯수
+        min-idle: 2 # pool에 미리 가지고 있을 connection 최소 갯수
+
+  redis2:
+    host: 141.164.53.200
+    port: 7000
     password: 123qwe!@#$
     lettuce:
       pool:

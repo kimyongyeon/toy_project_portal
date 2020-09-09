@@ -23,6 +23,7 @@ import java.sql.SQLException;
 @EnableTransactionManagement
 public class RedisConfig {
 
+    // 팔로우/팔로워 Redis
     @Value("${spring.redis.host}")
     private String redisHost;
 
@@ -32,9 +33,19 @@ public class RedisConfig {
     @Value("${spring.redis.password}")
     private String redisPassword;
 
+    // Token Redis
+    @Value("${spring.redis2.host}")
+    private String redisHost2;
+
+    @Value("${spring.redis2.port}")
+    private int redisPort2;
+
+    @Value("${spring.redis2.password}")
+    private String redisPassword2;
+
     @Bean
     public RedisConnectionFactory redisConnectionFactory( ) {
-        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration(); // 이게 뭐하는 거임?
+        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
         redisStandaloneConfiguration.setHostName(redisHost);
         redisStandaloneConfiguration.setPort(redisPort);
         redisStandaloneConfiguration.setPassword(redisPassword);
@@ -42,10 +53,29 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, String> redisTemplate( ) {
+    public RedisTemplate<String, String> redisTemplate_follower( ) {
         RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
         redisTemplate.setEnableTransactionSupport(true);
         redisTemplate.setConnectionFactory(redisConnectionFactory());
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        return redisTemplate;
+    }
+
+    @Bean
+    public RedisConnectionFactory redisConnectionFactory2( ) {
+        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
+        redisStandaloneConfiguration.setHostName(redisHost2);
+        redisStandaloneConfiguration.setPort(redisPort2);
+        redisStandaloneConfiguration.setPassword(redisPassword2);
+        return new LettuceConnectionFactory(redisStandaloneConfiguration);
+    }
+
+    @Bean
+    public RedisTemplate<String, String> redisTemplate_token( ) {
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setEnableTransactionSupport(true);
+        redisTemplate.setConnectionFactory(redisConnectionFactory2());
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new StringRedisSerializer());
         return redisTemplate;

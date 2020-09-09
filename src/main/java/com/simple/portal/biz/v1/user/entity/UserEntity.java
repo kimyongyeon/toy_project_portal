@@ -47,6 +47,9 @@ public class UserEntity {
     @Column(columnDefinition = "CHAR(1) DEFAULT 'N'")
     private char authority; // 'Y', 'N'
 
+    @Column(nullable = false)
+    private String platform;
+
     @Column(nullable = true)
     private String created;
 
@@ -57,7 +60,7 @@ public class UserEntity {
     private String lastLoginTime;
 
     @Builder
-    public UserEntity(Long id, String userId, String email, String nickname, String password, String gitAddr, String profileImg, int activityScore, char authority, String created, String updated, String lastLoginTime) {
+    public UserEntity(Long id, String userId, String email, String nickname, String password, String gitAddr, String profileImg, int activityScore, char authority, String platform, String created, String updated, String lastLoginTime) {
         this.id = id;
         this.userId = userId;
         this.email = email;
@@ -65,6 +68,7 @@ public class UserEntity {
         this.password = password;
         this.gitAddr = gitAddr;
         this.profileImg = profileImg;
+        this.platform = platform;
         this.activityScore = activityScore;
         this.authority = authority;
         this.created = created;
@@ -81,6 +85,7 @@ public class UserEntity {
                 + "password : " + this.password + "\n"
                 + "git_addr : " + this.gitAddr + "\n"
                 + "profile_img : " + this.profileImg + "\n"
+                + "platform : " + this.platform + "\n"
                 + "activity_score : " + this.activityScore + "\n"
                 + "authority : " + this.authority + "\n"
                 + "created : " + this.created + "\n"

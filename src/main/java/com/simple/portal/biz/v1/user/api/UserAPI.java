@@ -11,6 +11,7 @@ import com.simple.portal.biz.v1.user.exception.UserNotFoundException;
 import com.simple.portal.biz.v1.user.service.UserService;
 import com.simple.portal.common.ApiResponse;
 import com.simple.portal.common.Interceptor.JwtUtil;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +53,7 @@ public class UserAPI {
 
     @GetMapping("/getToken")
     public void getToken( ) {
-        String token = jwtUtil.createToken("xowns1234", 'N');
+        String token = jwtUtil.createAccessToken("xowns1234", 'N');
         log.info("token : " + token);
     }
 
@@ -91,8 +92,7 @@ public class UserAPI {
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    // 유저 등록 ( 회원 가입 ) -> 회원가입시 이미지를 받을건지는 추후 결정 필요
-    // -> 아이디 중복 체크 로직 필요
+    // 유저 등록 ( 회원 가입 ) - 이메일로 가입하는 유저
     @PostMapping("")
     public ResponseEntity<ApiResponse> userCreate(@Valid @RequestBody UserCreateDto userCreateDto, BindingResult bindingResult) {
         log.info("[POST] /user/ userCreateAPI" + "[RequestBody] " + userCreateDto.toString());
@@ -168,12 +168,11 @@ public class UserAPI {
             String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
             throw new ParamInvalidException(errMsg);
         }
-
         String id = loginDto.getUserId();
         String pw = loginDto.getPassword();
         log.info("[POST] /user/login " + "[ID] :  "  + id + "[PW] : " + pw + " /userLogin");
 
-        String token = userService.userLoginService(id, pw);
+        LoginTokenDto loginTokenDto = userService.userLoginService(id, pw);
 
         // authority 조회 후 'Y'일때만 로그인 성공 로직 작성
         char auth = userService.userAuthCheckServie(id);
@@ -183,24 +182,50 @@ public class UserAPI {
         Map<String, String> obj = new HashMap<>();
         obj.put("userId", id);// 로그인 return값에 userId 추가
         obj.put("Role", String.valueOf(auth)); // 'Y' 일반 회원, 'A' 관리자 -> 관리자는 API로 설정 못하고 수동으로 가능
-        obj.put("token", token);
+        obj.put("platform", "normal"); // 일반 로그일 경우 "normal"
+        obj.put("access-token", loginTokenDto.getAccessToken());
+        obj.put("refresh-token", loginTokenDto.getRefreshToken());
         apiResponse.setBody(obj);  // user_id 기반 토큰 생성
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
 
-    // 로그아웃 -> 토큰을 만료시킴 ( 토큰을 받아서 만료 ? )
+    // oauth 로그인 ( 최초에만 write 해준다. )
+    @PostMapping("/oauth")
+    public ResponseEntity<ApiResponse> oauthUserLogin(@Valid @RequestBody OAuthDto oAuthDto,
+                                                       BindingResult bindingResult) {
+
+        log.info("[Post] /user/oauth oauthUserLogin" + oAuthDto.toString());
+
+        // client가 요청 잘못했을때 (파라미터 ) - 400
+        if(bindingResult.hasErrors()) {
+            String errMsg = bindingResult.getAllErrors().get(0).getDefaultMessage(); // 첫번째 에러로 출력
+            throw new ParamInvalidException(errMsg);
+        }
+
+        // 기존에 했는지 구분
+        LoginTokenOauthDto loginTokenOauthDto = userService.oauthUserLoginService(oAuthDto);
+        apiResponse.setMsg(UserConst.SUCCESS_LOGIN);
+        Map<String, String> obj = new HashMap<>();
+        obj.put("userId", loginTokenOauthDto.getUserId());// 로그인 return값에 userId 추가
+        obj.put("Role", String.valueOf(loginTokenOauthDto.getAuth())); // 'Y' 일반 회원, 'A' 관리자 -> 관리자는 API로 설정 못하고 수동으로 가능
+        obj.put("access-token", loginTokenOauthDto.getAccessToken());
+        obj.put("refresh-token", loginTokenOauthDto.getRefreshToken());
+        apiResponse.setBody(obj);  // user_id 기반 토큰 생성
+        return new ResponseEntity(apiResponse, HttpStatus.OK);
+    }
+
+    // 로그아웃 -> 토큰을 만료시킴
     // 토큰이 한번 만들어지면 바꿀수 없다.. 즉, 유저가 로그아웃해도 세션처럼 값을 지울수 없다는 뜻이다. ( = 로그아웃해도 토큰이 살아있다. expireTime까지 )
-    // 그래서 로그아웃한 토큰을 레디스에 넣어놓고 토큰 유효성 검사할때 체크해줘야 한다. - 레디스는 주기적으로 삭제 ?
-    @PostMapping("/logout")
-    public void logout(HttpServletRequest httpServletRequest) {
+    // 해당 유저의 refresh token을 레디스에서 삭제하고 access token을 blackList에 등록한다.
+    @GetMapping("/logout")
+    public ResponseEntity<ApiResponse> logout(@RequestParam("userId") String userId) {
 
-        String userId = httpServletRequest.getParameter("userId");
-        String token = httpServletRequest.getParameter("token");
+        log.info("[POST] /user/logout " + userId);
 
-        log.info("[POST] /user/logout");
-        log.info("userId : " + userId);
-        log.info("token : " + token);
-
+        userService.userLogoutService(userId);
+        apiResponse.setMsg(UserConst.SUCCESS_LOGOUT);
+        apiResponse.setBody("");
+        return  new ResponseEntity(apiResponse, HttpStatus.OK);
     };
 
     // 권한 업데이트

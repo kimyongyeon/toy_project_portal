@@ -1,5 +1,6 @@
 package com.simple.portal.biz.v1.user.service;
 
+import com.simple.portal.biz.v1.user.dto.LoginTokenDto;
 import com.simple.portal.biz.v1.user.dto.OAuthDto;
 import com.simple.portal.biz.v1.user.entity.UserEntity;
 import com.simple.portal.biz.v1.user.exception.CreateUserFailedException;
@@ -32,7 +33,7 @@ public class Oauth2Service {
     }
 
     @Transactional
-    public String OauthUserLoginService(Map<String, Object> oauthMap) {
+    public LoginTokenDto OauthUserLoginService(Map<String, Object> oauthMap) {
 
         try {
             String platform = (String) oauthMap.get("platform");
@@ -51,7 +52,12 @@ public class Oauth2Service {
                 // 로그인의 경우 하루에 한번만 카운트 되도록 처리
                 if(!LastLoginDate.equals(nowDate)) userService.updateActivityScore(userId, ActivityScoreConst.LOGIN_ACTIVITY_SCORE);
                 userRepository.updateLastLoginTime(userId, makeNowTimeStamp()); // 최근 로그인 시간 update
-                return jwtUtil.createToken(userId, userRole);
+
+                // 로그인시 Access Token, Refresh Token 모두 발급.
+                String accessToken = jwtUtil.createAccessToken(user.getUserId(),  user.getAuthority());
+                String refrehToken = jwtUtil.createRefreshToken(user.getUserId());
+                return new LoginTokenDto(accessToken, refrehToken);
+
             } else { // Oauth의 경우 최초 로그인일때 가입과 동시에 로그인이 된다.
                 UserEntity insertUser = UserEntity.builder()
                         .userId(userId)
@@ -69,7 +75,10 @@ public class Oauth2Service {
 
                 userRepository.save(insertUser);
                 userService.updateActivityScore(userId, ActivityScoreConst.LOGIN_ACTIVITY_SCORE);
-                return jwtUtil.createToken(insertUser.getUserId(), insertUser.getAuthority());
+                // 로그인시 Access Token, Refresh Token 모두 발급.
+                String accessToken = jwtUtil.createAccessToken(insertUser.getUserId(), insertUser.getAuthority());
+                String refrehToken = jwtUtil.createRefreshToken(insertUser.getUserId());
+                return new LoginTokenDto(accessToken, refrehToken);
             }
             // 기존에 유저가 있으면 등록안하고 없으면 등록 ( select -> insert )
         } catch (Exception e) {

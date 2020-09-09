@@ -16,8 +16,11 @@ import com.simple.portal.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import javax.persistence.EntityManager;
@@ -27,6 +30,8 @@ import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static com.simple.portal.util.DateFormatUtil.makeNowTimeStamp;
 
@@ -36,10 +41,17 @@ public class UserService {
     private UserRepository userRepository;
     private CustomMailSender mailSender;
     private JwtUtil jwtUtil;
-    private RedisTemplate<String, String> redisTemplate;
     private JPAQueryFactory jpaQueryFactory;
     private S3Service s3Service;
     private SimpMessagingTemplate simpleMessageTemplate;
+
+    @Autowired
+    @Qualifier("redisTemplate_follower")
+    private RedisTemplate<String, String> redisTemplate_follower;
+
+    @Autowired
+    @Qualifier("redisTemplate_token")
+    private RedisTemplate<String, String> redisTemplate_token;
 
     @PersistenceContext
     private EntityManager entityManager; // native query를 위해 entityManger 추가
@@ -48,14 +60,12 @@ public class UserService {
     public void UserController(UserRepository userRepository,
                                CustomMailSender mailSender,
                                JwtUtil jwtUtil,
-                               RedisTemplate redisTemplate,
                                JPAQueryFactory jpaQueryFactory,
                                S3Service s3Service,
                                SimpMessagingTemplate simpleMessageTemplate) {
         this.userRepository = userRepository;
         this.mailSender = mailSender;
         this.jwtUtil = jwtUtil;
-        this.redisTemplate = redisTemplate;
         this.jpaQueryFactory = jpaQueryFactory;
         this.s3Service = s3Service;
         this.simpleMessageTemplate = simpleMessageTemplate;
@@ -78,6 +88,7 @@ public class UserService {
                        .gitAddr(userEntityList.get(i).getGitAddr())
                        .profileImg(userEntityList.get(i).getProfileImg())
                        .activityScore(userEntityList.get(i).getActivityScore())
+                       .platform(userEntityList.get(i).getPlatform())
                        .authority(userEntityList.get(i).getAuthority())
                        .created(userEntityList.get(i).getCreated())
                        .updated(userEntityList.get(i).getUpdated())
@@ -111,6 +122,7 @@ public class UserService {
                     .profileImg(userEntity.getProfileImg())
                     .activityScore(userEntity.getActivityScore())
                     .authority(userEntity.getAuthority())
+                    .platform(userEntity.getPlatform())
                     .created(userEntity.getCreated())
                     .updated(userEntity.getUpdated())
                     .followedList(followedList)
@@ -147,6 +159,7 @@ public class UserService {
                     .password(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt())) // 비밀번호
                     .gitAddr("https://github.com") // default 깃 주소
                     .profileImg(ApiConst.baseImgUrl)
+                    .platform("normal") // 이메일 인증 유저는 "normal"
                     .activityScore(0) // 초기점수 0 점
                     .authority('N') // 초기 권한 N
                     .created(makeNowTimeStamp())
@@ -183,6 +196,7 @@ public class UserService {
                     .password(originUser.getPassword()) // 변경 불가 ( 비밀번호 변경 api 따로 존재 )
                     .gitAddr(user.getGitAddr()) // 변경 가능
                     .profileImg(originUser.getProfileImg()) // 변경 불가 -> 프로필 update api를 통해 변경 가능
+                    .platform(originUser.getPlatform()) // 변경 불가
                     .activityScore(originUser.getActivityScore()) // 변경 불가
                     .authority(originUser.getAuthority()) // 변경 불가
                     .created(originUser.getCreated()) // 변경 불가
@@ -201,7 +215,6 @@ public class UserService {
     public void deleteUserService(String userId) {
         try {
             UserEntity deleteUser = userRepository.findByUserId(userId);
-            String imgDir = deleteUser.getProfileImg();
             String delFollowedKey = "user:followed:";
             String delFollowingKey = "user:following:";
             userRepository.deleteById(deleteUser.getId());
@@ -212,7 +225,7 @@ public class UserService {
             //나의 팔로워 및 팔로잉 정보 삭제.
             //내 꺼에서 followed, following 지우면서 각 유저의 것들도 지워줘야함.
             try {
-                SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+                SetOperations<String, String> setOperations = redisTemplate_follower.opsForSet();
                 //내 팔로잉 조회
                 FollowingList followingList = getFollowingIdService(userId);
                 //내 팔로워 조회
@@ -228,8 +241,8 @@ public class UserService {
                     setOperations.remove(followingKey,userId);
                 }
                 //내 팔로잉/팔로우 정보 삭제
-                redisTemplate.delete(delFollowedKey + userId);
-                redisTemplate.delete(delFollowingKey + userId);
+                redisTemplate_follower.delete(delFollowedKey + userId);
+                redisTemplate_follower.delete(delFollowingKey + userId);
             } catch (Exception e) {
                 e.printStackTrace();
                 log.error("[UserService] unfollowService Error : " + e.getMessage());
@@ -260,7 +273,63 @@ public class UserService {
     }
 
     @Transactional
-    public String userLoginService(String user_id, String password) { // 성공만 처리하고 나머지 exception 던짐
+    public LoginTokenOauthDto oauthUserLoginService(OAuthDto oAuthDto) {
+        try {
+            String platform = oAuthDto.getPlatform();
+            String email = oAuthDto.getEmail();
+            String nickname = oAuthDto.getNickname();
+            String profileImg = oAuthDto.getProfileImg();
+
+            // email과 platform을 key로 조회 ( email + platform은 unique 함 )
+            UserEntity oauthUser = userRepository.findByEmailAndPlatform(email, platform);
+
+            if(oauthUser != null) {  // 기존에 insert 된 경우
+                String userId = oauthUser.getUserId();
+                char userRole = oauthUser.getAuthority();
+                String lastLoginTime = oauthUser.getLastLoginTime();
+                String LastLoginDate = lastLoginTime.split(" ")[0]; // "lastLoginTime": "2020-08-29 17:53:56",
+                String nowDate = makeNowTimeStamp().split(" ")[0];
+                // 로그인의 경우 하루에 한번만 카운트 되도록 처리
+                if(!LastLoginDate.equals(nowDate)) updateActivityScore(userId, ActivityScoreConst.LOGIN_ACTIVITY_SCORE);
+                userRepository.updateLastLoginTime(userId, makeNowTimeStamp()); // 최근 로그인 시간 update
+
+                // 로그인시 Access Token, Refresh Token 모두 발급.
+                String accessToken = jwtUtil.createAccessToken(userId, userRole);
+                String refrehToken = jwtUtil.createRefreshToken(userId);
+                return new LoginTokenOauthDto(accessToken, refrehToken, userRole, userId);
+
+            } else { // Oauth의 경우 최초 로그인일때 가입과 동시에 로그인이 된다. -> uuid로 아이디 생성
+                String userId  = platform + ":" + UUID.randomUUID();  // platform:uuid로 기본 아이디 생성 -> oauth 유저의 경우 아이디 변경 가능
+                UserEntity insertUser = UserEntity.builder()
+                        .userId(userId)
+                        .email(email)
+                        .nickname(nickname)
+                        .password(platform) // 비밀번호 ( oauth의 경우 사용안하므로 platform이름으로 대체)
+                        .gitAddr("https://github.com") // default 깃 주소
+                        .profileImg(profileImg)
+                        .activityScore(0) // 초기점수 0 점
+                        .authority('Y') // oauth 유저는 바로 로그인 가능하므로 'Y'
+                        .platform(platform)
+                        .created(makeNowTimeStamp())
+                        .updated(makeNowTimeStamp())
+                        .lastLoginTime(makeNowTimeStamp())
+                        .build();
+
+                userRepository.save(insertUser);
+                updateActivityScore(userId, ActivityScoreConst.LOGIN_ACTIVITY_SCORE);
+                // 로그인시 Access Token, Refresh Token 모두 발급.
+                String accessToken = jwtUtil.createAccessToken(insertUser.getUserId(), insertUser.getAuthority());
+                String refrehToken = jwtUtil.createRefreshToken(insertUser.getUserId());
+                return new LoginTokenOauthDto(accessToken, refrehToken, insertUser.getAuthority(), insertUser.getUserId());
+            }
+        } catch (Exception e) {
+            log.error("[UserService] createOauthUserService Error : " + e.getMessage());
+            throw new CreateUserFailedException();
+        }
+    }
+
+    @Transactional
+    public LoginTokenDto userLoginService(String user_id, String password) { // 성공만 처리하고 나머지 exception 던짐
         try {
             if(!userRepository.existsUserByUserId(user_id)) throw new Exception(UserConst.NO_USER); // 아이디 존재 안함.
             else {
@@ -280,13 +349,34 @@ public class UserService {
                     }
 
                     userRepository.updateLastLoginTime(user_id, makeNowTimeStamp()); // 최근 로그인 시간 update
-                    return jwtUtil.createToken(user.getUserId(), userRole);
+
+                    // 로그인시 Access Token, Refresh Token 모두 발급.
+                    String accessToken = jwtUtil.createAccessToken(user.getUserId(), userRole);
+                    String refrehToken = jwtUtil.createRefreshToken(user.getUserId());
+                    return new LoginTokenDto(accessToken, refrehToken);
                 }
                 else throw new Exception(UserConst.INVALID_PASSWORD); // 비밀번호 오류
             }
         } catch (Exception e) {
             log.error("[UserService] userLoginService Error : " + e.getMessage());
             throw new LoginFailedException(e.getMessage());
+        }
+    }
+
+    // 로그아웃 ( 로그아웃을 하면 해당 유저로 부터 생성된 모든 token release )
+    public void userLogoutService(String userId) {
+        try {
+            // refreshToken release
+            String refreshTokenKey = "refresh:"+userId;
+            redisTemplate_token.delete(refreshTokenKey);
+
+            // blackList release
+            String tokenBlackListKey = "blackList:"+userId;
+            redisTemplate_token.delete(tokenBlackListKey);
+
+        } catch (Exception e) {
+            log.error("[UserService] userLogoutService Error : " + e.getMessage());
+            throw new LogoutFailedException();
         }
     }
 
@@ -356,7 +446,7 @@ public class UserService {
     public void followService(String following_id, String followed_id) {
         if(!userRepository.existsUserByUserId(following_id) || !userRepository.existsUserByUserId(followed_id)) throw new UserNotFoundException(); // 아이디 존재 안함.
         try {
-            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+            SetOperations<String, String> setOperations = redisTemplate_follower.opsForSet();
             String followedKey = "user:followed:" + followed_id;
             String followingKey = "user:following:" + following_id;
             setOperations.add(followedKey, following_id);
@@ -373,7 +463,7 @@ public class UserService {
     public void unfollowService(String following_id, String followed_id) {
         if(!userRepository.existsUserByUserId(following_id) || !userRepository.existsUserByUserId(followed_id)) throw new UserNotFoundException(); // 아이디 존재 안함.
         try {
-            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+            SetOperations<String, String> setOperations = redisTemplate_follower.opsForSet();
             String followingKey = "user:following:" + following_id;
             String followedKey = "user:followed:" + followed_id;
             setOperations.remove(followingKey, followed_id);
@@ -388,7 +478,7 @@ public class UserService {
     // 내 팔로워 조회 ( ID )
     public FollowedList getFollowerIdService(String followed_id) {
         try {
-            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+            SetOperations<String, String> setOperations = redisTemplate_follower.opsForSet();
             String followerKey = "user:followed:" + followed_id;
             Set<String> followers = setOperations.members(followerKey);
             List<String> follower_id_list = new ArrayList<>();
@@ -431,7 +521,7 @@ public class UserService {
     // 내가 팔로잉하는 유저 조회 ( Id )
     public FollowingList getFollowingIdService(String following_id) {
         try {
-            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+            SetOperations<String, String> setOperations = redisTemplate_follower.opsForSet();
             String followingKey = "user:following:" + following_id;
             Set<String> following_users = setOperations.members(followingKey);
             List<String> following_id_list = new ArrayList<>();
