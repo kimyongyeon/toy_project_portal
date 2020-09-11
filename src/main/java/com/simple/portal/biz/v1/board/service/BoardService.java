@@ -99,13 +99,16 @@ public class BoardService {
             feelEntity1.setBoardId(id);
             feelEntity1.setCount(1);
             feelEntity1.setUserId(userId);
-            feelEntity.setFeelState(feelLike);
+            feelEntity1.setFeelState(feelState);
             feelRepository.save(feelEntity1);
         } else {
             // delete
             feelRepository.delete(feelEntity);
         }
         Long likeTotalSumCnt = feelRepository.selectTocalCount(feelLike, boardId);
+        if (likeTotalSumCnt == null) {
+            likeTotalSumCnt = 0L;
+        }
         // 좋아요/싫어요 따로 집계
         boardEntity.setRowLike(likeTotalSumCnt); // 좋아요 증가
 //        boardEntity.setRowDisLike(decrease(boardEntity.getRowDisLike())); // 싫어요 감소
@@ -150,13 +153,16 @@ public class BoardService {
             feelEntity1.setBoardId(id);
             feelEntity1.setCount(1);
             feelEntity1.setUserId(userId);
-            feelEntity.setFeelState(feelDisLike);
+            feelEntity1.setFeelState(feelDisLike);
             feelRepository.save(feelEntity1);
         } else {
             // delete
             feelRepository.delete(feelEntity);
         }
         Long disLikeTotalSumCnt = feelRepository.selectTocalCount(feelDisLike, boardId);
+        if (disLikeTotalSumCnt == null){
+            disLikeTotalSumCnt = 0L;
+        }
         // 좋아요/싫어요 따로 집계
 //        boardEntity.setRowLike(decrease(boardEntity.getRowLike())); // 좋아요 감소
         boardEntity.setRowDisLike(disLikeTotalSumCnt); // 싫어요 증가
