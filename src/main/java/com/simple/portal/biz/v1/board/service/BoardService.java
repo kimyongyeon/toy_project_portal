@@ -94,25 +94,35 @@ public class BoardService {
         String feelState = feelLike;
         FeelEntity feelEntity = feelRepository.findByUserIdAndBoardIdAndFeelState(userId, boardId, feelState);
         if (feelEntity == null) {
-            // insert
+            // 좋아요 증가
             FeelEntity feelEntity1 = new FeelEntity();
-            feelEntity1.setBoardId(id);
+            feelEntity1.setBoardId(boardId);
             feelEntity1.setCount(1);
             feelEntity1.setUserId(userId);
             feelEntity1.setFeelState(feelState);
             feelRepository.save(feelEntity1);
+
+            // 싫어요 삭제
+            feelRepository.deleteByBoardIdAndUserIdAndFeelState(boardId, userId, "D");
+
         } else {
             // delete
             feelRepository.delete(feelEntity);
         }
-        Long likeTotalSumCnt = feelRepository.selectTocalCount(feelLike, boardId);
+
+        // 좋아요/싫어요 따로 집계
+        Long likeTotalSumCnt = feelRepository.selectTocalCount("L", boardId);
         if (likeTotalSumCnt == null) {
             likeTotalSumCnt = 0L;
         }
-        // 좋아요/싫어요 따로 집계
-        boardEntity.setRowLike(likeTotalSumCnt); // 좋아요 증가
-//        boardEntity.setRowDisLike(decrease(boardEntity.getRowDisLike())); // 싫어요 감소
+        boardEntity.setRowLike(likeTotalSumCnt);
+        Long disLikeTotalSumCnt = feelRepository.selectTocalCount("D", boardId);
+        if (disLikeTotalSumCnt == null) {
+            disLikeTotalSumCnt = 0L;
+        }
+        boardEntity.setRowDisLike(disLikeTotalSumCnt);
         BoardEntity boardEntity1 = boardRepository.save(boardEntity);
+
         if (boardEntity1 != null) {
             // 점수저장
             ActivityScoreEntity activityScoreEntity = new ActivityScoreEntity();
@@ -155,18 +165,28 @@ public class BoardService {
             feelEntity1.setUserId(userId);
             feelEntity1.setFeelState(feelDisLike);
             feelRepository.save(feelEntity1);
+
+            // 좋아요 삭제
+            feelRepository.deleteByBoardIdAndUserIdAndFeelState(boardId, userId, "L");
+
         } else {
             // delete
             feelRepository.delete(feelEntity);
         }
-        Long disLikeTotalSumCnt = feelRepository.selectTocalCount(feelDisLike, boardId);
-        if (disLikeTotalSumCnt == null){
+
+        // 좋아요/싫어요 따로 집계
+        Long likeTotalSumCnt = feelRepository.selectTocalCount("L", boardId);
+        if (likeTotalSumCnt == null) {
+            likeTotalSumCnt = 0L;
+        }
+        boardEntity.setRowLike(likeTotalSumCnt);
+        Long disLikeTotalSumCnt = feelRepository.selectTocalCount("D", boardId);
+        if (disLikeTotalSumCnt == null) {
             disLikeTotalSumCnt = 0L;
         }
-        // 좋아요/싫어요 따로 집계
-//        boardEntity.setRowLike(decrease(boardEntity.getRowLike())); // 좋아요 감소
-        boardEntity.setRowDisLike(disLikeTotalSumCnt); // 싫어요 증가
+        boardEntity.setRowDisLike(disLikeTotalSumCnt);
         BoardEntity boardEntity1 = boardRepository.save(boardEntity);
+
         if (boardEntity1 != null) {
 
             // 점수 저장

@@ -12,4 +12,6 @@ public interface FeelRepository extends JpaRepository<FeelEntity, Long> {
     // 선택한 게시물의 감정별 총 개수 조회
     @Query(value="SELECT SUM(COUNT) as cnt FROM tb_board_feel WHERE FEEL_STATE=? AND BOARD_ID=?", nativeQuery= true)
     Long selectTocalCount(String feelState, Long boardId);
+
+    void deleteByBoardIdAndUserIdAndFeelState(Long boardId, String userId, String feelState);
 }
