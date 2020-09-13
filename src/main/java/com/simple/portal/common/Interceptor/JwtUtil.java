@@ -47,7 +47,7 @@ public class JwtUtil {
 
     public String createAccessToken(String userId, char role) {
 
-        Date EXPIRE_TIME = new Date(System.currentTimeMillis() + (1000*60*1)); // Access Token은 유효시간 10분
+        Date EXPIRE_TIME = new Date(System.currentTimeMillis() + (1000*60*10)); // Access Token은 유효시간 10분
 
         Map<String, Object> headers = new HashMap<>();
         headers.put("typ", "JWT");
