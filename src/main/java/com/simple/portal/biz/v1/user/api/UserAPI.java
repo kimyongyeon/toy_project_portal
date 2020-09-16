@@ -183,8 +183,8 @@ public class UserAPI {
         obj.put("userId", id);// 로그인 return값에 userId 추가
         obj.put("Role", String.valueOf(auth)); // 'Y' 일반 회원, 'A' 관리자 -> 관리자는 API로 설정 못하고 수동으로 가능
         obj.put("platform", "normal"); // 일반 로그일 경우 "normal"
-        obj.put("access-token", loginTokenDto.getAccessToken());
-        obj.put("refresh-token", loginTokenDto.getRefreshToken());
+        obj.put("access_token", loginTokenDto.getAccessToken());
+        obj.put("refresh_token", loginTokenDto.getRefreshToken());
         apiResponse.setBody(obj);  // user_id 기반 토큰 생성
         return new ResponseEntity(apiResponse, HttpStatus.OK);
     }
